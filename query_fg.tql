@@ -1,0 +1,2 @@
+
+match $fg isa FunctionGrounding, has function-grounding-status $fg-status;

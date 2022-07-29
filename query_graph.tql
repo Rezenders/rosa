@@ -1,0 +1,14 @@
+match 
+    $fd isa FunctionDesign, has function-design-name $fd-name;
+    $f isa Function, has function-name $f-name;
+    $r($f,$fd);
+    $c isa Component, has component-name $c-name;
+    $rc($c,$fd);
+    $qa isa QualityAttribute, has qa-value $qa-value;
+    $rqa($qa, $fd);
+
+    
+
+    
+    
+    
