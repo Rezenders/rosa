@@ -1,0 +1,42 @@
+define
+
+## ATTRIBUTES 
+name sub attribute, 
+    abstract, 
+    value string;
+
+component-name sub name;
+component-type sub name;
+function-name sub name;
+
+### Concepts
+Function sub entity,
+    owns function-name @key,
+    plays requirement:requestor,
+    plays requirement:required,
+    plays function-design:function;
+
+# this seems weird
+ComponentType sub entity,
+    owns component-type @key,
+    plays function-design:required-component,
+    plays component-design:componentType;
+
+Component sub entity,
+    owns component-name @key,
+    plays function-design:required-component,
+    plays component-design:component;
+
+### Relations
+requirement sub relation,
+    relates requestor,
+    relates required;
+
+function-design sub relation,
+    relates function,
+    relates required-component;
+    
+ component-design sub relation,
+    relates componentType,
+    relates component;
+

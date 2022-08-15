@@ -1,0 +1,45 @@
+insert 
+
+$f0 isa Function, has function-name "Search pipeline";
+$f1 isa Function, has function-name "Path generator"; 
+$f2 isa Function, has function-name "Navigate"; 
+(requestor:$f0, required:$f1, required: $f2) isa requirement;
+
+$f3 isa Function, has function-name "Plan navigation"; 
+$f4 isa Function, has function-name "Move robot";
+(requestor:$f2, required:$f3, required:$f4) isa requirement;
+
+$f5 isa Function, has function-name "Localize robot"; 
+$f6 isa Function, has function-name "Control thrusters"; 
+(requestor:$f4, required:$f5, required:$f6) isa requirement;
+
+$ct1 isa ComponentType, has component-type "Path generator"; (function:$f1, required-component:$ct1) isa function-design;
+$ct2 isa ComponentType, has component-type "Navigation planner"; (function:$f3, required-component:$ct2) isa function-design;
+
+$c1t1 isa Component, has component-name "Boustrophedon planner";
+$c1t2 isa Component, has component-name "State machine 1";
+
+(componentType:$ct1, component:$c1t1) isa component-design; 
+(componentType:$ct2, component:$c1t2) isa component-design; 
+
+$ct3 isa ComponentType, has component-type "Localization estimator";
+$c1 isa Component, has component-name "MTi-100 IMU"; 
+$c2 isa Component, has component-name "DVL A50"; 
+(function:$f5, required-component:$ct3, required-component:$c1, required-component:$c2) isa function-design;
+
+$c1t3 isa Component, has component-name "Extended kalman filter";
+$c2t3 isa Component, has component-name "Particle filter";
+
+(componentType:$ct3, component:$c1t3) isa component-design; 
+(componentType:$ct3, component:$c2t3) isa component-design; 
+
+$c3 isa Component, has component-name "Thruster controller"; 
+$t1 isa Component, has component-name "T200 thruster 1"; 
+$t2 isa Component, has component-name "T200 thruster 2"; 
+$t3 isa Component, has component-name "T200 thruster 3"; 
+$t4 isa Component, has component-name "T200 thruster 4"; 
+$t5 isa Component, has component-name "T200 thruster 5"; 
+$t6 isa Component, has component-name "T200 thruster 6";
+(function:$f6, required-component:$c3, required-component:$t1, required-component:$t2, required-component:$t3, required-component:$t4, required-component:$t5, required-component:$t6) isa function-design;
+
+
