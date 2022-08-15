@@ -9,6 +9,9 @@ component-name sub name;
 component-type sub name;
 function-name sub name;
 
+component-executor sub attribute,
+    value string;
+    
 ### Concepts
 Function sub entity,
     owns function-name @key,
@@ -16,7 +19,6 @@ Function sub entity,
     plays requirement:required,
     plays function-design:function;
 
-# this seems weird
 ComponentType sub entity,
     owns component-type @key,
     plays function-design:required-component,
@@ -24,6 +26,7 @@ ComponentType sub entity,
 
 Component sub entity,
     owns component-name @key,
+    owns component-executor,
     plays function-design:required-component,
     plays component-design:component;
 

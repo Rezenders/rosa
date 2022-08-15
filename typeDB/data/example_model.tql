@@ -16,7 +16,7 @@ $f6 isa Function, has function-name "Control thrusters";
 $ct1 isa ComponentType, has component-type "Path generator"; (function:$f1, required-component:$ct1) isa function-design;
 $ct2 isa ComponentType, has component-type "Navigation planner"; (function:$f3, required-component:$ct2) isa function-design;
 
-$c1t1 isa Component, has component-name "Boustrophedon planner";
+$c1t1 isa Component, has component-name "Boustrophedon planner", has component-executor "bustrophedon_planner.py";
 $c1t2 isa Component, has component-name "State machine 1";
 
 (componentType:$ct1, component:$c1t1) isa component-design; 

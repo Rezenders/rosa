@@ -10,6 +10,9 @@ class KbInterface(ABC):
     def __init__(self):
         pass
 
+    def add_objectives(self):
+        pass
+
     def get_objectives(self):
         pass
 
