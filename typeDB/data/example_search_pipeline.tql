@@ -1,0 +1,45 @@
+insert
+
+$t0 isa Task, has task-name "Search pipeline";
+(task:$t0, required-function:$f1, required-function:$f2) isa task-requirement;
+
+$f1 isa Function, has function-name "Path generator";
+$ct1 isa ComponentType, has component-type "Path generator software"; (function:$f1, required-component:$ct1) isa function-design;
+$c1t1 isa Component, has component-name "Boustrophedon planner", has component-executor "bustrophedon_planner.py";
+(componentType:$ct1, component:$c1t1) isa component-design;
+
+$f2 isa Function, has function-name "Navigate safely";
+$f21 isa Function, has function-name "Plan navigation";
+$ct2 isa ComponentType, has component-type "Navigation planner"; (function:$f21, required-component:$ct2) isa function-design;
+$c1t2 isa Component, has component-name "State machine 1";
+(componentType:$ct2, component:$c1t2) isa component-design;
+
+$f22 isa Function, has function-name "Execute and control AUV motion";
+$c3 isa Component, has component-name "Thruster controller";
+$t1 isa Component, has component-name "T200 thruster 1";
+$t2 isa Component, has component-name "T200 thruster 2";
+$t3 isa Component, has component-name "T200 thruster 3";
+$t4 isa Component, has component-name "T200 thruster 4";
+$t5 isa Component, has component-name "T200 thruster 5";
+$t6 isa Component, has component-name "T200 thruster 6";
+(function:$f22, required-component:$c3, required-component:$t1, required-component:$t2, required-component:$t3, required-component:$t4, required-component:$t5, required-component:$t6) isa function-design;
+
+
+$f23 isa Function, has function-name "Localize AUV";
+$ct3 isa ComponentType, has component-type "Localization estimator";
+$c1t3 isa Component, has component-name "Extended kalman filter";
+$c2t3 isa Component, has component-name "Particle filter";
+(componentType:$ct3, component:$c1t3) isa component-design;
+(componentType:$ct3, component:$c2t3) isa component-design;
+
+$c1 isa Component, has component-name "MTi-100 IMU";
+$c2 isa Component, has component-name "DVL A50";
+(function:$f23, required-component:$ct3, required-component:$c1, required-component:$c2) isa function-design;
+
+#$f24 isa Function, has function-name "Detect obstacles";
+(parent-function:$f2, child-function:$f21, child-function:$f22, child-function:$f23) isa functional-hierarchy;
+
+
+
+
+
