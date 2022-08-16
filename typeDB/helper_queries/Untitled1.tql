@@ -1,0 +1,35 @@
+#match $p isa Function; $c isa Function; (parent-function:$p, child-function:$c) isa functional-hierarchy;
+#match $p isa Function, has function-name "Search pipeline"; $l isa Function, has function-name $fnl; (parent-function:$p, leaf-function:$l) isa functional-hierarchy-leaf;
+#match $p isa Function, has function-name $fn; $c isa Function, has function-name $fnc; (parent-function:$p, child-function:$c) isa functional-hierarchy;
+#match $r isa rule;
+
+#undefine behavioral-requirement sub relation;/
+
+#match $f isa Function, has function-name $fn, has root-function true;
+#match $f isa Function, has function-name $fn, has leaf-function true;
+#undefine rule function-hierarchy-root;
+#undefine rule function-hierarchy-leaf;
+#undefine rule functional-hierarchy-recursive;
+#undefine root-function sub attribute;
+#undefine leaf-function sub attribute;
+
+#undefine EstimatedQualityAttribute sub QualityAttribute;
+#undefine QualityAttribute sub entity;
+
+#match $f isa Function, has function-name $fn; $r (parent-function:$f, child-function:$fc) isa functional-hierarchy; $fc has function-name $fcn;
+#match 
+#    $f isa Function, has function-name "Navigate safely"; 
+#    (parent-function:$f, child-function:$fc) isa implicit-functional-hierarchy; 
+#    $fc has function-name $fcn; 
+#    $fc has is-leaf-function true; 
+#get $fc, $fcn;
+
+#match 
+ #   $f isa Function, has function-name "Navigate safely"; $r (parent-function:$f, child-function:$fc) isa implicit-functional-hierarchy; get $f;
+
+#match $f isa Function, has function-name "Localize AUV"; $r (function:$f, required-component:$c) isa function-design; $c isa Component; 
+
+#get fds given a function
+match $f isa Function, has function-name "Execute and control AUV motion"; $fd (function:$f, required-component:$c) isa function-design; (function-design:$fd, qa:$eqa) isa estimated-qa;
+
+

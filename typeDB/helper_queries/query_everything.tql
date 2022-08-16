@@ -1,0 +1,5 @@
+match
+
+$e isa entity;
+$r isa relation;
+$a isa attribute;

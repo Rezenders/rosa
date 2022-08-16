@@ -38,7 +38,10 @@ class TypeDBInterface(KbInterface):
     def connect_client(self, address, parallelisation=2):
         self.client = TypeDB.core_client(address=address, parallelisation=parallelisation)
 
-    def create_database(self, database_name):
+    def create_database(self, database_name, force=False):
+        if self.client.databases().contains(database_name) and force:
+            self.client.databases().get(database_name).delete()
+
         if not self.client.databases().contains(database_name):
             self.database = self.client.databases().create(database_name)
             self.database_name = database_name
@@ -49,8 +52,10 @@ class TypeDBInterface(KbInterface):
     def create_session(self, database_name, session_type, options=TypeDBOptions.core()):
         return self.client.session(database_name, session_type, options)
 
+    #### Read/write database
     def database_query(self, session_type, transaction_type, query_type, query, options=TypeDBOptions.core()):
         with self.create_session(self.database_name, session_type) as session:
+            options.infer = True
             with session.transaction(transaction_type, options) as transaction:
                 transaction_query_function = getattr(transaction.query(), query_type)
                 answer_iterator = transaction_query_function(query)
@@ -84,15 +89,26 @@ class TypeDBInterface(KbInterface):
         except TypeDBClientException as err:
             print("Error in load_data method. This is the exception msg: ", err)
 
+    # TODO: decorator?
+    def match_database(query):
+        return self.database_query(SessionType.DATA, TransactionType.READ, 'match', query)
+    ### Read/write database end
+
+    def get_leaf_functions(self, root_function_name):
+        query = f'''
+            match
+                $f isa Function, has function-name "{root_function_name}";
+                (parent-function:$f, child-function:$leaf_function) isa implicit-functional-hierarchy;
+                $leaf_function has function-name $fcn;
+                $leaf_function has is-leaf-function true;
+            get $leaf_function, $function_name;
+        '''
+        return self.match_database(query)
 
     def get_ok_function_groundings(self):
         query = '''
-          match
-            $fg isa FunctionGrounding;
-            not {$fg isa FunctionGrounding, has function-grounding-status $fg-status; $fg-status = "error";};
+            match
+                $fg isa FunctionGrounding;
+                not {$fg isa FunctionGrounding, has function-grounding-status $fg-status; $fg-status = "error";};
         '''
-        options = TypeDBOptions.core()
-        options.infer = True
-
-        answer_list = self.database_query(SessionType.DATA, TransactionType.READ, 'match', query, options)
-        return answer_list
+        return self.match_database(query)

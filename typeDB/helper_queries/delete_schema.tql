@@ -1,0 +1,18 @@
+#undefine Component sub entity;
+#undefine ComponentType sub entity;
+#undefine Function sub entity;
+#undefine component-design sub relation;
+#undefine function-design sub relation;
+#undefine functional-hierarchy sub relation;
+#undefine functional-hierarchy-leaf sub relation;
+#undefine requirement sub relation;
+
+#undefine rule functional-hierarchy-from-requirement;
+#undefine rule unemployment;
+#undefine rule functional-hierarchy-recursive;
+#undefine rule functional-hierarchy-leaf-recursive;
+#undefine component-executor sub attribute; 
+undefine component-name sub name;
+undefine component-type sub name;
+undefine function-name sub name;
+undefine name sub attribute;

@@ -6,12 +6,21 @@ name sub attribute,
     value string;
 
 component-name sub name;
-component-type sub name;
 function-name sub name;
+function-design-name sub name;
 task-name sub name;
+
+component-type sub name;
+qa-type sub name;
 
 component-executor sub attribute,
     value string;
+    
+is-leaf-function sub attribute,
+    value boolean;
+    
+qa-value sub attribute,
+    value double;
 
 ### Concepts
 Task sub entity,
@@ -20,9 +29,14 @@ Task sub entity,
 
 Function sub entity,
     owns function-name @key,
+    owns root-function-name,
+    owns is-root-function,
+    owns is-leaf-function,
     plays task-requirement:required-function,
     plays functional-hierarchy:parent-function,
     plays functional-hierarchy:child-function,
+    plays implicit-functional-hierarchy:parent-function,
+    plays implicit-functional-hierarchy:child-function,
     plays function-design:function;
 
 ComponentType sub entity,
@@ -36,6 +50,17 @@ Component sub entity,
     plays function-design:required-component,
     plays component-design:component;
 
+#FunctionDesign sub entity,
+#    owns function-design-name @key;
+
+QualityAttribute sub entity,
+    abstract,
+    owns qa-type,
+    owns qa-value;
+
+EstimatedQualityAttribute sub QualityAttribute, 
+    plays estimated-qa:qa;
+    
 ### Relations
 task-requirement sub relation,
     relates task,
@@ -45,56 +70,51 @@ functional-hierarchy sub relation,
     relates parent-function,
     relates child-function;
 
-#functional-hierarchy-leaf sub relation,
-#    relates parent-function,
-#    relates leaf-function;
+#this relation is used only to infer    
+implicit-functional-hierarchy sub relation,
+    relates parent-function,
+    relates child-function;
 
 function-design sub relation,
+    owns function-design-name @key,
+    plays estimated-qa:function-design,
     relates function,
     relates required-component;
+    
+estimated-qa sub relation,
+    relates function-design,
+    relates qa;
+    
+#function-design sub relation,
+#    relates function,
+#    relates required-component;
 
 component-design sub relation,
     relates componentType,
     relates component;
 
 # #https://docs.vaticle.com/docs/pattern/negation/
-# ##Rules
-# rule functional-hierarchy-from-requirement:
-#     when {
-#       (requestor: $f1, required: $f2) isa requirement;
-#     } then {
-#       (parent-function: $f1, child-function: $f2) isa functional-hierarchy;
-#     };
-#
-#
-# rule functional-hierarchy-recursive:
-#     when {
-#       (parent-function: $f1, child-function: $f2) isa functional-hierarchy;
-#       (parent-function: $f2, child-function: $f3) isa functional-hierarchy;
-#     } then {
-#       (parent-function: $f1, child-function: $f3) isa functional-hierarchy;
-#     };
-#  # (parent-function: $f1, child-function: $f2) isa functional-hierarchy;
-# #rule functional-hierarchy-leaf-recursive:
-#  #   when {
-#   #      $f3 isa Function;
-#   #      not {
-#   #          (parent-function: $f2, child-function: $f3) isa functional-hierarchy;
-#   #      };
-#   #  } then {
-#   #      (parent-function: $f3, leaf-function: $f2) isa functional-hierarchy-leaf;
-#   #  };
-#
-#  rule functional-hierarchy-leaf-recursive:
-#     when {
-#         $fgp isa Function; $fgc isa Function;
-#         (parent-function: $fp, child-function: $fc) isa functional-hierarchy;
-#         not{
-#             (parent-function: $fgp, child-function: $fp) isa functional-hierarchy;
-#         };
-#         not{
-#             (parent-function: $fc, child-function: $fgc) isa functional-hierarchy;
-#         };
-#     } then {
-#         (parent-function: $fp, leaf-function: $fc) isa functional-hierarchy-leaf;
-#     };
+## Rules  
+rule function-hierarchy-leaf:
+    when{
+        $f isa Function;
+        not {(parent-function: $f, child-function: $f1) isa functional-hierarchy;};
+    } then {
+        $f has is-leaf-function true;
+    };
+
+rule implicit-functional-hierarchy:
+     when {
+        (parent-function: $f1, child-function: $f2) isa functional-hierarchy;
+      } then {
+        (parent-function: $f1, child-function: $f2) isa implicit-functional-hierarchy;
+     };
+
+rule implicit-functional-hierarchy-recursive:
+     when {
+        (parent-function: $f1, child-function: $f2) isa implicit-functional-hierarchy;
+        (parent-function: $f2, child-function: $f3) isa implicit-functional-hierarchy;
+      } then {
+        (parent-function: $f1, child-function: $f3) isa implicit-functional-hierarchy;
+     };
+
