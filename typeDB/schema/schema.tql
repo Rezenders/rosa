@@ -1,22 +1,28 @@
 define
 
-## ATTRIBUTES 
-name sub attribute, 
-    abstract, 
+## ATTRIBUTES
+name sub attribute,
+    abstract,
     value string;
 
 component-name sub name;
 component-type sub name;
 function-name sub name;
+task-name sub name;
 
 component-executor sub attribute,
     value string;
-    
+
 ### Concepts
+Task sub entity,
+    owns task-name @key,
+    plays task-requirement:task;
+
 Function sub entity,
     owns function-name @key,
-    plays requirement:requestor,
-    plays requirement:required,
+    plays task-requirement:required-function,
+    plays functional-hierarchy:parent-function,
+    plays functional-hierarchy:child-function,
     plays function-design:function;
 
 ComponentType sub entity,
@@ -31,15 +37,64 @@ Component sub entity,
     plays component-design:component;
 
 ### Relations
-requirement sub relation,
-    relates requestor,
-    relates required;
+task-requirement sub relation,
+    relates task,
+    relates required-function;
+
+functional-hierarchy sub relation,
+    relates parent-function,
+    relates child-function;
+
+#functional-hierarchy-leaf sub relation,
+#    relates parent-function,
+#    relates leaf-function;
 
 function-design sub relation,
     relates function,
     relates required-component;
-    
- component-design sub relation,
+
+component-design sub relation,
     relates componentType,
     relates component;
 
+# #https://docs.vaticle.com/docs/pattern/negation/
+# ##Rules
+# rule functional-hierarchy-from-requirement:
+#     when {
+#       (requestor: $f1, required: $f2) isa requirement;
+#     } then {
+#       (parent-function: $f1, child-function: $f2) isa functional-hierarchy;
+#     };
+#
+#
+# rule functional-hierarchy-recursive:
+#     when {
+#       (parent-function: $f1, child-function: $f2) isa functional-hierarchy;
+#       (parent-function: $f2, child-function: $f3) isa functional-hierarchy;
+#     } then {
+#       (parent-function: $f1, child-function: $f3) isa functional-hierarchy;
+#     };
+#  # (parent-function: $f1, child-function: $f2) isa functional-hierarchy;
+# #rule functional-hierarchy-leaf-recursive:
+#  #   when {
+#   #      $f3 isa Function;
+#   #      not {
+#   #          (parent-function: $f2, child-function: $f3) isa functional-hierarchy;
+#   #      };
+#   #  } then {
+#   #      (parent-function: $f3, leaf-function: $f2) isa functional-hierarchy-leaf;
+#   #  };
+#
+#  rule functional-hierarchy-leaf-recursive:
+#     when {
+#         $fgp isa Function; $fgc isa Function;
+#         (parent-function: $fp, child-function: $fc) isa functional-hierarchy;
+#         not{
+#             (parent-function: $fgp, child-function: $fp) isa functional-hierarchy;
+#         };
+#         not{
+#             (parent-function: $fc, child-function: $fgc) isa functional-hierarchy;
+#         };
+#     } then {
+#         (parent-function: $fp, leaf-function: $fc) isa functional-hierarchy-leaf;
+#     };
