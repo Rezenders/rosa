@@ -29,8 +29,6 @@ Task sub entity,
 
 Function sub entity,
     owns function-name @key,
-    owns root-function-name,
-    owns is-root-function,
     owns is-leaf-function,
     plays task-requirement:required-function,
     plays functional-hierarchy:parent-function,

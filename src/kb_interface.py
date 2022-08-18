@@ -90,25 +90,72 @@ class TypeDBInterface(KbInterface):
             print("Error in load_data method. This is the exception msg: ", err)
 
     # TODO: decorator?
-    def match_database(query):
+    def match_database(self, query):
         return self.database_query(SessionType.DATA, TransactionType.READ, 'match', query)
     ### Read/write database end
 
+    #TODO: standard for variable names in queries
+    # TODO: remove unecessary variables from query
     def get_leaf_functions(self, root_function_name):
         query = f'''
             match
                 $f isa Function, has function-name "{root_function_name}";
                 (parent-function:$f, child-function:$leaf_function) isa implicit-functional-hierarchy;
-                $leaf_function has function-name $fcn;
+                $leaf_function has function-name $function_name;
                 $leaf_function has is-leaf-function true;
             get $leaf_function, $function_name;
         '''
         return self.match_database(query)
 
-    def get_ok_function_groundings(self):
-        query = '''
+    # def get_ok_function_groundings(self):
+    #     query = '''
+    #         match
+    #             $fg isa FunctionGrounding;
+    #             not {$fg isa FunctionGrounding, has function-grounding-status $fg-status; $fg-status = "error";};
+    #     '''
+    #     return self.match_database(query)
+
+    #get fd with higher estimated qa (only considering 1 qa)
+    # TODO: remove unecessary variables from query
+    def get_function_designs_ordered(self, function_name):
+        query = f'''
             match
-                $fg isa FunctionGrounding;
-                not {$fg isa FunctionGrounding, has function-grounding-status $fg-status; $fg-status = "error";};
+                $f isa Function, has function-name "{function_name}";
+                $fd (function:$f, required-component:$c) isa function-design;
+                $fd isa function-design, has function-design-name $function_design_name;
+                (function-design:$fd, qa:$eqa) isa estimated-qa;
+                $eqa isa EstimatedQualityAttribute, has qa-type $qa-type, has qa-value $qa-value;
+                get $fd, $function_design_name, $qa-type, $qa-value;
+                sort $qa-value desc;
+        '''
+        return self.match_database(query)
+
+    # get components from fd (only dealing with Components, not ComponentType)
+    # TODO: remove unecessary variables from query
+    def get_components_from_function_design(self, function_design_name):
+        query = f'''
+            match
+                $fd (function:$f, required-component:$component) isa function-design,  has function-design-name "{function_design_name}";
+                $component isa Component, has component-name $component_name;
+                get $component, $component_name;
+        '''
+        return self.match_database(query)
+
+    def get_component_types_from_function_design(self, function_design_name):
+        query = f'''
+            match
+                $fd (function:$f, required-component:$component) isa function-design,  has function-design-name "{function_design_name}";
+                $component isa ComponentType, has component-type $component_type;
+                get $component, $component_type;
+        '''
+        return self.match_database(query)
+
+    def get_components_from_component_type(self, component_type):
+        query = f'''
+            match
+                $ct isa ComponentType, has component-type "{component_type}";
+                $cd (componentType:$ct, component:$component) isa component-design;
+                $component isa Component, has component-name $component_name;
+                get $component, $component_name;
         '''
         return self.match_database(query)

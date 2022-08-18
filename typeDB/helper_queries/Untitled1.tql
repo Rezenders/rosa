@@ -30,6 +30,32 @@
 #match $f isa Function, has function-name "Localize AUV"; $r (function:$f, required-component:$c) isa function-design; $c isa Component; 
 
 #get fds given a function
-match $f isa Function, has function-name "Execute and control AUV motion"; $fd (function:$f, required-component:$c) isa function-design; (function-design:$fd, qa:$eqa) isa estimated-qa;
 
+#get fd with higher estimated qa (only considering 1 qa)
+#match 
+#    $f isa Function, has function-name "Execute and control AUV motion"; 
+#    $fd (function:$f, required-component:$c) isa function-design; 
+#    $fd isa function-design, has function-design-name $fdn; 
+#    (function-design:$fd, qa:$eqa) isa estimated-qa; 
+#    $eqa isa EstimatedQualityAttribute, has qa-type $qa-type, has qa-value $qa-value;
+#    get $fd, $fdn, $qa-type, $qa-value; 
+#    sort $qa-value desc;
 
+# get components from fd
+match
+    $fd (function:$f, required-component:$component) isa function-design,  has function-design-name "controller with 2 thrusters";
+    $component isa Component, has component-name $component_name;
+    get $component, $component_name;
+    
+#get componenttypes from fd
+match 
+    $fd (function:$f, required-component:$component) isa function-design,  has function-design-name "controller with 2 thrusters";
+    $component isa ComponentType, has component-type $component_type;
+    get $component, $component_type;
+
+#get components from component type
+match
+    $ct isa ComponentType, has component-type "component type";
+    $cd (componentType:$ct, component:$component) isa component-design;
+    $component isa Component, has component-name $component_name;
+    get $component, $component_name;
