@@ -56,6 +56,7 @@ match
 #get components from component type
 match
     $ct isa ComponentType, has component-type "component type";
-    $cd (componentType:$ct, component:$component) isa component-design;
+    $cd (componentType:$ct, component:$component) isa component-design, has component-design-priority $priority;
     $component isa Component, has component-name $component_name;
-    get $component, $component_name;
+    get $component, $component_name, $priority;
+    sort $priority asc;

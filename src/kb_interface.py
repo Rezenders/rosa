@@ -153,9 +153,10 @@ class TypeDBInterface(KbInterface):
     def get_components_from_component_type(self, component_type):
         query = f'''
             match
-                $ct isa ComponentType, has component-type "{component_type}";
-                $cd (componentType:$ct, component:$component) isa component-design;
+                $ct isa ComponentType, has component-type "component type";
+                $cd (componentType:$ct, component:$component) isa component-design, has component-design-priority $priority;
                 $component isa Component, has component-name $component_name;
-                get $component, $component_name;
+                get $component, $component_name, $priority;
+                sort $priority asc;
         '''
         return self.match_database(query)

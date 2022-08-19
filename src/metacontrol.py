@@ -33,4 +33,5 @@ if __name__ == '__main__':
                 components_from_type = typedb_interface.get_components_from_component_type(component_type)
                 for c in components_from_type:
                     component_name = c.get("component_name").get_value()
-                    print("        Component:", component_name)
+                    component_priority = c.get("priority").get_value()
+                    print("        Component:", component_name, " priority:", component_priority)

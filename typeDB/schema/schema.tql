@@ -15,6 +15,9 @@ qa-type sub name;
 
 component-executor sub attribute,
     value string;
+
+component-design-priority sub attribute,
+    value long;
     
 is-leaf-function sub attribute,
     value boolean;
@@ -48,9 +51,6 @@ Component sub entity,
     plays function-design:required-component,
     plays component-design:component;
 
-#FunctionDesign sub entity,
-#    owns function-design-name @key;
-
 QualityAttribute sub entity,
     abstract,
     owns qa-type,
@@ -83,11 +83,8 @@ estimated-qa sub relation,
     relates function-design,
     relates qa;
     
-#function-design sub relation,
-#    relates function,
-#    relates required-component;
-
 component-design sub relation,
+    owns component-design-priority @key,
     relates componentType,
     relates component;
 
