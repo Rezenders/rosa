@@ -29,7 +29,7 @@ $f2 isa Function, has function-name "Navigate safely";
 #(parent-function:$fteste, child-function:$fteste12, child-function:$fteste22) isa functional-hierarchy;
 
 $f22 isa Function, has function-name "Execute and control AUV motion";
-$c3 isa Component, has component-name "Thruster controller 1", has component-executor "controller1.py";
+$c3 isa Component, has component-name "Thruster controller 1", has component-executor "components/controller1.py";
 $c4 isa Component, has component-name "Thruster controller 2", has component-executor "controller2.py";
 $t1 isa Component, has component-name "T200 thruster 1";
 $t2 isa Component, has component-name "T200 thruster 2";
