@@ -10,6 +10,12 @@ class TypeDBInterface():
     def __del__(self):
         self.client.close()
 
+    def __init__(self, address, database_name, schema_path, data_path, force_database=False, force_data=False):
+        self.connect_client("localhost:1729")
+        self.create_database("pipeline_inspection", force=force_database)
+        self.load_schema("../typeDB/schema/schema.tql")
+        self.load_data("../typeDB/data/example_search_pipeline.tql", force=force_data)
+
     def connect_client(self, address, parallelisation=2):
         self.client = TypeDB.core_client(address=address, parallelisation=parallelisation)
 
