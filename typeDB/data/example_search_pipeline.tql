@@ -1,13 +1,18 @@
 insert
 
 $t0 isa Task, has task-name "Search pipeline";
-(task:$t0, required-function:$f2) isa task-requirement;
-#(task:$t0, required-function:$f1, required-function:$f2) isa task-requirement;
+#(task:$t0, required-function:$f2) isa task-requirement;
+(task:$t0, required-function:$f1, required-function:$f2) isa task-requirement;
 
-#$f1 isa Function, has function-name "Path generator";
-#$ct1 isa ComponentType, has component-type "Path generator software"; (function:$f1, required-component:$ct1) isa function-design;
-#$c1t1 isa Component, has component-name "Boustrophedon planner", has component-executor "bustrophedon_planner.py";
-#(componentType:$ct1, component:$c1t1) isa component-design;
+$f1 isa Function, has function-name "Path generator";
+$ct1 isa ComponentType, has component-type "Path generator software"; 
+$fd_path (function:$f1, required-component:$ct1) isa function-design, has function-design-name "bust planner";
+
+$qa_path isa EstimatedQualityAttribute, has qa-type "performance", has qa-value 0.9;
+(function-design:$fd_path, qa:$qa_path) isa estimated-qa;
+
+$c1t1 isa Component, has component-name "Boustrophedon planner", has component-executor "bustrophedon_planner.py";
+(componentType:$ct1, component:$c1t1) isa component-design, has component-design-priority 1;
 
 $f2 isa Function, has function-name "Navigate safely";
 #$f21 isa Function, has function-name "Plan navigation";

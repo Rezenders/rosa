@@ -17,6 +17,8 @@
 #undefine QualityAttribute sub entity;
 
 #match $f isa Function, has function-name $fn; $r (parent-function:$f, child-function:$fc) isa functional-hierarchy; $fc has function-name $fcn;
+
+#get leaf functions of a function
 #match 
 #    $f isa Function, has function-name "Navigate safely"; 
 #    (parent-function:$f, child-function:$fc) isa implicit-functional-hierarchy; 
@@ -60,3 +62,31 @@ match
     $component isa Component, has component-name $component_name;
     get $component, $component_name, $priority;
     sort $priority asc;
+    
+#get req functions required for a task
+match
+    $t isa Task, has task-name $task-name;
+    (task:$t, required-function:$function) isa task-requirement;
+    $function isa Function, has function-name $function_name;
+    get $function_name;
+
+match
+    $task isa Task, has task-name $task_name;
+    (task:$task, required-function:$function) isa task-requirement;
+    $function isa Function, has function-name $function_name;
+    $leaf_function_name isa function-name;
+    {$function has is-leaf-function true, has function-name $leaf_function_name;} or 
+    {(parent-function:$function, child-function:$fc) isa implicit-functional-hierarchy;
+        $fc has is-leaf-function true, has function-name $leaf_function_name; };
+    get $function_name, $leaf_function_name;
+    #(parent-function:$function, child-function:$fc) isa implicit-functional-hierarchy;
+    #$fc has is-leaf-function true; 
+    #$fc has function-name $leaf_function_name;  
+    #get $function_name, $leaf_function_name;
+    
+#match 
+ #   $f isa Function, has function-name "Navigate safely"; 
+  #  (parent-function:$f, child-function:$fc) isa implicit-functional-hierarchy; 
+  #  $fc has function-name $fcn; 
+  #  $fc has is-leaf-function true; 
+#get $fc, $fcn;
