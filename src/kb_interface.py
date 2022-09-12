@@ -59,16 +59,17 @@ class TypeDBInterface():
 
     def load_data(self, data_path, force=False):
         if force:
-            query = 'match $e isa entity; delete $e isa entity;'
-            self.database_query(SessionType.DATA, TransactionType.WRITE, 'delete', query)
-            query = 'match $r isa relation; delete $r isa relation;'
-            self.database_query(SessionType.DATA, TransactionType.WRITE, 'delete', query)
-            query = 'match $a isa attribute; delete $a isa attribute;'
-            self.database_query(SessionType.DATA, TransactionType.WRITE, 'delete', query)
+            self.delete_from_database('match $e isa entity; delete $e isa entity;')
+            self.delete_from_database('match $r isa relation; delete $r isa relation;')
+            self.delete_from_database('match $a isa attribute; delete $a isa attribute;')
         try:
             self.write_database_file(SessionType.DATA, TransactionType.WRITE, 'insert', data_path)
         except TypeDBClientException as err:
             print("Error in load_data method. This is the exception msg: ", err)
+
+    # Delete query
+    def delete_from_database(self, query):
+        return self.database_query(SessionType.DATA, TransactionType.WRITE, 'delete', query)
 
     # TODO: decorator?
     def match_database(self, query):
