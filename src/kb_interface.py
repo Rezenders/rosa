@@ -67,6 +67,10 @@ class TypeDBInterface():
         except TypeDBClientException as err:
             print("Error in load_data method. This is the exception msg: ", err)
 
+    # Insert query
+    def insert_database(self, query):
+        return self.database_query(SessionType.DATA, TransactionType.WRITE, 'insert', query)
+
     # Delete query
     def delete_from_database(self, query):
         return self.database_query(SessionType.DATA, TransactionType.WRITE, 'delete', query)
