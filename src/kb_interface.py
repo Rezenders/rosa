@@ -6,15 +6,19 @@ from typedb.client import SessionType
 from typedb.client import TransactionType
 from typedb.client import TypeDBClientException
 
+
 class TypeDBInterface():
     def __del__(self):
         self.client.close()
 
-    def __init__(self, address, database_name, schema_path, data_path, force_database=False, force_data=False):
+    def __init__(self, address, database_name, schema_path, data_path, force_database=False, force_data=False, function_designs_ordering_funcs=dict(), default_function_design_ordering_func='function_designs_order_desc'):
         self.connect_client("localhost:1729")
         self.create_database("pipeline_inspection", force=force_database)
         self.load_schema("../typeDB/schema/schema.tql")
         self.load_data("../typeDB/data/example_search_pipeline.tql", force=force_data)
+
+        self.function_designs_ordering_funcs = function_designs_ordering_funcs
+        self.default_function_design_ordering_func = default_function_design_ordering_func
 
     def connect_client(self, address, parallelisation=2):
         self.client = TypeDB.core_client(address=address, parallelisation=parallelisation)
@@ -140,9 +144,8 @@ class TypeDBInterface():
         '''
         return self.match_database(query)
 
-    #get fd with higher estimated qa (only considering 1 qa)
-    # TODO: remove unecessary variables from query
-    def get_function_designs_ordered(self, function_name):
+    # fds ordered desc single qa
+    def function_designs_order_desc(self, function_name):
         query = f'''
             match
                 $f isa Function, has function-name "{function_name}";
@@ -154,6 +157,28 @@ class TypeDBInterface():
                 sort $qa-value desc;
         '''
         return self.match_database(query)
+
+    # fds ordered asc single qa
+    def function_designs_order_asc(self, function_name):
+        query = f'''
+            match
+                $f isa Function, has function-name "{function_name}";
+                $fd (function:$f, required-component:$c) isa function-design;
+                $fd isa function-design, has function-design-name $function_design_name;
+                (function-design:$fd, qa:$eqa) isa estimated-qa;
+                $eqa isa EstimatedQualityAttribute, has qa-type $qa-type, has qa-value $qa-value;
+                get $function_design_name, $qa-type, $qa-value;
+                sort $qa-value asc;
+        '''
+        return self.match_database(query)
+
+    #get fd with higher estimated qa (only considering 1 qa)
+    # TODO: remove unecessary variables from query
+    def get_function_designs_ordered(self, function_name):
+        if function_name in self.function_designs_ordering_funcs:
+            return getattr(self,self.function_designs_ordering_funcs[function_name])(function_name)
+        else:
+            return getattr(self, self.default_function_design_ordering_func)(function_name)
 
     # get components from fd (only dealing with Components, not ComponentType)
     # TODO: get component-executor
