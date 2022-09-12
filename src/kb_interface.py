@@ -34,6 +34,7 @@ class TypeDBInterface():
         return self.client.session(database_name, session_type, options)
 
     #### Read/write database
+    # Generic query method
     def database_query(self, session_type, transaction_type, query_type, query, options=TypeDBOptions.core()):
         with self.create_session(self.database_name, session_type) as session:
             options.infer = True
@@ -48,15 +49,18 @@ class TypeDBInterface():
                         answer_list.append(answer.map())
                     return answer_list
 
+    # Load schema or data from file
     def write_database_file(self, session_type, transaction_type, query_type, file_path):
         with open(file_path, mode='r') as file:
             query = file.read()
 
         self.database_query(session_type, transaction_type, query_type, query)
 
+    # Load schema from file
     def load_schema(self, schema_path):
         self.write_database_file(SessionType.SCHEMA, TransactionType.WRITE, 'define', schema_path)
 
+    # Load data from file
     def load_data(self, data_path, force=False):
         if force:
             self.delete_from_database('match $e isa entity; delete $e isa entity;')
@@ -92,10 +96,13 @@ class TypeDBInterface():
         return self.database_query(SessionType.DATA, TransactionType.WRITE, 'delete', query)
 
     # TODO: decorator?
+    # Match query
     def match_database(self, query):
         return self.database_query(SessionType.DATA, TransactionType.READ, 'match', query)
 
     ### Read/write database end
+
+    ### Queries begining
     def get_leaf_functions_from_task(self, task_name):
         query = f'''
             match
@@ -132,14 +139,6 @@ class TypeDBInterface():
             get $leaf_function, $function_name;
         '''
         return self.match_database(query)
-
-    # def get_ok_function_groundings(self):
-    #     query = '''
-    #         match
-    #             $fg isa FunctionGrounding;
-    #             not {$fg isa FunctionGrounding, has function-grounding-status $fg-status; $fg-status = "error";};
-    #     '''
-    #     return self.match_database(query)
 
     #get fd with higher estimated qa (only considering 1 qa)
     # TODO: remove unecessary variables from query
