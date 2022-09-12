@@ -67,11 +67,27 @@ class TypeDBInterface():
         except TypeDBClientException as err:
             print("Error in load_data method. This is the exception msg: ", err)
 
+    ### Events begining
+    def insert_data_event(func):
+        def inner(*args, **kwargs):
+            print('Data has been inserted!') #TODO: Do something else
+            return func(*args, **kwargs)
+        return inner
+
+    def delete_data_event(func):
+        def inner(*args, **kwargs):
+            print('Data has been deleted!') #TODO: Do something else
+            return func(*args, **kwargs)
+        return inner
+    ### Events end
+
     # Insert query
+    @insert_data_event
     def insert_database(self, query):
         return self.database_query(SessionType.DATA, TransactionType.WRITE, 'insert', query)
 
     # Delete query
+    @delete_data_event
     def delete_from_database(self, query):
         return self.database_query(SessionType.DATA, TransactionType.WRITE, 'delete', query)
 
