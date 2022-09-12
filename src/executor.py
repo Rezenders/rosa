@@ -28,6 +28,9 @@ class Executor():
 
     def stop_components(self, component_names):
         for component_name in component_names:
-            process = self.component_subprocesses_dict[component_name]
-            process.terminate()
-            process.wait()
+            if component_name in self.component_subprocesses_dict:
+                process = self.component_subprocesses_dict[component_name]
+                process.terminate()
+                process.wait()
+            else:
+                print("No subprocess for component: ", component_name)
