@@ -1,5 +1,6 @@
 #!/usr/bin/env python
-
+import time
+from executor import Executor
 from kb_interface import TypeDBInterface
 
 # get leaf functions from task
@@ -41,43 +42,39 @@ def get_required_components(interface, functions_dict):
     return components_dict
 
 def solve_task(interface, task_name):
-    print("Querying leaf functions of task ", task_name)
     functions_dict = get_leaf_functions_from_task(typedb_interface, task_name)
-    print(functions_dict)
-
-    print("Querying required components for leaf functions")
     components_dict = get_required_components(typedb_interface, functions_dict)
-    print(components_dict)
-
     return components_dict
 
-def executor(interface, required_components):
-    print(required_components)
+def start_components(interface, required_components):
     for components in required_components.values():
         for component in components:
-            # component_executor = interface.get_component_executor(component).get('component_executor').get_value()
             component_executor = interface.get_component_executor(component)
             if len(component_executor)>0:
                 print(component_executor[0].get('component_executor').get_value())
+                _component_executor= component_executor[0].get('component_executor').get_value()
+                executor.start_subprocess(_component_executor)
 
-def init_typedb_interface(address, database_name, schema_path, data_path):
-    typedb_interface = TypeDBInterface()
-    typedb_interface.connect_client("localhost:1729")
-    typedb_interface.create_database("pipeline_inspection", force=True)
-    typedb_interface.load_schema("../typeDB/schema/schema.tql")
-    typedb_interface.load_data("../typeDB/data/example_search_pipeline.tql", force=True)
-    return typedb_interface
 
 if __name__ == '__main__':
 
-    typedb_interface = init_typedb_interface(
+    typedb_interface = TypeDBInterface(
         "localhost:1729",
         "pipeline_inspection",
         "../typeDB/schema/schema.tql",
-        "../typeDB/data/example_search_pipeline.tql")
+        "../typeDB/data/example_search_pipeline.tql",
+        force_database=True,
+        force_data=True)
 
+    executor = Executor(typedb_interface)
     task_name = 'Search pipeline'
     print('Task: ',task_name)
+
+    # Plan
     required_components = solve_task(typedb_interface, task_name)
 
-    executor(typedb_interface, required_components)
+    # Execute
+    executor.request_components(required_components)
+
+    time.sleep(2)
+    executor.stop_components(['Thruster controller 1'])
