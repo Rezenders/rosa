@@ -6,32 +6,7 @@ from typedb.client import SessionType
 from typedb.client import TransactionType
 from typedb.client import TypeDBClientException
 
-class KbInterface(ABC):
-    def __init__(self):
-        pass
-
-    def add_objectives(self):
-        pass
-
-    def get_objectives(self):
-        pass
-
-    def get_function_designs(self, function):
-        pass
-
-    def get_ok_function_groundings(self):
-        pass
-
-    def get_measured_qas(self):
-        pass
-
-    def get_estimated_qas(self):
-        pass
-
-    def get_required_qas(self):
-        pass
-
-class TypeDBInterface(KbInterface):
+class TypeDBInterface():
     def __del__(self):
         self.client.close()
 
