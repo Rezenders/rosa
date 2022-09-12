@@ -46,25 +46,17 @@ def solve_task(interface, task_name):
     components_dict = get_required_components(typedb_interface, functions_dict)
     return components_dict
 
-def start_components(interface, required_components):
-    for components in required_components.values():
-        for component in components:
-            component_executor = interface.get_component_executor(component)
-            if len(component_executor)>0:
-                print(component_executor[0].get('component_executor').get_value())
-                _component_executor= component_executor[0].get('component_executor').get_value()
-                executor.start_subprocess(_component_executor)
-
-
 if __name__ == '__main__':
 
+    function_designs_ordering_funcs = {'Execute and control AUV motion':'function_designs_order_desc'}
     typedb_interface = TypeDBInterface(
         "localhost:1729",
         "pipeline_inspection",
         "../typeDB/schema/schema.tql",
         "../typeDB/data/example_search_pipeline.tql",
         force_database=True,
-        force_data=True)
+        force_data=True,
+        function_designs_ordering_funcs=function_designs_ordering_funcs)
 
     executor = Executor(typedb_interface)
     task_name = 'Search pipeline'
