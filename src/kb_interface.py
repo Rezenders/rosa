@@ -67,7 +67,31 @@ class TypeDBInterface():
     # TODO: decorator?
     def match_database(self, query):
         return self.database_query(SessionType.DATA, TransactionType.READ, 'match', query)
+
     ### Read/write database end
+    def get_leaf_functions_from_task(self, task_name):
+        query = f'''
+            match
+                $task isa Task, has task-name "{task_name}";
+                (task:$task, required-function:$function) isa task-requirement;
+                $function isa Function, has function-name $function_name;
+                $leaf_function_name isa function-name;
+                {{$function has is-leaf-function true, has function-name $leaf_function_name;}} or
+                {{(parent-function:$function, child-function:$fc) isa implicit-functional-hierarchy;
+                    $fc has is-leaf-function true, has function-name $leaf_function_name; }};
+                get $function_name, $leaf_function_name;
+        '''
+        return self.match_database(query)
+
+    def get_required_functions_from_task(self, task_name):
+        query = f'''
+            match
+                $t isa Task, has task-name "{task_name}";
+                (task:$t, required-function:$function) isa task-requirement;
+                $function isa Function, has function-name $function_name;
+                get $function_name;
+        '''
+        return self.match_database(query)
 
     #TODO: standard for variable names in queries
     # TODO: remove unecessary variables from query
@@ -100,19 +124,19 @@ class TypeDBInterface():
                 $fd isa function-design, has function-design-name $function_design_name;
                 (function-design:$fd, qa:$eqa) isa estimated-qa;
                 $eqa isa EstimatedQualityAttribute, has qa-type $qa-type, has qa-value $qa-value;
-                get $fd, $function_design_name, $qa-type, $qa-value;
+                get $function_design_name, $qa-type, $qa-value;
                 sort $qa-value desc;
         '''
         return self.match_database(query)
 
     # get components from fd (only dealing with Components, not ComponentType)
-    # TODO: remove unecessary variables from query
+    # TODO: get component-executor
     def get_components_from_function_design(self, function_design_name):
         query = f'''
             match
                 $fd (function:$f, required-component:$component) isa function-design,  has function-design-name "{function_design_name}";
                 $component isa Component, has component-name $component_name;
-                get $component, $component_name;
+                get $component_name;
         '''
         return self.match_database(query)
 
@@ -121,17 +145,25 @@ class TypeDBInterface():
             match
                 $fd (function:$f, required-component:$component) isa function-design,  has function-design-name "{function_design_name}";
                 $component isa ComponentType, has component-type $component_type;
-                get $component, $component_type;
+                get $component_type;
         '''
         return self.match_database(query)
 
     def get_components_from_component_type(self, component_type):
         query = f'''
             match
-                $ct isa ComponentType, has component-type "component type";
+                $ct isa ComponentType, has component-type "{component_type}";
                 $cd (componentType:$ct, component:$component) isa component-design, has component-design-priority $priority;
                 $component isa Component, has component-name $component_name;
-                get $component, $component_name, $priority;
+                get $component_name, $priority;
                 sort $priority asc;
+        '''
+        return self.match_database(query)
+
+    def get_component_executor(self, component_name):
+        query = f'''
+            match
+                $c isa Component, has component-name "{component_name}", has component-executor $component_executor;
+                get $component_executor;
         '''
         return self.match_database(query)
