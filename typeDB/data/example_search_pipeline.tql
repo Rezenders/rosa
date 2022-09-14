@@ -35,8 +35,8 @@ $t1 isa Component, has component-name "T200 thruster 1";
 $t2 isa Component, has component-name "T200 thruster 2";
 
 $ct isa ComponentType, has component-type "component type";
-$ctc1 isa Component, has component-name "component 1";
-$ctc2 isa Component, has component-name "component 2";
+$ctc1 isa Component, has component-name "component 1", has component-executor "component1.py", has component-status "deactivated";
+$ctc2 isa Component, has component-name "component 2", has component-executor "component2.py", has component-status "deactivated" ;
 (componentType:$ct, component:$ctc1) isa component-design, has component-design-priority 1;
 (componentType:$ct, component:$ctc2) isa component-design, has component-design-priority 2;
 #$t3 isa Component, has component-name "T200 thruster 3";

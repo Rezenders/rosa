@@ -25,22 +25,22 @@ is-leaf-function sub attribute,
 qa-value sub attribute,
     value double;
 
-is-required sub attribute,
+is-required sub attribute, #not used
     abstract,
     value boolean;
 
 is-task-required sub is-required;
-is-function-required sub is-required;
-is-component-type-required sub is-required;
-is-component-required sub is-required;
+is-function-required sub is-required; #not used
+is-component-type-required sub is-required; #not used
+is-component-required sub is-required; #not used
 
 status sub attribute,
     abstract,
     value string,
     regex "^(activated|deactivated|error|unfeasible)$";
 
-task-status sub status;   
-component-status sub status;
+task-status sub status; #not used
+component-status sub status; 
     
 ### Concepts
 Task sub entity,
@@ -66,6 +66,7 @@ ComponentType sub entity,
 Component sub entity,
     owns component-name @key,
     owns component-executor,
+    owns component-status,
     plays function-design:required-component,
     plays component-design:component;
 
