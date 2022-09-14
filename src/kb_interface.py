@@ -242,3 +242,40 @@ class TypeDBInterface():
                 get $component_executor;
         '''
         return self.match_database(query)
+
+    def get_component_status(self, component_name):
+        query = f'''
+            match $component isa Component,
+            has component-name "{component_name}",
+            has component-status $component_status;
+            get $component_status;
+        '''
+        return self.match_database(query)
+
+    def delete_component_status(self, component_name):
+        query = f'''
+            match $c isa Component,
+            has component-name "{component_name}", has component-status $cs;
+            delete $c has $cs;
+        '''
+        return self.delete_from_database(query)
+
+    def delete_component(self, component_name):
+        query = f'''
+            match $c isa Component, has component-name "{component_name}";
+            delete $c isa Component;
+        '''
+        return self.delete_from_database(query)
+
+    def insert_component_status(self, component_name, component_status):
+        query = f'''
+            match $c isa Component, has component-name "{component_name}";
+            insert $c has component-status "{component_status}";
+        '''
+        return self.insert_database(query)
+
+    def insert_component(self, component_name):
+        query = f'''
+            insert $c isa Component, has component-name "{component_name}";
+        '''
+        return self.insert_database(query)
