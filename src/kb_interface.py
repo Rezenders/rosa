@@ -30,7 +30,8 @@ class TypeDBInterface():
         self.default_component_ordering_func = default_component_ordering_func
 
     def connect_client(self, address, parallelisation=2):
-        self.client = TypeDB.core_client(address=address, parallelisation=parallelisation)
+        self.client = TypeDB.core_client(
+            address=address, parallelisation=parallelisation)
 
     def create_database(self, database_name, force=False):
         if self.client.databases().contains(database_name) and force:
@@ -41,7 +42,8 @@ class TypeDBInterface():
             self.database_name = database_name
         else:
             self.database_name = database_name
-            print("The database with the name ", database_name, " already exists. Ignoring create_database request.")
+            print("The database with the name ", database_name,
+                  " already exists. Ignoring create_database request.")
 
     def create_session(self, database_name, session_type, options=TypeDBOptions.core()):
         return self.client.session(database_name, session_type, options)

@@ -16,7 +16,6 @@ class Executor():
             for component in components:
                 component_executor = self.db_interface.get_component_executor(component)
                 if len(component_executor)>0:
-                    # print(component_executor[0].get('component_executor').get_value())
                     _component_executor= component_executor[0].get('component_executor').get_value()
                     self.start_subprocess(component, _component_executor)
 
