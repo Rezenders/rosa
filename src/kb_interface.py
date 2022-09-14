@@ -11,7 +11,12 @@ class TypeDBInterface():
     def __del__(self):
         self.client.close()
 
-    def __init__(self, address, database_name, schema_path, data_path, force_database=False, force_data=False, function_designs_ordering_funcs=dict(), default_function_design_ordering_func='function_designs_order_desc'):
+    def __init__(self, address, database_name, schema_path, data_path,
+                    force_database=False, force_data=False,
+                    function_designs_ordering_funcs=dict(),
+                    default_function_design_ordering_func='function_designs_order_desc',
+                    component_ordering_funcs=dict(),
+                    default_component_ordering_func='component_order_asc'):
         self.connect_client("localhost:1729")
         self.create_database("pipeline_inspection", force=force_database)
         self.load_schema("../typeDB/schema/schema.tql")
@@ -19,6 +24,9 @@ class TypeDBInterface():
 
         self.function_designs_ordering_funcs = function_designs_ordering_funcs
         self.default_function_design_ordering_func = default_function_design_ordering_func
+
+        self.component_ordering_funcs = component_ordering_funcs
+        self.default_component_ordering_func = default_component_ordering_func
 
     def connect_client(self, address, parallelisation=2):
         self.client = TypeDB.core_client(address=address, parallelisation=parallelisation)
@@ -173,7 +181,6 @@ class TypeDBInterface():
         return self.match_database(query)
 
     #get fd with higher estimated qa (only considering 1 qa)
-    # TODO: remove unecessary variables from query
     def get_function_designs_ordered(self, function_name):
         if function_name in self.function_designs_ordering_funcs:
             return getattr(self,self.function_designs_ordering_funcs[function_name])(function_name)
@@ -200,7 +207,7 @@ class TypeDBInterface():
         '''
         return self.match_database(query)
 
-    def get_components_from_component_type(self, component_type):
+    def component_order_asc(self, component_type):
         query = f'''
             match
                 $ct isa ComponentType, has component-type "{component_type}";
@@ -210,6 +217,23 @@ class TypeDBInterface():
                 sort $priority asc;
         '''
         return self.match_database(query)
+
+    def component_order_desc(self, component_type):
+        query = f'''
+            match
+                $ct isa ComponentType, has component-type "{component_type}";
+                $cd (componentType:$ct, component:$component) isa component-design, has component-design-priority $priority;
+                $component isa Component, has component-name $component_name;
+                get $component_name, $priority;
+                sort $priority desc;
+        '''
+        return self.match_database(query)
+
+    def get_components_from_component_type(self, component_type):
+        if component_type in self.component_ordering_funcs:
+            return getattr(self,self.component_ordering_funcs[component_type])(component_type)
+        else:
+            return getattr(self, self.default_component_ordering_func)(component_type)
 
     def get_component_executor(self, component_name):
         query = f'''

@@ -49,6 +49,7 @@ def solve_task(interface, task_name):
 if __name__ == '__main__':
 
     function_designs_ordering_funcs = {'Execute and control AUV motion':'function_designs_order_desc'}
+    component_ordering_funcs = {'component type':'component_order_desc'}
     typedb_interface = TypeDBInterface(
         "localhost:1729",
         "pipeline_inspection",
@@ -56,7 +57,8 @@ if __name__ == '__main__':
         "../typeDB/data/example_search_pipeline.tql",
         force_database=True,
         force_data=True,
-        function_designs_ordering_funcs=function_designs_ordering_funcs)
+        function_designs_ordering_funcs=function_designs_ordering_funcs,
+        component_ordering_funcs=component_ordering_funcs)
 
     executor = Executor(typedb_interface)
     task_name = 'Search pipeline'
