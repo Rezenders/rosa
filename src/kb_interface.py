@@ -11,16 +11,17 @@ class TypeDBInterface():
     def __del__(self):
         self.client.close()
 
-    def __init__(self, address, database_name, schema_path, data_path,
-                    force_database=False, force_data=False,
-                    function_designs_ordering_funcs=dict(),
-                    default_function_design_ordering_func='function_designs_order_desc',
-                    component_ordering_funcs=dict(),
-                    default_component_ordering_func='component_order_asc'):
-        self.connect_client("localhost:1729")
-        self.create_database("pipeline_inspection", force=force_database)
-        self.load_schema("../typeDB/schema/schema.tql")
-        self.load_data("../typeDB/data/example_search_pipeline.tql", force=force_data)
+    def __init__(self, address, database_name, schema_path, data_path=None,
+                 force_database=False, force_data=False,
+                 function_designs_ordering_funcs=dict(),
+                 default_function_design_ordering_func='function_designs_order_desc',
+                 component_ordering_funcs=dict(),
+                 default_component_ordering_func='component_order_asc'):
+        self.connect_client(address)
+        self.create_database(database_name, force=force_database)
+        self.load_schema(schema_path)
+        if data_path is not None:
+            self.load_data(data_path, force=force_data)
 
         self.function_designs_ordering_funcs = function_designs_ordering_funcs
         self.default_function_design_ordering_func = default_function_design_ordering_func
@@ -52,12 +53,13 @@ class TypeDBInterface():
             options.infer = True
             with session.transaction(transaction_type, options) as transaction:
                 transaction_query_function = getattr(transaction.query(), query_type)
-                answer_iterator = transaction_query_function(query)
+                query_answer = transaction_query_function(query)
                 if transaction_type == TransactionType.WRITE:
                     transaction.commit()
+                    return query_answer
                 elif transaction_type == TransactionType.READ:
                     answer_list = []
-                    for answer in answer_iterator:
+                    for answer in query_answer:
                         answer_list.append(answer.map())
                     return answer_list
 
