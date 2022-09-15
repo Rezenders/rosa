@@ -283,3 +283,74 @@ class TypeDBInterface():
             insert $c isa Component, has component-name "{component_name}";
         '''
         return self.insert_database(query)
+
+    def update_component_status(self, component_name, component_status):
+        self.delete_component_status(component_name)
+        self.insert_component_status(component_name, component_status)
+
+    def get_component_requirement(self, component_name):
+        query = f'''
+            match $component isa Component,
+            has component-name "{component_name}",
+            has is-component-required $is_component_required;
+            get $is_component_required;
+        '''
+        return self.match_database(query)
+
+    def delete_component_requirement(self, component_name):
+        query = f'''
+            match $c isa Component,
+            has component-name "{component_name}",
+            has is-component-required $requirement;
+            delete $c has $requirement;
+        '''
+        return self.delete_from_database(query)
+
+    def insert_component_requirement(self, component_name, is_required):
+        query = f'''
+            match $c isa Component, has component-name "{component_name}";
+            insert $c has is-component-required {is_required};
+        '''
+        return self.insert_database(query)
+
+    def update_component_requirement(self, component_name, is_required):
+        self.delete_component_requirement(component_name)
+        self.insert_component_requirement(component_name, is_required)
+
+    def get_component_pid(self, component_name):
+        query = f'''
+            match $component isa Component,
+            has component-name "{component_name}",
+            has component-executor-pid $pid;
+            get $pid;
+        '''
+        return self.match_database(query)
+
+    def delete_component_pid(self, component_name):
+        query = f'''
+            match $c isa Component,
+            has component-name "{component_name}",
+            has component-executor-pid $pid;
+            delete $c has $pid;
+        '''
+        return self.delete_from_database(query)
+
+    def insert_component_pid(self, component_name, pid):
+        query = f'''
+            match $c isa Component, has component-name "{component_name}";
+            insert $c has component-executor-pid {pid};
+        '''
+        return self.insert_database(query)
+
+    def update_component_pid(self, component_name, pid):
+        self.delete_component_pid(component_name)
+        self.insert_component_pid(component_name, pid)
+
+    def get_component_max_retry(self, component_name):
+        query = f'''
+         match $component isa Component,
+         has component-name "{component_name}",
+         has component-max-retry $component-max-retry;
+         get $component-max-retry;
+        '''
+        return self.match_database(query)
