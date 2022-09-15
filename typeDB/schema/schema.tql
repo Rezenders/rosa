@@ -16,6 +16,12 @@ qa-type sub name;
 component-executor sub attribute,
     value string;
 
+component-max-retry sub attribute,
+    value long;
+
+component-executor-pid sub attribute,
+    value long; # remove?
+
 component-design-priority sub attribute,
     value long;
     
@@ -32,7 +38,9 @@ is-required sub attribute, #not used
 is-task-required sub is-required;
 is-function-required sub is-required; #not used
 is-component-type-required sub is-required; #not used
-is-component-required sub is-required; #not used
+is-component-required sub is-required;
+
+
 
 status sub attribute,
     abstract,
@@ -65,8 +73,11 @@ ComponentType sub entity,
 
 Component sub entity,
     owns component-name @key,
-    owns component-executor,
     owns component-status,
+    owns is-component-required,
+    owns component-executor,
+    owns component-max-retry,
+    owns component-executor-pid,
     plays function-design:required-component,
     plays component-design:component;
 

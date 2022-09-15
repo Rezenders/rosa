@@ -3,6 +3,7 @@ import time
 from executor import Executor
 from kb_interface import TypeDBInterface
 
+
 # get leaf functions from task
 def get_leaf_functions_from_task(interface, task_name):
     functions = interface.get_leaf_functions_from_task(task_name)
@@ -31,14 +32,18 @@ def get_required_components(interface, functions_dict):
             for component_type in required_components_type:
                 _component_type_str = component_type.get("component_type").get_value()
                 _components_designs_ordered = interface.get_components_from_component_type(_component_type_str)
-                required_components += [{'component_name':_components_designs_ordered[0].get("component_name")}]
+                component_name = _components_designs_ordered[0].get("component_name")
+                required_components += [{'component_name': component_name}]
+                interface.update_component_requirement(component_name, "true")
 
             required_components += interface.get_components_from_function_design(function_design_name)
             for component in required_components:
-                if function in components_dict:
-                    components_dict[function] += [component.get("component_name").get_value()]
+                component_name = component.get("component_name").get_value()
+                interface.update_component_requirement(component_name, "true")
+                if function in components_dict:  # TODO: this can be improved
+                    components_dict[function] += [component_name]
                 else:
-                    components_dict[function] = [component.get("component_name").get_value()]
+                    components_dict[function] = [component_name]
     return components_dict
 
 def solve_task(interface, task_name):
@@ -62,7 +67,7 @@ if __name__ == '__main__':
 
     executor = Executor(typedb_interface)
     task_name = 'Search pipeline'
-    print('Task: ',task_name)
+    print('Task: ', task_name)
 
     # Plan
     required_components = solve_task(typedb_interface, task_name)
@@ -70,5 +75,10 @@ if __name__ == '__main__':
     # Execute
     executor.request_components(required_components)
 
-    time.sleep(2)
+    i = 0
+    while i < 20:
+        executor.monitor_components()
+        time.sleep(1)
+        i += 1
+
     executor.stop_components(['Thruster controller 1'])
