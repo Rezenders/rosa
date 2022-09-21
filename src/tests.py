@@ -149,6 +149,39 @@ class TestKbInterface(unittest.TestCase):
 
         self.assertEqual(component_pid, 4321)
 
+    def test_get_unsolved_required_tasks(self):
+        self.typedb_interface.insert_entity('Task', 'task-name', 'task1')
+        self.typedb_interface.insert_attribute_entity(
+            'Task',
+            'task-name',
+            'task1',
+            'is-task-required',
+            'true')
+
+        self.typedb_interface.insert_entity('Task', 'task-name', 'task2')
+        self.typedb_interface.insert_attribute_entity(
+            'Task',
+            'task-name',
+            'task2',
+            'is-task-required',
+            'true')
+
+        self.typedb_interface.insert_attribute_entity(
+            'Task',
+            'task-name',
+            'task2',
+            'task-status',
+            "'activated'")
+
+        tasks_name = self.typedb_interface.get_unsolved_required_tasks()
+        # task_name = tasks[0].get("task-name").get_value()
+        self.typedb_interface.delete_entity('Task', 'task-name', 'task1')
+        self.assertEqual(len(tasks_name), 1)
+        self.assertEqual(tasks_name[0], 'task1')
+
+    class TestPlanner(unittest.TestCase):
+        pass
+
 
 if __name__ == '__main__':
     unittest.main()
