@@ -239,22 +239,21 @@ class TypeDBInterface():
         else:
             return getattr(self, self.default_component_ordering_func)(component_type)
 
-    def get_component_executor(self, component_name):
+    def get_attribute_from_entity(self, entity, entity_key, key_value, attribute):
         query = f'''
-            match
-                $c isa Component, has component-name "{component_name}", has component-executor $component_executor;
-                get $component_executor;
+            match $entity isa {entity},
+            has {entity_key} "{key_value}",
+            has {attribute} $attribute;
+            get $attribute;
         '''
         return self.match_database(query)
 
-    def get_component_status(self, component_name):
-        query = f'''
-            match $component isa Component,
-            has component-name "{component_name}",
-            has component-status $component_status;
-            get $component_status;
-        '''
-        return self.match_database(query)
+    def get_attribute_from_component(self, component_name, attribute_name):
+        return self.get_attribute_from_entity(
+            entity="Component",
+            entity_key="component-name",
+            key_value=component_name,
+            attribute=attribute_name)
 
     def delete_component_status(self, component_name):
         query = f'''
@@ -288,15 +287,6 @@ class TypeDBInterface():
         self.delete_component_status(component_name)
         self.insert_component_status(component_name, component_status)
 
-    def get_component_requirement(self, component_name):
-        query = f'''
-            match $component isa Component,
-            has component-name "{component_name}",
-            has is-component-required $is_component_required;
-            get $is_component_required;
-        '''
-        return self.match_database(query)
-
     def delete_component_requirement(self, component_name):
         query = f'''
             match $c isa Component,
@@ -317,15 +307,6 @@ class TypeDBInterface():
         self.delete_component_requirement(component_name)
         self.insert_component_requirement(component_name, is_required)
 
-    def get_component_pid(self, component_name):
-        query = f'''
-            match $component isa Component,
-            has component-name "{component_name}",
-            has component-executor-pid $pid;
-            get $pid;
-        '''
-        return self.match_database(query)
-
     def delete_component_pid(self, component_name):
         query = f'''
             match $c isa Component,
@@ -345,12 +326,3 @@ class TypeDBInterface():
     def update_component_pid(self, component_name, pid):
         self.delete_component_pid(component_name)
         self.insert_component_pid(component_name, pid)
-
-    def get_component_max_retry(self, component_name):
-        query = f'''
-         match $component isa Component,
-         has component-name "{component_name}",
-         has component-max-retry $component-max-retry;
-         get $component-max-retry;
-        '''
-        return self.match_database(query)

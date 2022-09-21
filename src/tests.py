@@ -45,7 +45,8 @@ class TestKbInterface(unittest.TestCase):
         self.typedb_interface.insert_database(query_insert)
 
         self.typedb_interface.delete_component_status(component_name)
-        status = self.typedb_interface.get_component_status(component_name)
+        status = self.typedb_interface.get_attribute_from_component(
+            component_name, 'component-status')
         self.typedb_interface.delete_component(component_name)
 
         self.assertEqual(status, [])
@@ -56,8 +57,9 @@ class TestKbInterface(unittest.TestCase):
         self.typedb_interface.insert_component(component_name)
 
         self.typedb_interface.insert_component_status(component_name, "error")
-        status = self.typedb_interface.get_component_status(component_name)
-        component_status = status[0].get("component_status").get_value()
+        status = self.typedb_interface.get_attribute_from_component(
+            component_name, 'component-status')
+        component_status = status[0].get("attribute").get_value()
         self.typedb_interface.delete_component(component_name)
 
         self.assertEqual(component_status, "error")
@@ -71,8 +73,9 @@ class TestKbInterface(unittest.TestCase):
         self.typedb_interface.update_component_status(
             component_name, "activated")
 
-        status = self.typedb_interface.get_component_status(component_name)
-        component_status = status[0].get("component_status").get_value()
+        status = self.typedb_interface.get_attribute_from_component(
+            component_name, 'component-status')
+        component_status = status[0].get("attribute").get_value()
         self.typedb_interface.delete_component(component_name)
 
         self.assertEqual(component_status, "activated")
@@ -88,8 +91,8 @@ class TestKbInterface(unittest.TestCase):
         self.typedb_interface.insert_database(query_insert)
 
         self.typedb_interface.delete_component_requirement(component_name)
-        requirement = \
-            self.typedb_interface.get_component_requirement(component_name)
+        requirement = self.typedb_interface.get_attribute_from_component(
+            component_name, 'is-component-required')
         self.typedb_interface.delete_component(component_name)
 
         self.assertEqual(requirement, [])
@@ -101,10 +104,9 @@ class TestKbInterface(unittest.TestCase):
 
         self.typedb_interface.insert_component_requirement(
             component_name, "false")
-        requirement = \
-            self.typedb_interface.get_component_requirement(component_name)
-        component_required = \
-            requirement[0].get("is_component_required").get_value()
+        requirement = self.typedb_interface.get_attribute_from_component(
+            component_name, 'is-component-required')
+        component_required = requirement[0].get("attribute").get_value()
         self.typedb_interface.delete_component(component_name)
 
         self.assertEqual(component_required, False)
@@ -119,10 +121,9 @@ class TestKbInterface(unittest.TestCase):
         self.typedb_interface.update_component_requirement(
             component_name, "true")
 
-        requirement = \
-            self.typedb_interface.get_component_requirement(component_name)
-        component_required = \
-            requirement[0].get("is_component_required").get_value()
+        requirement = self.typedb_interface.get_attribute_from_component(
+            component_name, 'is-component-required')
+        component_required = requirement[0].get("attribute").get_value()
         self.typedb_interface.delete_component(component_name)
 
         self.assertEqual(component_required, True)
@@ -135,8 +136,9 @@ class TestKbInterface(unittest.TestCase):
 
         self.typedb_interface.update_component_pid(component_name, 4321)
 
-        pid = self.typedb_interface.get_component_pid(component_name)
-        component_pid = pid[0].get("pid").get_value()
+        pid = self.typedb_interface.get_attribute_from_component(
+            component_name, 'component-executor-pid')
+        component_pid = pid[0].get("attribute").get_value()
         self.typedb_interface.delete_component(component_name)
 
         self.assertEqual(component_pid, 4321)
