@@ -1,5 +1,3 @@
-from abc import ABC
-
 from typedb.client import TypeDB
 from typedb.client import TypeDBOptions
 from typedb.client import SessionType
@@ -7,7 +5,9 @@ from typedb.client import TransactionType
 from typedb.client import TypeDBClientException
 
 
-class TypeDBInterface():
+# TODO: split into 2 classes, one with basic functionalities for interacting
+# with typeDB and another one with the specific queries for "Metacontrol"
+class TypeDBInterface:
     def __del__(self):
         self.client.close()
 
@@ -119,6 +119,16 @@ class TypeDBInterface():
     ### Read/write database end
 
     ### Queries begining
+    def get_unsolved_required_tasks(self):
+        query = f'''
+            match
+                $task isa Task, has task-name $task-name, has is-task-required true;
+                not {{$task isa Task, has is-task-required true, has task-status $task-status;
+                $task-status = "activated";}};
+                get $task-name;
+        '''
+        return self.match_database(query)
+
     def get_leaf_functions_from_task(self, task_name):
         query = f'''
             match
@@ -152,7 +162,7 @@ class TypeDBInterface():
                 (parent-function:$f, child-function:$leaf_function) isa implicit-functional-hierarchy;
                 $leaf_function has function-name $function_name;
                 $leaf_function has is-leaf-function true;
-            get $leaf_function, $function_name;
+                get $leaf_function, $function_name;
         '''
         return self.match_database(query)
 
@@ -239,12 +249,25 @@ class TypeDBInterface():
         else:
             return getattr(self, self.default_component_ordering_func)(component_type)
 
+    def delete_entity(self, entity, entity_key, key_value):
+        query = f'''
+            match $entity isa {entity}, has {entity_key} "{key_value}";
+            delete $entity isa {entity};
+        '''
+        return self.delete_from_database(query)
+
     def delete_component(self, component_name):
         query = f'''
             match $c isa Component, has component-name "{component_name}";
             delete $c isa Component;
         '''
         return self.delete_from_database(query)
+
+    def insert_entity(self, entity, entity_key, key_value):
+        query = f'''
+            insert $entity isa {entity}, has {entity_key} "{key_value}";
+        '''
+        return self.insert_database(query)
 
     def insert_component(self, component_name):
         query = f'''
