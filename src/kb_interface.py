@@ -235,9 +235,22 @@ class TypeDBInterface():
 
     def get_components_from_component_type(self, component_type):
         if component_type in self.component_ordering_funcs:
-            return getattr(self,self.component_ordering_funcs[component_type])(component_type)
+            return getattr(self, self.component_ordering_funcs[component_type])(component_type)
         else:
             return getattr(self, self.default_component_ordering_func)(component_type)
+
+    def delete_component(self, component_name):
+        query = f'''
+            match $c isa Component, has component-name "{component_name}";
+            delete $c isa Component;
+        '''
+        return self.delete_from_database(query)
+
+    def insert_component(self, component_name):
+        query = f'''
+            insert $c isa Component, has component-name "{component_name}";
+        '''
+        return self.insert_database(query)
 
     def get_attribute_from_entity(self, entity, entity_key, key_value, attribute):
         query = f'''
@@ -255,74 +268,49 @@ class TypeDBInterface():
             key_value=component_name,
             attribute=attribute_name)
 
-    def delete_component_status(self, component_name):
+    def delete_attribute_from_entity(self, entity, entity_key, key_value, attribute):
         query = f'''
-            match $c isa Component,
-            has component-name "{component_name}", has component-status $cs;
-            delete $c has $cs;
+            match $entity isa {entity},
+            has {entity_key} "{key_value}",
+            has {attribute} $attribute;
+            delete $entity has $attribute;
         '''
         return self.delete_from_database(query)
 
-    def delete_component(self, component_name):
-        query = f'''
-            match $c isa Component, has component-name "{component_name}";
-            delete $c isa Component;
-        '''
-        return self.delete_from_database(query)
+    def delete_attribute_from_component(self, component_name, attribute_name):
+        return self.delete_attribute_from_entity(
+            entity="Component",
+            entity_key="component-name",
+            key_value=component_name,
+            attribute=attribute_name)
 
-    def insert_component_status(self, component_name, component_status):
+    def insert_attribute_entity(self, entity, entity_key, key_value, attribute, attribute_value):
         query = f'''
-            match $c isa Component, has component-name "{component_name}";
-            insert $c has component-status "{component_status}";
-        '''
-        return self.insert_database(query)
-
-    def insert_component(self, component_name):
-        query = f'''
-            insert $c isa Component, has component-name "{component_name}";
+            match $entity isa {entity},
+            has {entity_key} "{key_value}";
+            insert $entity has {attribute} {attribute_value};
         '''
         return self.insert_database(query)
 
-    def update_component_status(self, component_name, component_status):
-        self.delete_component_status(component_name)
-        self.insert_component_status(component_name, component_status)
+    def insert_attribute_component(self, component_name, attribute_name, attribute_value):
+        return self.insert_attribute_entity(
+            entity="Component",
+            entity_key="component-name",
+            key_value=component_name,
+            attribute=attribute_name,
+            attribute_value=attribute_value
+        )
 
-    def delete_component_requirement(self, component_name):
-        query = f'''
-            match $c isa Component,
-            has component-name "{component_name}",
-            has is-component-required $requirement;
-            delete $c has $requirement;
-        '''
-        return self.delete_from_database(query)
+    def update_attribute_entity(self, entity, entity_key, key_value, attribute, attribute_value):
+        self.delete_attribute_from_entity(
+            entity, entity_key, key_value, attribute)
+        self.insert_attribute_entity(
+            entity, entity_key, key_value, attribute, attribute_value)
 
-    def insert_component_requirement(self, component_name, is_required):
-        query = f'''
-            match $c isa Component, has component-name "{component_name}";
-            insert $c has is-component-required {is_required};
-        '''
-        return self.insert_database(query)
-
-    def update_component_requirement(self, component_name, is_required):
-        self.delete_component_requirement(component_name)
-        self.insert_component_requirement(component_name, is_required)
-
-    def delete_component_pid(self, component_name):
-        query = f'''
-            match $c isa Component,
-            has component-name "{component_name}",
-            has component-executor-pid $pid;
-            delete $c has $pid;
-        '''
-        return self.delete_from_database(query)
-
-    def insert_component_pid(self, component_name, pid):
-        query = f'''
-            match $c isa Component, has component-name "{component_name}";
-            insert $c has component-executor-pid {pid};
-        '''
-        return self.insert_database(query)
-
-    def update_component_pid(self, component_name, pid):
-        self.delete_component_pid(component_name)
-        self.insert_component_pid(component_name, pid)
+    def update_attribute_component(self, component_name, attribute_name, attribute_value):
+        self.update_attribute_entity(
+            entity="Component",
+            entity_key="component-name",
+            key_value=component_name,
+            attribute=attribute_name,
+            attribute_value=attribute_value)

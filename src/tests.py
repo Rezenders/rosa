@@ -44,7 +44,8 @@ class TestKbInterface(unittest.TestCase):
         '''
         self.typedb_interface.insert_database(query_insert)
 
-        self.typedb_interface.delete_component_status(component_name)
+        self.typedb_interface.delete_attribute_from_component(
+            component_name, 'component-status')
         status = self.typedb_interface.get_attribute_from_component(
             component_name, 'component-status')
         self.typedb_interface.delete_component(component_name)
@@ -56,7 +57,8 @@ class TestKbInterface(unittest.TestCase):
         self.typedb_interface.delete_component(component_name)
         self.typedb_interface.insert_component(component_name)
 
-        self.typedb_interface.insert_component_status(component_name, "error")
+        self.typedb_interface.insert_attribute_component(
+            component_name, 'component-status', "'error'")
         status = self.typedb_interface.get_attribute_from_component(
             component_name, 'component-status')
         component_status = status[0].get("attribute").get_value()
@@ -68,10 +70,11 @@ class TestKbInterface(unittest.TestCase):
         component_name = "component"
         self.typedb_interface.delete_component(component_name)
         self.typedb_interface.insert_component(component_name)
-        self.typedb_interface.insert_component_status(component_name, "error")
+        self.typedb_interface.insert_attribute_component(
+            component_name, 'component-status', "'error'")
 
-        self.typedb_interface.update_component_status(
-            component_name, "activated")
+        self.typedb_interface.update_attribute_component(
+            component_name, 'component-status', "'activated'")
 
         status = self.typedb_interface.get_attribute_from_component(
             component_name, 'component-status')
@@ -90,7 +93,8 @@ class TestKbInterface(unittest.TestCase):
         '''
         self.typedb_interface.insert_database(query_insert)
 
-        self.typedb_interface.delete_component_requirement(component_name)
+        self.typedb_interface.delete_attribute_from_component(
+            component_name, 'is-component-required')
         requirement = self.typedb_interface.get_attribute_from_component(
             component_name, 'is-component-required')
         self.typedb_interface.delete_component(component_name)
@@ -102,8 +106,8 @@ class TestKbInterface(unittest.TestCase):
         self.typedb_interface.delete_component(component_name)
         self.typedb_interface.insert_component(component_name)
 
-        self.typedb_interface.insert_component_requirement(
-            component_name, "false")
+        self.typedb_interface.insert_attribute_component(
+            component_name, 'is-component-required', "false")
         requirement = self.typedb_interface.get_attribute_from_component(
             component_name, 'is-component-required')
         component_required = requirement[0].get("attribute").get_value()
@@ -115,11 +119,11 @@ class TestKbInterface(unittest.TestCase):
         component_name = "component"
         self.typedb_interface.delete_component(component_name)
         self.typedb_interface.insert_component(component_name)
-        self.typedb_interface.insert_component_requirement(
-            component_name, "false")
+        self.typedb_interface.update_attribute_component(
+            component_name, 'is-component-required', "false")
 
-        self.typedb_interface.update_component_requirement(
-            component_name, "true")
+        self.typedb_interface.update_attribute_component(
+            component_name, 'is-component-required', "true")
 
         requirement = self.typedb_interface.get_attribute_from_component(
             component_name, 'is-component-required')
@@ -132,9 +136,11 @@ class TestKbInterface(unittest.TestCase):
         component_name = "component"
         self.typedb_interface.delete_component(component_name)
         self.typedb_interface.insert_component(component_name)
-        self.typedb_interface.insert_component_pid(component_name, 1234)
+        self.typedb_interface.insert_attribute_component(
+            component_name, 'component-executor-pid', 1234)
 
-        self.typedb_interface.update_component_pid(component_name, 4321)
+        self.typedb_interface.update_attribute_component(
+            component_name, 'component-executor-pid', 4321)
 
         pid = self.typedb_interface.get_attribute_from_component(
             component_name, 'component-executor-pid')
