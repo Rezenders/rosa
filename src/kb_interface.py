@@ -48,13 +48,14 @@ class TypeDBInterface:
     def create_session(self, database_name, session_type, options=TypeDBOptions.core()):
         return self.client.session(database_name, session_type, options)
 
-    #### Read/write database
+    # Read/write database
     # Generic query method
     def database_query(self, session_type, transaction_type, query_type, query, options=TypeDBOptions.core()):
         with self.create_session(self.database_name, session_type) as session:
             options.infer = True
             with session.transaction(transaction_type, options) as transaction:
-                transaction_query_function = getattr(transaction.query(), query_type)
+                transaction_query_function = getattr(
+                    transaction.query(), query_type)
                 query_answer = transaction_query_function(query)
                 if transaction_type == TransactionType.WRITE:
                     transaction.commit()
@@ -74,32 +75,37 @@ class TypeDBInterface:
 
     # Load schema from file
     def load_schema(self, schema_path):
-        self.write_database_file(SessionType.SCHEMA, TransactionType.WRITE, 'define', schema_path)
+        self.write_database_file(
+            SessionType.SCHEMA, TransactionType.WRITE, 'define', schema_path)
 
     # Load data from file
     def load_data(self, data_path, force=False):
         if force:
-            self.delete_from_database('match $e isa entity; delete $e isa entity;')
-            self.delete_from_database('match $r isa relation; delete $r isa relation;')
-            self.delete_from_database('match $a isa attribute; delete $a isa attribute;')
+            self.delete_from_database(
+                'match $e isa entity; delete $e isa entity;')
+            self.delete_from_database(
+                'match $r isa relation; delete $r isa relation;')
+            self.delete_from_database(
+                'match $a isa attribute; delete $a isa attribute;')
         try:
-            self.write_database_file(SessionType.DATA, TransactionType.WRITE, 'insert', data_path)
+            self.write_database_file(
+                SessionType.DATA, TransactionType.WRITE, 'insert', data_path)
         except TypeDBClientException as err:
             print("Error in load_data method. This is the exception msg: ", err)
 
-    ### Events begining
+    # Events begining
     def insert_data_event(func):
         def inner(*args, **kwargs):
-            print('Data has been inserted!') #TODO: Do something else
+            print('Data has been inserted!')  # TODO: Do something else
             return func(*args, **kwargs)
         return inner
 
     def delete_data_event(func):
         def inner(*args, **kwargs):
-            print('Data has been deleted!') #TODO: Do something else
+            print('Data has been deleted!')  # TODO: Do something else
             return func(*args, **kwargs)
         return inner
-    ### Events end
+    # Events end
 
     # Insert query
     @insert_data_event
@@ -116,9 +122,9 @@ class TypeDBInterface:
     def match_database(self, query):
         return self.database_query(SessionType.DATA, TransactionType.READ, 'match', query)
 
-    ### Read/write database end
+    # Read/write database end
 
-    ### Queries begining
+    # Queries begining
     def get_unsolved_required_tasks(self):
         query = f'''
             match
@@ -153,7 +159,7 @@ class TypeDBInterface:
         '''
         return self.match_database(query)
 
-    #TODO: standard for variable names in queries
+    # TODO: standard for variable names in queries
     # TODO: remove unecessary variables from query
     def get_leaf_functions(self, root_function_name):
         query = f'''
@@ -194,10 +200,10 @@ class TypeDBInterface:
         '''
         return self.match_database(query)
 
-    #get fd with higher estimated qa (only considering 1 qa)
+    # get fd with higher estimated qa (only considering 1 qa)
     def get_function_designs_ordered(self, function_name):
         if function_name in self.function_designs_ordering_funcs:
-            return getattr(self,self.function_designs_ordering_funcs[function_name])(function_name)
+            return getattr(self, self.function_designs_ordering_funcs[function_name])(function_name)
         else:
             return getattr(self, self.default_function_design_ordering_func)(function_name)
 
@@ -249,9 +255,9 @@ class TypeDBInterface:
         else:
             return getattr(self, self.default_component_ordering_func)(component_type)
 
-    def delete_entity(self, entity, entity_key, key_value):
+    def delete_entity(self, entity, key, key_value):
         query = f'''
-            match $entity isa {entity}, has {entity_key} "{key_value}";
+            match $entity isa {entity}, has {key} "{key_value}";
             delete $entity isa {entity};
         '''
         return self.delete_from_database(query)
@@ -263,9 +269,9 @@ class TypeDBInterface:
         '''
         return self.delete_from_database(query)
 
-    def insert_entity(self, entity, entity_key, key_value):
+    def insert_entity(self, entity, key, key_value):
         query = f'''
-            insert $entity isa {entity}, has {entity_key} "{key_value}";
+            insert $entity isa {entity}, has {key} "{key_value}";
         '''
         return self.insert_database(query)
 
@@ -275,65 +281,67 @@ class TypeDBInterface:
         '''
         return self.insert_database(query)
 
-    def get_attribute_from_entity(self, entity, entity_key, key_value, attribute):
+    def get_attribute_from_entity(self, entity, key, key_value, attr):
         query = f'''
             match $entity isa {entity},
-            has {entity_key} "{key_value}",
-            has {attribute} $attribute;
+            has {key} "{key_value}",
+            has {attr} $attribute;
             get $attribute;
         '''
         return self.match_database(query)
 
-    def get_attribute_from_component(self, component_name, attribute_name):
+    def get_attribute_from_component(self, component_name, attr):
         return self.get_attribute_from_entity(
-            entity="Component",
-            entity_key="component-name",
-            key_value=component_name,
-            attribute=attribute_name)
+            "Component",
+            "component-name",
+            component_name,
+            attr)
 
-    def delete_attribute_from_entity(self, entity, entity_key, key_value, attribute):
+    def delete_attribute_from_entity(self, entity, key, key_value, attr):
         query = f'''
             match $entity isa {entity},
-            has {entity_key} "{key_value}",
-            has {attribute} $attribute;
+            has {key} "{key_value}",
+            has {attr} $attribute;
             delete $entity has $attribute;
         '''
         return self.delete_from_database(query)
 
     def delete_attribute_from_component(self, component_name, attribute_name):
         return self.delete_attribute_from_entity(
-            entity="Component",
-            entity_key="component-name",
-            key_value=component_name,
-            attribute=attribute_name)
+            "Component",
+            "component-name",
+            component_name,
+            attribute_name)
 
-    def insert_attribute_entity(self, entity, entity_key, key_value, attribute, attribute_value):
+    def insert_attribute_entity(
+     self, entity, key, key_value, attr, attr_value):
         query = f'''
             match $entity isa {entity},
-            has {entity_key} "{key_value}";
-            insert $entity has {attribute} {attribute_value};
+            has {key} "{key_value}";
+            insert $entity has {attr} {attr_value};
         '''
         return self.insert_database(query)
 
-    def insert_attribute_component(self, component_name, attribute_name, attribute_value):
+    def insert_attribute_component(self, component_name, attr, attr_value):
         return self.insert_attribute_entity(
-            entity="Component",
-            entity_key="component-name",
-            key_value=component_name,
-            attribute=attribute_name,
-            attribute_value=attribute_value
+            "Component",
+            "component-name",
+            component_name,
+            attr,
+            attr_value
         )
 
-    def update_attribute_entity(self, entity, entity_key, key_value, attribute, attribute_value):
+    def update_attribute_entity(
+     self, entity, key, key_value, attr, attr_value):
         self.delete_attribute_from_entity(
-            entity, entity_key, key_value, attribute)
+            entity, key, key_value, attr)
         self.insert_attribute_entity(
-            entity, entity_key, key_value, attribute, attribute_value)
+            entity, key, key_value, attr, attr_value)
 
-    def update_attribute_component(self, component_name, attribute_name, attribute_value):
+    def update_attribute_component(self, component_name, attr, attr_value):
         self.update_attribute_entity(
-            entity="Component",
-            entity_key="component-name",
-            key_value=component_name,
-            attribute=attribute_name,
-            attribute_value=attribute_value)
+            "Component",
+            "component-name",
+            component_name,
+            attr,
+            attr_value)
