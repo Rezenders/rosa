@@ -36,30 +36,33 @@ is-required sub attribute, #not used
     value boolean;
 
 is-task-required sub is-required;
-is-function-required sub is-required; #not used
+is-function-required sub is-required;
 is-component-type-required sub is-required; #not used
 is-component-required sub is-required;
-
-
 
 status sub attribute,
     abstract,
     value string,
     regex "^(activated|deactivated|error|unfeasible)$";
 
-task-status sub status; #not used
+task-status sub status;
+function-status sub status;
 component-status sub status; 
     
 ### Concepts
 Task sub entity,
     owns task-name @key,
+    owns task-status,
     owns is-task-required,
-    plays task-requirement:task;
+    plays task-requirement:task,
+    plays implicit-task-requirement:task;
 
 Function sub entity,
     owns function-name @key,
-    owns is-leaf-function,
+    owns is-leaf-function, #not used
+    owns is-function-required,
     plays task-requirement:required-function,
+    plays implicit-task-requirement:required-function,
     plays functional-hierarchy:parent-function,
     plays functional-hierarchy:child-function,
     plays implicit-functional-hierarchy:parent-function,
@@ -91,6 +94,10 @@ EstimatedQualityAttribute sub QualityAttribute,
     
 ### Relations
 task-requirement sub relation,
+    relates task,
+    relates required-function;
+    
+implicit-task-requirement sub relation,
     relates task,
     relates required-function;
 
@@ -143,3 +150,10 @@ rule implicit-functional-hierarchy-recursive:
         (parent-function: $f1, child-function: $f3) isa implicit-functional-hierarchy;
      };
 
+rule implicit-task-requirement:
+    when {
+        (task:$task, required-function:$function) isa task-requirement;
+        (parent-function: $function, child-function:$f-child) isa implicit-functional-hierarchy;
+    } then {
+        (task:$task, required-function:$f-child) isa implicit-task-requirement;
+    };

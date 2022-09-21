@@ -1,6 +1,6 @@
 insert
 
-$t0 isa Task, has task-name "Search pipeline";
+$t0 isa Task, has task-name "Search pipeline", has is-task-required true;
 #(task:$t0, required-function:$f2) isa task-requirement;
 (task:$t0, required-function:$f1, required-function:$f2) isa task-requirement;
 
