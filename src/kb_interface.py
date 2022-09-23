@@ -141,34 +141,6 @@ class TypeDBInterface:
         query_result = self.get_unsolved_required_tasks_raw()
         return [result.get("task-name").get_value() for result in query_result]
 
-    # def get_leaf_functions_from_task_raw(self, task_name):
-    #     query = f'''
-    #         match
-    #             $task isa Task, has task-name "{task_name}";
-    #             (task:$task, required-function:$function) isa task-requirement;
-    #             $function isa Function, has function-name $function_name;
-    #             $leaf_function_name isa function-name;
-    #             {{$function has is-leaf-function true,
-    #                 has function-name $leaf_function_name;}} or
-    #             {{(parent-function:$function, child-function:$fc)
-    #                 isa implicit-functional-hierarchy;
-    #                 $fc has is-leaf-function true,
-    #                 has function-name $leaf_function_name; }};
-    #             get $function_name, $leaf_function_name;
-    #     '''
-    #     return self.match_database(query)
-    #
-    # def get_leaf_functions_from_task(self, task_name):
-    #     query_result = self.get_leaf_functions_from_task_raw(task_name)
-    #     functions_dict = dict()
-    #
-    #     for function in query_result:
-    #         root_function = function.get("function_name").get_value()
-    #         leaf_function = function.get("leaf_function_name").get_value()
-    #         functions_dict.setdefault(root_function, []).append(leaf_function)
-    #
-    #     return functions_dict
-
     # TODO: replace for implicit-task-requirement???
     # TODO: I think it might be possible to just return a list with all
     # functions, no need for a dict
@@ -190,19 +162,6 @@ class TypeDBInterface:
         query_result = self.get_root_functions_from_task_raw(task_name)
         return [r.get("function-name").get_value() for r in query_result]
 
-    # def get_functional_hierarchy_from_task(self, task_name):
-    #     query_result = self.get_functional_hierarchy_from_task_raw(task_name)
-    #     functions_dict = dict()
-    #
-    #     for result in query_result:
-    #         root_function = result.get("function-name").get_value()
-    #         print(root_function)
-    #         leaf_function = result.get("fc-name").get_value()
-    #         print(leaf_function)
-    #         functions_dict.setdefault(root_function, []).append(leaf_function)
-    #
-    #     return functions_dict
-
     def get_child_functions_raw(self, function):
         query = f'''
             match
@@ -218,15 +177,6 @@ class TypeDBInterface:
         query_result = self.get_child_functions_raw(function)
         return [result.get("fc-name").get_value() for result in query_result]
 
-    # def get_required_functions_from_task(self, task_name):
-    #     query = f'''
-    #         match
-    #             $t isa Task, has task-name "{task_name}";
-    #             (task:$t, required-function:$function) isa task-requirement;
-    #             $function isa Function, has function-name $function_name;
-    #             get $function_name;
-    #     '''
-    #     return self.match_database(query)
 
     def get_functions_not_required_anymore_raw(self):
         query = f'''
@@ -248,17 +198,6 @@ class TypeDBInterface:
         return [r.get("function-name").get_value() for r in query_result]
 
 
-    # TODO: standard for variable names in queries
-    # def get_leaf_functions(self, root_function_name):
-    #     query = f'''
-    #         match
-    #             $f isa Function, has function-name "{root_function_name}";
-    #             (parent-function:$f, child-function:$leaf_function) isa implicit-functional-hierarchy;
-    #             $leaf_function has function-name $function_name;
-    #             $leaf_function has is-leaf-function true;
-    #             get $leaf_function, $function_name;
-    #     '''
-    #     return self.match_database(query)
 
     # fds ordered desc single qa
     def function_designs_order_desc(self, function_name):
