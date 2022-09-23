@@ -177,6 +177,18 @@ class TypeDBInterface:
         query_result = self.get_child_functions_raw(function)
         return [result.get("fc-name").get_value() for result in query_result]
 
+    def get_required_functions_raw(self):
+        query = f'''
+            match
+                $function isa Function, has is-function-required true,
+                    has function-name $function-name;
+                get $function-name;
+        '''
+        return self.match_database(query)
+
+    def get_required_functions(self):
+        query_result = self.get_required_functions_raw()
+        return [r.get("function-name").get_value() for r in query_result]
 
     def get_functions_not_required_anymore_raw(self):
         query = f'''
@@ -197,7 +209,43 @@ class TypeDBInterface:
         query_result = self.get_functions_not_required_anymore_raw()
         return [r.get("function-name").get_value() for r in query_result]
 
+    def get_component_types_not_required_anymore_raw(self):
+        query = f'''
+            match
+                $component isa ComponentType,
+                    has is-component-type-required true,
+                    has component-type $component-type;
+                (function:$function, required-component:$component)
+                    isa function-design;
+                not {{$function isa Function, has is-function-required true;}};
+                get $component-type;
+        '''
+        return self.match_database(query)
 
+    def get_component_types_not_required_anymore(self):
+        query_result = self.get_component_types_not_required_anymore_raw()
+        return [r.get("componet-type").get_value() for r in query_result]
+
+    def get_components_not_required_anymore_raw(self):
+        query = f'''
+            match
+                $component isa Component, has is-component-required true,
+                    has component-name $component-name;
+                {{(function:$function, required-component:$component)
+                    isa function-design;
+                    not {{$function isa Function,
+                        has is-function-required true;}};}} or
+                {{(componentType:$component-type, component:$component)
+                    isa component-design;
+                    not {{$component-type isa ComponentType,
+                        has is-component-type-required true;}};}};
+                get $component-name;
+        '''
+        return self.match_database(query)
+
+    def get_components_not_required_anymore(self):
+        query_result = self.get_components_not_required_anymore_raw()
+        return [r.get("component-name").get_value() for r in query_result]
 
     # fds ordered desc single qa
     def function_designs_order_desc(self, function_name):
