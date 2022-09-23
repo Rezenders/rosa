@@ -25,9 +25,7 @@ component-executor-pid sub attribute,
 component-design-priority sub attribute,
     value long;
     
-is-leaf-function sub attribute,
-    value boolean;
-    
+   
 qa-value sub attribute,
     value double;
 
@@ -59,7 +57,6 @@ Task sub entity,
 
 Function sub entity,
     owns function-name @key,
-    owns is-leaf-function, #not used
     owns is-function-required,
     plays task-requirement:required-function,
     plays implicit-task-requirement:required-function,
@@ -125,15 +122,6 @@ component-design sub relation,
     relates componentType,
     relates component;
 
-# #https://docs.vaticle.com/docs/pattern/negation/
-## Rules  
-rule function-hierarchy-leaf:
-    when{
-        $f isa Function;
-        not {(parent-function: $f, child-function: $f1) isa functional-hierarchy;};
-    } then {
-        $f has is-leaf-function true;
-    };
 
 rule implicit-functional-hierarchy:
      when {
