@@ -29,7 +29,7 @@ component-design-priority sub attribute,
 qa-value sub attribute,
     value double;
 
-is-required sub attribute, #not used
+is-required sub attribute, 
     abstract,
     value boolean;
 
@@ -68,6 +68,7 @@ Function sub entity,
 
 ComponentType sub entity,
     owns component-type @key,
+    owns is-component-type-required,
     plays function-design:required-component,
     plays component-design:componentType;
 
