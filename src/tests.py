@@ -2,7 +2,7 @@
 
 import unittest
 from executor import Executor
-from typedb_interface import TypeDBInterface
+from model_interface import ModelInterface
 
 
 class TestKbInterface(unittest.TestCase):
@@ -11,7 +11,7 @@ class TestKbInterface(unittest.TestCase):
         function_designs_ordering_funcs = {
             'Execute and control AUV motion': 'function_designs_order_desc'}
         component_ordering_funcs = {'component type': 'component_order_desc'}
-        self.typedb_interface = TypeDBInterface(
+        self.typedb_interface = ModelInterface(
             "localhost:1729",
             "test_database",
             "../typeDB/schema/schema.tql",
