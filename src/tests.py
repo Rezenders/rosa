@@ -2,7 +2,7 @@
 
 import unittest
 from executor import Executor
-from kb_interface import TypeDBInterface
+from typedb_interface import TypeDBInterface
 
 
 class TestKbInterface(unittest.TestCase):

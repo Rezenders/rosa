@@ -2,7 +2,7 @@
 
 import time
 import subprocess
-from kb_interface import TypeDBInterface
+from typedb_interface import TypeDBInterface
 
 
 class Executor():

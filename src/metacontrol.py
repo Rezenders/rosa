@@ -2,7 +2,7 @@
 import time
 from planner import Planner
 from executor import Executor
-from kb_interface import TypeDBInterface
+from typedb_interface import TypeDBInterface
 
 # def solve_task(interface, task_name):
 #     functions_dict = get_leaf_functions_from_task(typedb_interface, task_name)
