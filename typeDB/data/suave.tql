@@ -1,0 +1,54 @@
+insert
+
+#Task search pipeline
+$t0 isa Task, has task-name "search pipeline", has is-required true;
+
+$f0 isa Function, has function-name "generate search path";
+$f1 isa Function, has function-name "recover motion";
+
+(task:$t0, required-function:$f0, required-function:$f1) isa task-requirement;
+
+## Component Generate spiral search path node and configurations
+$c0 isa Component, has component-name "generate spiral search path node";
+
+(function: $f0, required-component: $c0) isa function-design, has function-design-name "generate spiral search path function design";
+
+$cp0 isa ComponentParameter, has parameter-key "altitude", has parameter-value "1.0";
+$cp1 isa ComponentParameter, has parameter-key "altitude", has parameter-value "2.0";
+$cp2 isa ComponentParameter, has parameter-key "altitude", has parameter-value "3.0";
+
+$cc0 (component: $c0, parameter: $cp0) isa component-configuration, has component-configuration-name "low altitude", has performance 1.0;
+$cc1 (component: $c0, parameter: $cp1) isa component-configuration, has component-configuration-name "medium altitude", has performance 2.0;
+$cc2 (component: $c0, parameter: $cp2) isa component-configuration, has component-configuration-name "high altitude", has performance 3.0;
+
+$water_visibility isa EnvironmentalAttribute, has attribute-name "water visibility";
+#$ea0 isa EnvironmentalAttribute, has attribute-name "water visibility", has attribute-value 1.25;/
+#$ea1 isa EnvironmentalAttribute, has attribute-name "water visibility", has attribute-value 2.25;/
+#$ea2 isa EnvironmentalAttribute, has attribute-name "water visibility", has attribute-value 3.25;/
+
+(constraint: $water_visibility, constrained: $cc0) isa constrainment, has attribute-value 1.25;
+(constraint: $water_visibility, constrained: $cc1) isa constrainment, has attribute-value 2.25;
+(constraint: $water_visibility, constrained: $cc2) isa constrainment, has attribute-value 3.25;
+
+## Component recover motion node and configurations
+$c1 isa Component, has component-name "recover motion node";
+
+$thruster1 isa Component, has component-name "thruster1";
+$thruster2 isa Component, has component-name "thruster2";
+$thruster3 isa Component, has component-name "thruster3";
+$thruster4 isa Component, has component-name "thruster4";
+$thruster5 isa Component, has component-name "thruster5";
+$thruster6 isa Component, has component-name "thruster6";
+
+(function: $f1, required-component: $thruster1, required-component: $thruster2, required-component: $thruster3, required-component: $thruster4, required-component: $thruster5, required-component: $thruster6) isa function-design,
+    has function-design-name "recover motion inactive", has performance 2.0;
+(function: $f1, required-component: $c1) isa function-design, has function-design-name "recover motion active", has performance 1.0;
+
+
+# Task inspect pipeline
+$t1 isa Task, has task-name "inspect pipeline";
+$f2 isa Function, has function-name "follow pipeline";
+(task:$t1, required-function:$f1, required-function:$f2) isa task-requirement;
+
+$c2 isa Component, has component-name "follow pipeline node";
+(function: $f2, required-component: $c2) isa function-design, has function-design-name "follow pipeline function design";

@@ -1,0 +1,116 @@
+ define
+
+## ATTRIBUTES
+name sub attribute,
+    abstract,
+    value string;
+    
+task-name sub name;
+function-name sub name;
+function-design-name sub name;
+component-name sub name;
+component-configuration-name sub name;
+attribute-name sub name;
+
+status sub attribute,
+    abstract,
+    value string,
+    regex "^(activated|deactivated|error|unfeasible)$";
+
+task-status sub status;
+function-status sub status;
+component-status sub status;
+
+parameter-key sub attribute,
+    value string;
+
+parameter-value sub attribute,
+    value string;
+
+attribute-value sub attribute,
+    value double;
+
+attribute-measurement sub attribute,
+    value double;
+
+performance sub attribute,
+    value double;
+
+is-required sub attribute, 
+#    abstract,
+    value boolean;
+
+#is-task-required sub is-required;
+#is-function-required sub is-required;
+#is-component-required sub is-required;
+
+### Relationships
+task-requirement sub relation,
+    owns is-required,
+    relates task,
+    relates required-function;
+
+function-design sub relation,
+    owns function-design-name @key,
+    owns performance,
+    owns is-required,
+    relates function,
+    relates required-component;
+
+component-configuration sub relation,
+    owns component-configuration-name @key,
+    owns performance,
+    owns is-required,
+    relates component,
+    relates parameter,
+    plays constrainment:constrained;
+
+constrainment sub relation,
+    owns attribute-value,
+    relates constraint,
+    relates constrained;
+
+### Concepts
+Task sub entity,
+    owns task-name @key,
+    owns task-status,
+    owns is-required,
+    plays task-requirement:task;
+    
+Function sub entity,
+    owns function-name @key,
+    owns function-status,
+    owns is-required,
+    plays task-requirement:required-function,
+    plays function-design:function;
+    
+Component sub entity,
+    owns component-name @key,
+    owns component-status,
+    owns is-required,
+    plays function-design:required-component,
+    plays component-configuration:component;
+    
+ComponentParameter sub entity,
+    owns parameter-key,
+    owns parameter-value,
+    owns is-required,
+    plays component-configuration:parameter;
+    
+Attribute sub entity,
+    abstract,
+    owns attribute-name @key,
+    owns attribute-measurement,
+    plays constrainment:constraint;
+
+EnvironmentalAttribute sub Attribute;
+
+# Rules
+rule implicit-function-requirement:
+    when {
+        $task isa Task, has is-required true;
+        $tr (task:$task, required-function:$function) isa task-requirement;       
+    } then {
+       $function has is-required true; 
+    };
+
