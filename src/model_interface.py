@@ -53,6 +53,23 @@ class ModelInterface(TypeDBInterface):
         query_result = self.get_unsolved_required_tasks_raw()
         return [result.get("task-name").get_value() for result in query_result]
 
+    # Update status of a task
+    def update_task_status(self, task_name, task_status):
+        return self.update_attribute_entity(
+            'Task',
+            'task-name',
+            task_name,
+            'task-status',
+            "'{}'".format(task_status))
+
+    # Check if a Task is required
+    def is_task_required(self, task_name):
+        is_required = self.get_attribute_from_entity(
+             'Task', 'task-name', task_name, 'is-required')
+        if len(is_required) == 0:
+            return False
+        return is_required[0]
+
     # TODO: replace for implicit-task-requirement???
     # TODO: I think it might be possible to just return a list with all
     # functions, no need for a dict
