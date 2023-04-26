@@ -18,13 +18,24 @@ class ModelInterface(TypeDBInterface):
             force_data
         )
 
+        # TODO: I am not sure I like this anymore
         self.function_designs_ordering_funcs = function_designs_ordering_funcs
         self.default_function_design_ordering_func = default_function_design_ordering_func
 
         self.component_ordering_funcs = component_ordering_funcs
         self.default_component_ordering_func = default_component_ordering_func
 
-    # Queries begining
+    # Request task
+    def request_task(self, task_name):
+        return self.insert_attribute_entity(
+            'Task', 'task-name', task_name, 'is-required', 'true')
+
+    # Cancel task
+    def cancel_task(self, task_name):
+        return self.insert_attribute_entity(
+            'Task', 'task-name', task_name, 'is-required', 'false')
+
+    # Get unsolved tasks raw
     def get_unsolved_required_tasks_raw(self):
         query = f'''
             match
@@ -37,6 +48,7 @@ class ModelInterface(TypeDBInterface):
         '''
         return self.match_database(query)
 
+    # Get unsolved tasks
     def get_unsolved_required_tasks(self):
         query_result = self.get_unsolved_required_tasks_raw()
         return [result.get("task-name").get_value() for result in query_result]
