@@ -27,12 +27,12 @@ class ModelInterface(TypeDBInterface):
 
     # Request task
     def request_task(self, task_name):
-        return self.insert_attribute_entity(
+        return self.update_attribute_entity(
             'Task', 'task-name', task_name, 'is-required', 'true')
 
     # Cancel task
     def cancel_task(self, task_name):
-        return self.insert_attribute_entity(
+        return self.update_attribute_entity(
             'Task', 'task-name', task_name, 'is-required', 'false')
 
     # Get unsolved tasks raw
