@@ -29,8 +29,8 @@ class ModelInterface(TypeDBInterface):
         query = f'''
             match
                 $task isa Task, has task-name $task-name,
-                    has is-task-required true;
-                not {{$task isa Task, has is-task-required true,
+                    has is-required true;
+                not {{$task isa Task, has is-required true,
                     has task-status $task-status;
                     $task-status = "activated";}};
                 get $task-name;
