@@ -125,7 +125,7 @@ class TypeDBInterface:
         '''
         return self.insert_database(query)
 
-    def get_attribute_from_entity(self, entity, key, key_value, attr):
+    def get_attribute_from_entity_raw(self, entity, key, key_value, attr):
         query = f'''
             match $entity isa {entity},
             has {key} "{key_value}",
@@ -133,6 +133,11 @@ class TypeDBInterface:
             get $attribute;
         '''
         return self.match_database(query)
+
+    def get_attribute_from_entity(self, entity, key, key_value, attr):
+        result = self.get_attribute_from_entity_raw(
+            entity, key, key_value, attr)
+        return [r.get("attribute").get_value() for r in result]
 
     def delete_attribute_from_entity(self, entity, key, key_value, attr):
         query = f'''
