@@ -14,12 +14,25 @@ attribute-name sub name;
 
 status sub attribute,
     abstract,
-    value string,
+    value string;
+
+task-status sub status,
     regex "^(activated|deactivated|error|unfeasible)$";
 
-task-status sub status;
-function-status sub status;
-component-status sub status;
+function-status sub status,
+    regex "^(ok|configuration error|unfeasible)$";
+
+function-design-status sub status,
+    regex "^(ok|unfeasible)$";
+
+component-status sub status,
+    regex "^(ok|configuration error|unfeasible|failure)$";
+
+component-configuration-status sub status,
+    regex "^(ok|unfeasible)$";
+
+constrainment-status sub status,
+    regex "^(ok|violation)$";
 
 parameter-key sub attribute,
     value string;
@@ -36,8 +49,10 @@ attribute-measurement sub attribute,
 performance sub attribute,
     value double;
 
-is-required sub attribute, 
-#    abstract,
+is-required sub attribute,
+    value boolean;
+
+is-selected sub attribute,
     value boolean;
 
 #is-task-required sub is-required;
@@ -46,27 +61,30 @@ is-required sub attribute,
 
 ### Relationships
 task-requirement sub relation,
-    owns is-required,
+    #owns is-required,
     relates task,
     relates required-function;
 
 function-design sub relation,
     owns function-design-name @key,
     owns performance,
-    owns is-required,
+    owns is-selected,
+    owns function-design-status,
     relates function,
     relates required-component;
 
 component-configuration sub relation,
     owns component-configuration-name @key,
     owns performance,
-    owns is-required,
+    owns is-selected,
+    owns component-configuration-status,
     relates component,
     relates parameter,
     plays constrainment:constrained;
 
 constrainment sub relation,
     owns attribute-value,
+    owns constrainment-status,
     relates constraint,
     relates constrained;
 
@@ -94,7 +112,7 @@ Component sub entity,
 ComponentParameter sub entity,
     owns parameter-key,
     owns parameter-value,
-    owns is-required,
+    #owns is-required,
     plays component-configuration:parameter;
     
 Attribute sub entity,
@@ -114,3 +132,111 @@ rule implicit-function-requirement:
        $function has is-required true; 
     };
 
+# TODO: add condition to check what type of constraint it is, still need to add a type property to constrainment. Then add more rules
+rule constrainment-violation-greater-equal:
+    when{
+        $constrainment (constraint: $constraint, constrained: $constrained) isa constrainment, has attribute-value $value;
+        $constraint has attribute-measurement $measurement;
+        not {$measurement >= $value;};
+    } then {
+        $constrainment has constrainment-status 'violation';
+    };
+ 
+rule constrainment-ok-greater-equal:
+    when{
+        $constrainment (constraint: $constraint, constrained: $constrained) isa constrainment, has attribute-value $value;
+        $constraint has attribute-measurement $measurement;
+        $measurement >= $value;
+    } then {
+        $constrainment has constrainment-status 'ok';
+    };
+
+rule constrainment-ok-no-measurement:
+    when{
+        $constrainment (constraint: $constraint, constrained: $constrained) isa constrainment, has attribute-value $value;
+        not {$constraint has attribute-measurement $measurement;};
+    } then {
+        $constrainment has constrainment-status 'ok';
+    };
+    
+rule constrainment-violation-propagation-component-configuration:
+    when{
+        $constrainment (constrained: $constrained) isa constrainment, has constrainment-status 'violation';
+        $constrained isa component-configuration;
+    } then {
+        $constrained has component-configuration-status 'unfeasible';
+    };
+    
+rule constrainment-ok-propagation-component-configuration:
+    when{
+        $constrainment (constrained: $constrained) isa constrainment, has constrainment-status 'ok';
+        $constrained isa component-configuration;
+    } then {
+        $constrained has component-configuration-status 'ok';
+    };
+
+rule all-component-configurations-unfeasible-propagation-component:
+    when{
+        $c isa Component;
+        (component: $c) isa component-configuration;  # (1)
+        not {  # (2)
+            (component: $c) isa component-configuration, has component-configuration-status $status;
+            $status != 'unfeasible';
+        };
+    } then {
+        $c has component-status 'unfeasible';
+    };
+
+rule component-configuration-selected-unfeasible-propragation:
+    when {
+        $c isa Component;
+        not {
+            $c has component-status $c_status; $c_status like 'unfeasible|failure';
+        };
+        $component_configuration (component: $c) isa component-configuration, has is-selected true,  has component-configuration-status 'unfeasible';
+    } then {
+        $c has component-status 'configuration error';
+    };
+ 
+rule component-configuration-selected-ok-propragation:
+ when {
+        $c isa Component;
+        not {
+            $c has component-status $c_status; $c_status like 'configuration error|unfeasible|failure';
+        };
+        $component_configuration (component: $c) isa component-configuration, has is-selected true,  has component-configuration-status 'ok';
+    } then {
+        $c has component-status 'ok';
+    };
+
+#rule component-failure-propagation:
+#    when{
+#        $c isa Component, has component-status 'failure';
+#        $fd (required-component: $c) isa function-design;
+#    } then {
+#        $fd has function-design-status 'unfeasible';
+#    };
+
+#rule component-unfeasible-propagation:
+#    when{
+#        $c isa Component, has component-status 'unfeasible';
+#        $fd (required-component: $c) isa function-design;
+#    } then {
+#        $fd has function-design-status 'unfeasible';
+#    };
+
+#rule constrainment-violation-propagation-function-design:
+#    when{
+#        $constrainment (constrained: $constrained) isa constrainment, has constrainment-status 'violation';
+#        $constrained isa function-design;
+#    } then {
+#        $constrained has function-design-status 'unfeasible';
+#    };
+
+#rule constrainment-violation-propagation-component:
+#    when{
+#        $constrainment (constrained: $constrained) isa constrainment, has constrainment-status 'violation';
+#        $constrained isa Component;
+#    } then {
+#        $constrained has component-status 'unfeasible';
+#    };
