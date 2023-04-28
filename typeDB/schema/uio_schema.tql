@@ -20,10 +20,10 @@ task-status sub status,
     regex "^(activated|deactivated|error|unfeasible)$";
 
 function-status sub status,
-    regex "^(ok|configuration error|unfeasible)$";
+    regex "^(ok|configuration error|implicit configuration error|unfeasible|unsolved)$";
 
 function-design-status sub status,
-    regex "^(ok|unfeasible)$";
+    regex "^(ok|unfeasible|implicit configuration error)$";
 
 component-status sub status,
     regex "^(ok|configuration error|unfeasible|failure)$";
@@ -153,7 +153,7 @@ rule constrainment-ok-greater-equal:
 
 rule constrainment-ok-no-measurement:
     when{
-        $constrainment (constraint: $constraint, constrained: $constrained) isa constrainment, has attribute-value $value;
+        $constrainment (constraint: $constraint, constrained: $constrained) isa constrainment;
         not {$constraint has attribute-measurement $measurement;};
     } then {
         $constrainment has constrainment-status 'ok';
@@ -189,7 +189,7 @@ rule all-component-configurations-unfeasible-propagation-component:
 
 rule component-configuration-selected-unfeasible-propragation:
     when {
-        $c isa Component;
+        $c isa Component, has is-required true;
         not {
             $c has component-status $c_status; $c_status like 'unfeasible|failure';
         };
@@ -198,33 +198,124 @@ rule component-configuration-selected-unfeasible-propragation:
         $c has component-status 'configuration error';
     };
  
-rule component-configuration-selected-ok-propragation:
+rule component-ok:
  when {
         $c isa Component;
         not {
             $c has component-status $c_status; $c_status like 'configuration error|unfeasible|failure';
         };
-        $component_configuration (component: $c) isa component-configuration, has is-selected true,  has component-configuration-status 'ok';
+        not {
+             $component_configuration (component: $c) isa component-configuration, has component-configuration-status $config_status; $config_status like 'unfeasible';
+        };
     } then {
         $c has component-status 'ok';
     };
 
-#rule component-failure-propagation:
-#    when{
-#        $c isa Component, has component-status 'failure';
-#        $fd (required-component: $c) isa function-design;
-#    } then {
-#        $fd has function-design-status 'unfeasible';
-#    };
+# This might result in several unfeasible status being included if there are more than 1 component with failure or unfeasible status. I don't think this is a problem.
+rule component-unfeasible-failure-propagation:
+    when{
+        $c isa Component, has component-status $c_status; $c_status like 'failure|unfeasible';
+        $fd (required-component: $c) isa function-design;
+    } then {
+        $fd has function-design-status 'unfeasible';
+    };
 
-#rule component-unfeasible-propagation:
-#    when{
-#        $c isa Component, has component-status 'unfeasible';
-#        $fd (required-component: $c) isa function-design;
-#    } then {
-#        $fd has function-design-status 'unfeasible';
-#    };
+# 'configuration error' is the status here, not the relation
+rule component-configuration-error-propagation:
+    when {
+        $c isa Component, has component-status $c_status; $c_status = 'configuration error';
+        $fd (required-component: $c) isa function-design, has is-selected true;
+        not {
+            $fd has function-design-status $fd_status; 
+            $fd_status = 'unfeasible';
+        };
+    } then {
+        $fd has function-design-status 'implicit configuration error';
+    };
 
+rule function-design-selected-ok:
+    when {
+        $fd (required-component: $c) isa function-design, has is-selected true;
+        not {
+            $fd has function-design-status $fd_status; $fd_status like 'implicit configuration error|unfeasible';
+        };
+        not {
+            $c has component-status $c_status; $c_status != 'ok';
+        };
+    } then {
+        $fd has function-design-status 'ok';
+    };
+
+rule function-design-not-selected-ok:
+    when {
+        $fd (required-component: $c) isa function-design;
+        not {
+            $fd has function-design-status $fd_status; $fd_status like 'implicit configuration error|unfeasible';
+        }; 
+        not {
+            $fd has is-selected $selected;  $selected = true;
+        };
+        not {
+            $c has component-status $c_status; $c_status like 'unfeasible|failure';
+        };
+    } then {
+        $fd has function-design-status 'ok';
+    };
+    
+rule function-status-unfeasible:
+    when {
+        $f isa Function;
+        not {
+            (function:$f) isa function-design, has function-design-status $fd_status;
+            $fd_status != 'unfeasible';
+        };
+    } then {
+        $f has function-status 'unfeasible';
+    };
+
+rule function-status-configuration-error:
+    when {
+        $f isa Function, has is-required true;
+        $fd (function: $f) isa function-design, has is-selected true, has function-design-status 'unfeasible';
+        not {
+            $f has function-status 'unfeasible';
+        };
+    } then {
+        $f has function-status 'configuration error';
+    };  
+
+rule function-status-implicit-configuration-error:
+    when {
+        $f isa Function, has is-required true;
+        $fd (function: $f) isa function-design, has is-selected true, has function-design-status 'implicit configuration error';
+        not {
+            $f has function-status 'unfeasible';
+        };
+    } then {
+        $f has function-status 'implicit configuration error';
+    };  
+
+rule function-status-unsolved:
+    when {
+        $f isa Function, has is-required true;
+        not {
+            $f has function-status 'unfeasible';
+            $fd (function: $f) isa function-design, has is-selected true;
+        };
+    } then {
+        $f has function-status 'unsolved';
+    };
+    
+    
+rule function-status-ok:
+    when {
+        $f isa Function;
+        not {
+            $f has function-status 'configuration error|implicit configuration error|unfeasible|unsolved';
+        };
+    } then {
+        $f has function-status 'ok';
+    };
 #rule constrainment-violation-propagation-function-design:
 #    when{
 #        $constrainment (constrained: $constrained) isa constrainment, has constrainment-status 'violation';
