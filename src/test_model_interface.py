@@ -4,18 +4,13 @@ from model_interface import ModelInterface
 
 @pytest.fixture
 def kb_interface():
-    function_designs_ordering_funcs = {
-        'Execute and control AUV motion': 'function_designs_order_desc'}
-    component_ordering_funcs = {'component type': 'component_order_desc'}
     kb_interface = ModelInterface(
         "localhost:1729",
         "test_database",
         "../typeDB/schema/uio_schema.tql",
         "../typeDB/data/test_data.tql",  # TODO:better way to handle empty data
         force_database=True,
-        force_data=True,
-        function_designs_ordering_funcs=function_designs_ordering_funcs,
-        component_ordering_funcs=component_ordering_funcs)
+        force_data=True)
     return kb_interface
 
 
@@ -53,10 +48,16 @@ def test_get_unsolved_tasks(kb_interface, task_name, expected_result):
     assert (task_name in unsolved) is expected_result
 
 
-def test_update_measurement_ea(kb_interface):
+def test_get_measurement_attribute(kb_interface):
+    value = 1.0
+    measured_value = kb_interface.get_measured_attribute('ea_measurement')
+    assert value == measured_value
+
+
+def test_update_measurement_attribute(kb_interface):
     value = 1.32
-    kb_interface.update_measured_ea('ea1', 1.32)
-    measured_value = kb_interface.get_measured_ea('ea1')
+    kb_interface.update_measured_attribute('ea1', 1.32)
+    measured_value = kb_interface.get_measured_attribute('ea1')
     assert value == measured_value
 
 # def test_get_required_functions_from_task(kb_interface):
