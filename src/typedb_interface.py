@@ -99,17 +99,22 @@ class TypeDBInterface:
     # Insert query
     @insert_data_event
     def insert_database(self, query):
-        return self.database_query(SessionType.DATA, TransactionType.WRITE, 'insert', query)
+        return self.database_query(
+            SessionType.DATA, TransactionType.WRITE, 'insert', query)
 
     # Delete query
     @delete_data_event
     def delete_from_database(self, query):
-        return self.database_query(SessionType.DATA, TransactionType.WRITE, 'delete', query)
+        return self.database_query(
+            SessionType.DATA, TransactionType.WRITE, 'delete', query)
 
     # TODO: decorator?
     # Match query
     def match_database(self, query):
-        return self.database_query(SessionType.DATA, TransactionType.READ, 'match', query)
+        options = TypeDBOptions.core()
+        options.infer = True
+        return self.database_query(
+            SessionType.DATA, TransactionType.READ, 'match', query, options)
     # Read/write database end
 
     def delete_entity(self, entity, key, key_value):
