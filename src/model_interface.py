@@ -70,6 +70,12 @@ class ModelInterface(TypeDBInterface):
             return False
         return is_required[0]
 
+    # Check if a Task is feasible
+    def is_task_feasible(self, task_name):
+        status = self.get_attribute_from_entity(
+             'Task', 'task-name', task_name, 'task-status')
+        return all(x in status for x in ['feasible'])
+
     # TODO: replace for implicit-task-requirement???
     # TODO: I think it might be possible to just return a list with all
     # functions, no need for a dict
