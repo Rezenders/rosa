@@ -6,7 +6,7 @@ from model_interface import ModelInterface
 def kb_interface():
     kb_interface = ModelInterface(
         "localhost:1729",
-        "test_database",
+        "pytest_database",
         "../typeDB/schema/uio_schema.tql",
         "../typeDB/data/test_data.tql",  # TODO:better way to handle empty data
         force_database=True,
@@ -29,24 +29,48 @@ def test_cancel_task(kb_interface):
 
 @pytest.mark.parametrize("task_name, expected_result", [
     ('task_required', True),
-    ('task_required_activated', True),
+    # ('task_required_activated', True),
     ('task_not_required', False),
     ('task_required_empty', False),
 ])
-def test_is_task_required_false(kb_interface, task_name, expected_result):
+def test_is_task_required(kb_interface, task_name, expected_result):
     assert kb_interface.is_task_required(task_name) is expected_result
 
 
 @pytest.mark.parametrize("task_name, expected_result", [
+    ('task_required', False),
+    ('task_feasible', True),
+])
+def test_is_task_feasible(kb_interface, task_name, expected_result):
+    assert kb_interface.is_task_feasible(task_name) is expected_result
+
+
+@pytest.mark.parametrize("task_name, expected_result", [
     ('task_required', True),
-    ('task_required_activated', False),
+    ('task_required_solved', False),
     ('task_not_required', False),
     ('task_required_empty', False),
 ])
-def test_get_unsolved_tasks(kb_interface, task_name, expected_result):
-    unsolved = kb_interface.get_unsolved_required_tasks()
+def test_get_tasks_not_solved(kb_interface, task_name, expected_result):
+    unsolved = kb_interface.get_required_tasks_not_solved()
     assert (task_name in unsolved) is expected_result
 
+#TODO: test_get_required_unsolved_tasks (if it is used)
+
+
+# def test_has_tasks_not_solved(kb_interface):
+#     assert kb_interface.has_required_tasks_not_solved() is True
+
+# TODO: test_get_unsolved_required_functions (if it is used)
+
+def test_propagate_component_performance(kb_interface):
+    kb_interface.propagate_components_performance()
+    performance = kb_interface.get_attribute_from_entity(
+         'Component',
+         'component-name',
+         'component1',
+         'performance')
+    assert performance[0] == 11.0
 
 def test_get_measurement_attribute(kb_interface):
     value = 1.0

@@ -271,5 +271,6 @@ def test_task_status_inference(kb_interface, tr_name, t_name, status):
         'Task',
         'task-name',
         t_name,
-        'task-requirement-status')
+        'task-status')
+    print(t_status_inferred)
     assert tr_status_inferred == t_status_inferred
