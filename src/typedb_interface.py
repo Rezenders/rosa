@@ -50,10 +50,19 @@ class TypeDBInterface:
                     transaction.commit()
                     return query_answer
                 elif transaction_type == TransactionType.READ:
-                    answer_list = []
-                    for answer in query_answer:
-                        answer_list.append(answer.map())
-                    return answer_list
+                    if query_type == 'match':
+                        answer_list = []
+                        for answer in query_answer:
+                            answer_list.append(answer.map())
+                        return answer_list
+                    elif query_type == 'match_aggregate':
+                        answer = query_answer.get()
+                        if answer.is_nan():
+                            return None
+                        if answer.is_int():
+                            return answer.as_int()
+                        if answer.is_float():
+                            return answer.as_float()
 
     # Load schema or data from file
     def write_database_file(self, session_type, transaction_type, query_type, file_path):
@@ -115,6 +124,16 @@ class TypeDBInterface:
         options.infer = True
         return self.database_query(
             SessionType.DATA, TransactionType.READ, 'match', query, options)
+
+    def match_aggregate_database(self, query):
+        options = TypeDBOptions.core()
+        options.infer = True
+        return self.database_query(
+            SessionType.DATA,
+            TransactionType.READ,
+            'match_aggregate',
+            query,
+            options)
     # Read/write database end
 
     def delete_entity(self, entity, key, key_value):
@@ -166,5 +185,5 @@ class TypeDBInterface:
      self, entity, key, key_value, attr, attr_value):
         self.delete_attribute_from_entity(
             entity, key, key_value, attr)
-        self.insert_attribute_entity(
+        return self.insert_attribute_entity(
             entity, key, key_value, attr, attr_value)
