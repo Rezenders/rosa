@@ -387,6 +387,21 @@ class ModelInterface(TypeDBInterface):
             'is-selected',
             value)
 
+    def activate_component(self, name, value='true'):
+        return self.update_attribute_entity(
+            'Component',
+            'component-name',
+            name,
+            'is-active',
+            value)
+
+    def activate_component_configuration(self, name, value='true'):
+        return self.update_attribute_entity(
+            'component-configuration',
+            'component-configuration-name',
+            name,
+            'is-active',
+            value)
     # def get_functions_not_required_anymore_raw(self):
     #     query = f'''
     #         match
