@@ -5,9 +5,9 @@ class ModelInterface(TypeDBInterface):
     def __init__(self, address, database_name, schema_path, data_path=None,
                  force_database=False, force_data=False,
                  function_designs_ordering_funcs=dict(),
-                 default_function_design_ordering_func='function_designs_order_desc',
-                 component_ordering_funcs=dict(),
-                 default_component_ordering_func='component_order_asc'):
+                 default_function_design_ordering_func='get_function_design_higher_performance',
+                 component_configuration_ordering_funcs=dict(),
+                 default_component_configuration_ordering_func='get_component_configuration_higher_performance'):
 
         super().__init__(
             address,
@@ -22,8 +22,11 @@ class ModelInterface(TypeDBInterface):
         self.function_designs_ordering_funcs = function_designs_ordering_funcs
         self.default_function_design_ordering_func = default_function_design_ordering_func
 
-        self.component_ordering_funcs = component_ordering_funcs
-        self.default_component_ordering_func = default_component_ordering_func
+        self.component_configuration_ordering_funcs = component_configuration_ordering_funcs
+        self.default_component_configuration_ordering_func = default_component_configuration_ordering_func
+
+        # self.component_ordering_funcs = component_ordering_funcs
+        # self.default_component_ordering_func = default_component_ordering_func
 
     # Add a task
     # def add_task(self, task_name):
@@ -306,6 +309,90 @@ class ModelInterface(TypeDBInterface):
             return None
         return measurement[0]
 
+    def get_function_design_higher_performance(self, function_name):
+        query = f'''
+            match
+                $f isa Function, has function-name "{function_name}";
+                $fd (function: $f) isa function-design,
+                    has function-design-name $fd-name,
+                    has performance $fd-performance;
+                not {{
+                    $fd has function-design-status 'unfeasible';
+                }};
+                get $fd-name, $fd-performance;
+                sort $fd-performance desc; limit 1;
+        '''
+        return self.match_database(query)
+
+    def get_best_function_design_raw(self, function_name):
+        _func = None
+        if function_name in self.function_designs_ordering_funcs:
+            _func = getattr(
+                self, self.function_designs_ordering_funcs[function_name])
+        else:
+            _func = getattr(self, self.default_function_design_ordering_func)
+
+        return _func(function_name)
+
+    def get_best_function_design(self, function_name):
+        query_result = self.get_best_function_design_raw(function_name)
+        if len(query_result) == 0:
+            return None
+        else:
+            return query_result[0].get("fd-name").get_value()
+
+    def get_component_configuration_higher_performance(self, c_name):
+        query = f'''
+            match
+                $component isa Component, has component-name "{c_name}";
+                $component-configuration (component: $component)
+                    isa component-configuration,
+                    has performance $conf-performance,
+                    has component-configuration-name $conf-name;
+                not {{
+                    $component-configuration
+                        has component-configuration-status 'unfeasible';
+                }};
+                get $conf-name, $conf-performance;
+                sort $conf-performance desc; limit 1;
+        '''
+        return self.match_database(query)
+
+    def get_best_component_configuration_raw(self, component_name):
+        _func = None
+        if component_name in self.component_configuration_ordering_funcs:
+            _func = getattr(
+                self,
+                self.component_configuration_ordering_funcs[component_name])
+        else:
+            _func = getattr(
+                self, self.default_component_configuration_ordering_func)
+
+        return _func(component_name)
+
+    def get_best_component_configuration(self, function_name):
+        query_result = self.get_best_component_configuration_raw(function_name)
+        if len(query_result) == 0:
+            return None
+        else:
+            return query_result[0].get("conf-name").get_value()
+
+    def select_function_design(self, fd_name, value='true'):
+        return self.update_attribute_entity(
+            'function-design',
+            'function-design-name',
+            fd_name,
+            'is-selected',
+            value)
+
+    def select_component_configuration(self, name, value='true'):
+        return self.update_attribute_entity(
+            'component-configuration',
+            'component-configuration-name',
+            name,
+            'is-selected',
+            value)
+
     # def get_functions_not_required_anymore_raw(self):
     #     query = f'''
     #         match
@@ -363,51 +450,8 @@ class ModelInterface(TypeDBInterface):
     #     query_result = self.get_components_not_required_anymore_raw()
     #     return [r.get("component-name").get_value() for r in query_result]
     #
-    # # fds ordered desc single qa
-    # def function_designs_order_desc(self, function_name):
-    #     query = f'''
-    #         match
-    #             $f isa Function, has function-name "{function_name}";
-    #             $fd (function:$f, required-component:$c) isa function-design;
-    #             $fd isa function-design, has function-design-name $fd-name;
-    #             (function-design:$fd, qa:$eqa) isa estimated-qa;
-    #             $eqa isa EstimatedQualityAttribute, has qa-type $qa-type,
-    #                 has qa-value $qa-value;
-    #             get $fd-name, $qa-type, $qa-value;
-    #             sort $qa-value desc;
-    #     '''
-    #     return self.match_database(query)
-    #
-    # # fds ordered asc single qa
-    # def function_designs_order_asc(self, function_name):
-    #     query = f'''
-    #         match
-    #             $f isa Function, has function-name "{function_name}";
-    #             $fd (function:$f, required-component:$c) isa function-design;
-    #             $fd isa function-design, has function-design-name $fd-name;
-    #             (function-design:$fd, qa:$eqa) isa estimated-qa;
-    #             $eqa isa EstimatedQualityAttribute, has qa-type $qa-type,
-    #                 has qa-value $qa-value;
-    #             get $fd-name, $qa-type, $qa-value;
-    #             sort $qa-value asc;
-    #     '''
-    #     return self.match_database(query)
-    #
-    # # get fd with higher estimated qa (only considering 1 qa)
-    # def get_function_designs_ordered_raw(self, function_name):
-    #     _func = None
-    #     if function_name in self.function_designs_ordering_funcs:
-    #         _func = getattr(
-    #             self, self.function_designs_ordering_funcs[function_name])
-    #     else:
-    #         _func = getattr(self, self.default_function_design_ordering_func)
-    #
-    #     return _func(function_name)
-    #
-    # def get_function_designs_ordered(self, function_name):
-    #     query_result = self.get_function_designs_ordered_raw(function_name)
-    #     return [r.get("fd-name").get_value() for r in query_result]
-    #
+
+
     # # get components from fd (only dealing with Components, not ComponentType)
     # def get_components_from_function_design_raw(self, fd_name):
     #     query = f'''
