@@ -67,19 +67,21 @@ def test_component_configuration_status_inference(
     assert inferred_status[0] == config_status
 
 
-@pytest.mark.parametrize("configurations, c_name, c_required, c_status", [
-    ([('low param', 'unfeasible', 'true'), ('high param', 'unfeasible', 'false')], 'component1', 'false', 'unfeasible'),
-    ([('low param', 'unfeasible', 'true'), ('high param', 'feasible', 'false')], 'component1', 'true', 'configuration error'),
-    ([('low param', 'feasible', 'false'), ('high param', 'feasible', 'false')], 'component1', 'true', 'unsolved'),
-    ([], 'component1', 'true', 'unsolved'),
-    ([('low param', 'feasible', 'true'), ('high param', 'feasible', 'false')], 'component1', 'false', 'feasible'),
-    ([('low param', 'feasible', 'false'), ('high param', 'unfeasible', 'false')], 'component1', 'false', 'feasible'),
-    ([], 'component1', 'false', 'feasible'),
-    ([('low param', 'feasible', 'true'), ('high param', 'feasible', 'false')], 'component1', 'true', 'solved'),
-    ([('low param', 'feasible', 'true'), ('high param', 'unfeasible', 'false')], 'component1', 'true', 'solved'),
+@pytest.mark.parametrize("configurations, c_name, c_required, c_active, c_status", [
+    ([('low param', 'unfeasible', 'true'), ('high param', 'unfeasible', 'false')], 'component1', 'false', 'false', 'unfeasible'),
+    ([('low param', 'unfeasible', 'true'), ('high param', 'feasible', 'false')], 'component1', 'true', 'false', 'configuration error'),
+    ([('low param', 'feasible', 'false'), ('high param', 'feasible', 'false')], 'component1', 'true', 'false', 'unsolved'),
+    ([('low param', 'feasible', 'true'), ('high param', 'feasible', 'false')], 'component1', 'true', 'false', 'unsolved'),
+    ([('low param', 'feasible', 'true'), ('high param', 'unfeasible', 'false')], 'component1', 'true', 'false', 'unsolved'),
+    ([], 'component1', 'true', 'false', 'unsolved'),
+    ([('low param', 'feasible', 'true'), ('high param', 'feasible', 'false')], 'component1', 'false', 'false', 'feasible'),
+    ([('low param', 'feasible', 'false'), ('high param', 'unfeasible', 'false')], 'component1', 'false', 'false', 'feasible'),
+    ([], 'component1', 'false', 'false', 'feasible'),
+    ([('low param', 'feasible', 'true'), ('high param', 'feasible', 'false')], 'component1', 'true', 'true', 'solved'),
+    ([('low param', 'feasible', 'true'), ('high param', 'unfeasible', 'false')], 'component1', 'true', 'true', 'solved'),
 ])
 def test_component_status_inference(
-        kb_interface, configurations, c_name, c_required, c_status):
+        kb_interface, configurations, c_name, c_required, c_active, c_status):
     for config in configurations:
         kb_interface.update_attribute_entity(
             'component-configuration',
@@ -100,6 +102,12 @@ def test_component_status_inference(
         c_name,
         'is-required',
         c_required)
+    kb_interface.update_attribute_entity(
+        'Component',
+        'component-name',
+        c_name,
+        'is-active',
+        c_active)
     c_status_inferred = kb_interface.get_attribute_from_entity(
         'Component',
         'component-name',
@@ -138,6 +146,13 @@ def test_function_design_status_inference(
             component[0],
             'component-status',
             "'{}'".format(component[1]))
+        if component[1] == 'solved':
+            kb_interface.update_attribute_entity(
+                'Component',
+                'component-name',
+                component[0],
+                'is-active',
+                'true')
     kb_interface.update_attribute_entity(
         'function-design',
         'function-design-name',
