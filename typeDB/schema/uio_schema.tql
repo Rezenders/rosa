@@ -130,12 +130,26 @@ Attribute sub entity,
 EnvironmentalAttribute sub Attribute;
 
 # Rules
-rule implicit-function-requirement:
+rule implicit-task-requirement-is-required:
     when {
         $task isa Task, has is-required true;
-        $tr (task:$task, required-function:$function) isa task-requirement;       
+        $tr (task:$task) isa task-requirement;       
     } then {
-       $function has is-required true; 
+        $tr has is-required true; 
+    };
+    
+rule implicit-function-is-required:
+    when {
+        $tr (required-function:$function) isa task-requirement, has is-required true;       
+    } then { 
+        $function has is-required true; 
+    };
+
+rule implicit-component-is-required:
+    when {
+        (required-component: $c) isa function-design, has is-selected true;
+    } then {
+        $c has is-required true;
     };
 
 # TODO: add condition to check what type of constraint it is, still need to add a type property to constrainment. Then add more rules
