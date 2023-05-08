@@ -17,8 +17,8 @@ status sub attribute,
     abstract,
     value string;
 
-#task-status sub status,
-#    regex "^(solved|unsolved|feasible|unfeasible|implicit configuration error)$";
+task-status sub status,
+    regex "^(solved|unsolved|feasible|unfeasible|implicit configuration error)$";
 
 task-requirement-status sub status,
     regex "^(unfeasible|implicit configuration error|feasible|unsolved|solved)$";
@@ -97,8 +97,7 @@ constrainment sub relation,
 ### Concepts
 Task sub entity,
     owns task-name @key,
-#    owns task-status,/
-    owns task-requirement-status,
+    owns task-status,
     owns is-required,
     plays task-requirement:task;
     
@@ -489,13 +488,12 @@ rule task-requirement-status-feasible:
         $tr has task-requirement-status 'feasible';
     }; 
 
-rule task-status:
+rule task-status-unfeasible:
     when {
-        $tr (task:$t) isa task-requirement, has task-requirement-status $tr_status;
+        $tr (task:$t) isa task-requirement, has task-requirement-status 'unfeasible';
     } then {
-        $t has $tr_status;
+        $t has task-status 'unfeasible';
     };
-
 #rule constrainment-violation-propagation-function-design:
 #    when{
 #        $constrainment (constrained: $constrained) isa constrainment, has constrainment-status 'violation';
@@ -510,4 +508,31 @@ rule task-status:
 #        $constrained isa Component;
 #    } then {
 #        $constrained has component-status 'unfeasible';
-#    };
+    
+ rule task-status-implicit-configuration-error:
+    when {
+        $tr (task:$t) isa task-requirement, has task-requirement-status 'implicit configuration error';
+    } then {
+        $t has task-status 'implicit configuration error';
+    };
+        
+rule task-status-feasible:
+   when {
+       $tr (task:$t) isa task-requirement, has task-requirement-status 'feasible';
+   } then {
+       $t has task-status 'feasible';
+   };
+
+rule task-status-unsolved:
+   when {
+       $tr (task:$t) isa task-requirement, has task-requirement-status 'unsolved';
+   } then {
+       $t has task-status 'unsolved';
+   };
+
+rule task-status-solved:
+   when {
+       $tr (task:$t) isa task-requirement, has task-requirement-status 'solved';
+   } then {
+       $t has task-status 'solved';
+   }; 
