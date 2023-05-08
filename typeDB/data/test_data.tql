@@ -1,24 +1,23 @@
 insert
 
-#Task search pipeline
+$f_no_fd isa Function, has function-name "function_no_fd";
+
 $t1 isa Task, has task-name "task1";
 
-$f_no_fd isa Function, has function-name "function_no_fd";
 $f1 isa Function, has function-name "function1";
 $f2 isa Function, has function-name "function2";
 
-(task:$t1, required-function:$f1, required-function:$f2) isa task-requirement;
+(task:$t1, required-function:$f1, required-function:$f2) isa task-requirement, has task-requirement-name 'task1 requirement';
 
-## Component Generate spiral search path node and configurations
 $c1 isa Component, has component-name "component1";
 
 (function: $f1, required-component: $c1) isa function-design, has function-design-name "f1_fd1";
 
 $cp1 isa ComponentParameter, has parameter-key "param1", has parameter-value "2.0";
-$cp2 isa ComponentParameter, has parameter-key "param1", has parameter-value "3.0";
+$cp2 isa ComponentParameter, has parameter-key "param2", has parameter-value "3.0";
 
-$cc1 (component: $c1, parameter: $cp1) isa component-configuration, has component-configuration-name "low param1", has performance 1.0;
-$cc2 (component: $c1, parameter: $cp2) isa component-configuration, has component-configuration-name "high param2", has performance 10.0;
+$cc1 (component: $c1, parameter: $cp1) isa component-configuration, has component-configuration-name "low param", has performance 1.0;
+$cc2 (component: $c1, parameter: $cp2) isa component-configuration, has component-configuration-name "high param", has performance 10.0;
 
 $ea1 isa EnvironmentalAttribute, has attribute-name "ea1";
 $ea_measurement isa EnvironmentalAttribute, has attribute-name "ea_measurement", has attribute-measurement 1.0;
@@ -37,15 +36,19 @@ $c5 isa Component, has component-name "component5";
 # Task inspect pipeline
 $t2 isa Task, has task-name "task2";
 $f3 isa Function, has function-name "function3";
-(task:$t2, required-function:$f2, required-function:$f3) isa task-requirement;
+(task:$t2, required-function:$f2, required-function:$f3) isa task-requirement, has task-requirement-name 'task2 requirement';
 
-$c6 isa Component, has component-name "component6";
-(function: $f3, required-component: $c6) isa function-design, has function-design-name "f3_fd1_c5";
+$c6 isa Component, has component-name "component6", has performance 2.0;
+$c7 isa Component, has component-name "component7", has performance 1.34;
+(function: $f3, required-component: $c6, required-component: $c7) isa function-design, has function-design-name "f3_fd1_c6_c7";
 
-#$t_required isa Task, has task-name "task_required", has is-required true;
-#$t_required_activated isa Task, has task-name "task_required_activated", has is-required true, has task-status 'activated';
-#$t_not_required isa Task, has task-name "task_not_required", has is-required false;
-#$t_required_empty isa Task, has task-name "task_required_empty";
+$t_required isa Task, has task-name "task_required", has is-required true;
+$t_required_activated isa Task, has task-name "task_required_solved", has is-required true, has task-status 'solved';
+$t_not_required isa Task, has task-name "task_not_required", has is-required false;
+$t_required_empty isa Task, has task-name "task_required_empty";
+$t_feasible isa Task, has task-name "task_feasible", has task-status 'feasible';
+
+$c_required isa Component, has component-name "c_required", has is-required true;
 
 #$f_required isa Function, has function-name "function_required", has is-required true;
 #$f_required_activated isa Function, has function-name "function_required_activated", has is-required true, has function-status 'activated';
