@@ -34,24 +34,56 @@ def monitor(kb_interface):
         'water visibility', water_visibility)
 
 
-def analyze():
+def analyze(kb_interface):
     # Status propagation solved by the inference reasone
     # TODO: include adaptation to improve performance
     pass
 
 
-def plan(kb_interface):
-    # TODO: implement plan when task is unsolved
-    # if task status = unsolved (not needed)
-    #   get unsolved functions
-    #       select fd
-    #   get unsolved fds
-    #       request components
-    #   get unsolved components
-    #       select component configuration
+# This should be included in the knowledge model
+# the reconfig plan should include the components and component conf that
+# needs to be deactivated
+reconfiguration_plan = dict()
 
-    unsolved_functions = kb_interface.get_unsolved_required_functions()
-    pass
+
+def plan(kb_interface):
+    # TODO: include plan to improve peformance, and overcome config errors
+    kb_interface.propagate_performance()
+    unsolved_functions = kb_interface.get_unsolved_functions()
+    print('unsolved functions: {}'.format(unsolved_functions))
+    for function in unsolved_functions:
+        best_fd = kb_interface.get_best_function_design(function)
+        if best_fd is not None:
+            kb_interface.select_function_design(best_fd, 'true')
+
+    unsolved_components = kb_interface.get_unsolved_components()
+    print('unsolved components: {}'.format(unsolved_components))
+    for component in unsolved_components:
+        best_config = kb_interface.get_best_component_configuration(component)
+        kb_interface.select_component_configuration(best_config, 'true')
+        reconfiguration_plan[component] = ('activate', best_config)
+
+
+def execute(kb_interface):
+    for reconf_action in reconfiguration_plan.items():
+        component = reconf_action[0]
+        action = reconf_action[1]
+        if action[0] == 'activate':
+            kb_interface.activate_component(component, 'true')
+            if action[1] is not None:
+                kb_interface.activate_component_configuration(action[1], 'true')
+            print('Component {0} set to {1} state, with config {2}'.format(
+                component, action[0], action[1]))
+        else:
+            kb_interface.activate_component(component, 'false')
+            print('Component {0} set to {1} state'.format(componet, action[0]))
+        component_status = kb_interface.get_attribute_from_entity(
+            'Component',
+            'component-name',
+            component,
+            'component-status')
+        print('Component status {}'.format(component_status))
+    reconfiguration_plan.clear()
 
 
 def main():
@@ -70,7 +102,10 @@ def main():
     while True:
         monitor(kb_interface)
         measured_wv = kb_interface.get_measured_attribute('water visibility')
-
+        print("Measured water visibility {}".format(measured_wv))
+        analyze(kb_interface)
+        plan(kb_interface)
+        execute(kb_interface)
         time.sleep(1)
 
 
