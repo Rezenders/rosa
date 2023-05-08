@@ -159,27 +159,30 @@ class ModelInterface(TypeDBInterface):
         query_result = self.get_required_functions_raw()
         return [r.get("function-name").get_value() for r in query_result]
 
-    # Get all Functions with is-required property equal to True and
+    # Get all entities with is-required property equal to True and
     # function-status equal to 'unsolved' raw
-    def get_unsolved_required_functions_raw(self):
+    def get_unsolved_entity_raw(self, entity):
         query = f'''
             match
-                $function isa Function, has is-required true,
-                    has function-name $function-name,
-                    has function-status 'unsolved';
-                get $function-name;
+                $e isa {entity}, has is-required true,
+                    has {entity.lower()}-name $name,
+                    has {entity.lower()}-status 'unsolved';
+                get $name;
         '''
         return self.match_database(query)
+
+    # Get all Functions with is-required property equal to True and
+    # function-status equal to 'unsolved' raw
+    def get_unsolved_functions_raw(self):
+        return self.get_unsolved_entity_raw('Function')
 
     # Get all Functions with is-required property equal to True and
     # function-status equal to 'unsolved'
-    def get_unsolved_required_functions(self):
-        query_result = self.get_unsolved_required_functions_raw()
-        return [r.get("function-name").get_value() for r in query_result]
+    def get_unsolved_functions(self):
+        query_result = self.get_unsolved_entity_raw('Function')
+        return [r.get("name").get_value() for r in query_result]
 
-    # def get_function_designs_ordered(self):
-
-    def get_unsolved_required_functions_raw(self):
+    def get_unsolved_functions_raw(self):
         query = f'''
             match
                 $function isa Function, has is-required true,
@@ -188,6 +191,12 @@ class ModelInterface(TypeDBInterface):
                 get $function-name;
         '''
         return self.match_database(query)
+
+    # Get all Components with is-required property equal to True and
+    # component-status equal to 'unsolved'
+    def get_unsolved_components(self):
+        query_result = self.get_unsolved_entity_raw('Component')
+        return [r.get("name").get_value() for r in query_result]
 
     def propagate_performance(self):
         self.propagate_components_performance()
