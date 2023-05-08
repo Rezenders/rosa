@@ -1,12 +1,12 @@
 insert
 
 #Task search pipeline
-$t0 isa Task, has task-name "search pipeline", has is-required true;
+$t0 isa Task, has task-name "search pipeline";
 
 $f0 isa Function, has function-name "generate search path";
 $f1 isa Function, has function-name "recover motion";
 
-(task:$t0, required-function:$f0, required-function:$f1) isa task-requirement;
+(task:$t0, required-function:$f0, required-function:$f1) isa task-requirement, has task-requirement-name "search pipeline requirement";
 
 ## Component Generate spiral search path node and configurations
 $c0 isa Component, has component-name "generate spiral search path node";
@@ -48,7 +48,7 @@ $thruster6 isa Component, has component-name "thruster6";
 # Task inspect pipeline
 $t1 isa Task, has task-name "inspect pipeline";
 $f2 isa Function, has function-name "follow pipeline";
-(task:$t1, required-function:$f1, required-function:$f2) isa task-requirement;
+(task:$t1, required-function:$f1, required-function:$f2) isa task-requirement,  has task-requirement-name "inspect pipeline requirement";
 
 $c2 isa Component, has component-name "follow pipeline node";
 (function: $f2, required-component: $c2) isa function-design, has function-design-name "follow pipeline function design";
