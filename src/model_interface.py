@@ -187,7 +187,42 @@ class ModelInterface(TypeDBInterface):
         return self.match_database(query)
 
     def propagate_performance(self):
-        pass
+        self.propagate_components_performance()
+        self.propagate_function_designs_performance()
+
+    def get_function_designs_to_propagate_performance(self):
+        query = f'''
+            match
+                $function-design (required-component: $component)
+                    isa function-design, has function-design-name $fd-name;
+                not {{
+                    $function-design has performance $p;
+                }};
+                $component has performance $c-p;
+                get $fd-name;
+        '''
+        return [r.get("fd-name").get_value()
+                for r in self.match_database(query)]
+
+    def get_function_design_inferred_performance_sum(self, fd_name):
+        query = f'''
+            match
+                $function-design (required-component: $component)
+                    isa function-design, has function-design-name "{fd_name}";
+                not {{
+                    $function-design has performance $p;
+                }};
+                $component has performance $c-p;
+                get $c-p; sum $c-p;
+        '''
+        return self.match_aggregate_database(query)
+
+    def propagate_function_designs_performance(self):
+        self.propagate_entity_performance(
+            self.get_function_designs_to_propagate_performance,
+            self.get_function_design_inferred_performance_sum,
+            self.update_function_design_performance,
+        )
 
     def get_components_to_propagate_peformance(self):
         query = f'''
@@ -201,13 +236,14 @@ class ModelInterface(TypeDBInterface):
                         has performance $p;
                 }};
                 $component-configuration (component: $component)
-                    isa component-configuration, has performance $p;
+                    isa component-configuration, has performance $p,
+                    has component-configuration-status 'feasible';
                 get $component-name;
         '''
         return [r.get("component-name").get_value()
                 for r in self.match_database(query)]
 
-    def get_component_inferred_performance_sum(self, c_name):
+    def get_component_inferred_performance_max(self, c_name):
         query = f'''
             match
                 $component isa Component, has component-name "{c_name}";
@@ -217,23 +253,38 @@ class ModelInterface(TypeDBInterface):
                 $component-configuration (component: $component)
                     isa component-configuration;
                 $component-configuration has performance $cc_p;
-                get $cc_p; sum $cc_p;
+                get $cc_p; max $cc_p;
         '''
         return self.match_aggregate_database(query)
 
     def propagate_components_performance(self):
-        components = self.get_components_to_propagate_peformance()
-        print(components)
-        for c_name in components:
-            performance = self.get_component_inferred_performance_sum(c_name)
+        self.propagate_entity_performance(
+            self.get_components_to_propagate_peformance,
+            self.get_component_inferred_performance_max,
+            self.update_component_performance,
+        )
+
+    def propagate_entity_performance(
+            self, get_entity, get_inferred_performance, update_performance):
+        entities = get_entity()
+        for entity in entities:
+            performance = get_inferred_performance(entity)
             if performance is not None:
-                self.update_component_performance(c_name, performance)
+                update_performance(entity, performance)
 
     def update_component_performance(self, c_name, value):
         return self.update_attribute_entity(
             'Component',
             'component-name',
             c_name,
+            'performance',
+            value)
+
+    def update_function_design_performance(self, fd_name, value):
+        return self.update_attribute_entity(
+            'function-design',
+            'function-design-name',
+            fd_name,
             'performance',
             value)
 
