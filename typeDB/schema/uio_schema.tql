@@ -59,6 +59,9 @@ is-required sub attribute,
 is-selected sub attribute,
     value boolean;
 
+is-active sub attribute,
+    value boolean;
+
 #is-task-required sub is-required;
 #is-function-required sub is-required;
 #is-component-required sub is-required;
@@ -112,6 +115,8 @@ Component sub entity,
     owns component-name @key,
     owns component-status,
     owns is-required,
+    owns is-active,
+    owns performance,
     plays function-design:required-component,
     plays component-configuration:component;
     
@@ -229,19 +234,26 @@ rule component-status-unsolved:
             $c has component-status $c_status; $c_status like 'unfeasible|failure|configuration error';
         };
         not {
-            $component_configuration (component: $c) isa component-configuration, has is-selected true, has component-configuration-status 'feasible';
+            $c has is-active true;
         };
     } then {
          $c has component-status 'unsolved';
     };
 
+# TODO: what about when the component doesn't have a configuration?
 rule component-status-solved:
     when {
-        $c isa Component, has is-required true;
+        $c isa Component, has is-required true, has is-active true;
         not {
             $c has component-status $c_status; $c_status like 'unfeasible|failure|configuration error|unsolved';
         };
-        $component_configuration (component: $c) isa component-configuration, has is-selected true, has component-configuration-status 'feasible';
+        {
+            $component_configuration (component: $c) isa component-configuration, has is-selected true, has component-configuration-status 'feasible';
+        } or {
+            not{
+                $component_configuration (component: $c) isa component-configuration;
+            };
+        };
     } then {
         $c has component-status 'solved';
     };
@@ -256,28 +268,17 @@ rule component-status-feasible:
             $c has component-status $c_status; 
             $c_status like 'unfeasible|failure|configuration error|unsolved|solved';
         };
-        $component_configuration (component: $c) isa component-configuration, has component-configuration-status 'feasible';
+        {
+            $component_configuration (component: $c) isa component-configuration, has component-configuration-status 'feasible';
+        } or {
+            not {
+                $component_configuration (component: $c) isa component-configuration;
+            };
+        };
     } then {
         $c has component-status 'feasible';
     };
     
-rule component-status-feasible-without-configuration:
-    when {
-        $c isa Component;
-        not {
-            $c has is-required true;
-        };
-        not {
-            $c has component-status $c_status; 
-            $c_status like 'unfeasible|failure|configuration error|unsolved|solved';
-        };
-        not {
-            $component_configuration (component: $c) isa component-configuration;
-        };
-    } then {
-        $c has component-status 'feasible';
-    };
-
 # This might result in several unfeasible status being included if there are more than 1 component with failure or unfeasible status. I don't think this is a problem.
 rule function-design-status-unfeasible:
     when{
@@ -392,7 +393,7 @@ rule function-status-unsolved:
         $f isa Function, has is-required true;
         not {
             $f has function-status $f_status; 
-            $f_status like 'unfeasible|configuration error|implicit configuration error';
+            $f_status like 'unfeasible|configuration error|implicit configuration error|solved';
         };
         not {
             $fd (function: $f) isa function-design, has is-selected true, has function-design-status $fd_status;
@@ -408,7 +409,7 @@ rule function-status-solved:
         $f isa Function, has is-required true;
         not {
             $f has function-status $f_status; 
-            $f_status like 'unfeasible|configuration error|implicit configuration error|unsolved';
+            $f_status like 'unfeasible|configuration error|implicit configuration error';
         };
         $fd (function: $f) isa function-design, has is-selected true, has function-design-status 'solved';
     } then {
@@ -508,20 +509,6 @@ rule task-status-unfeasible:
     } then {
         $t has task-status 'unfeasible';
     };
-#rule constrainment-violation-propagation-function-design:
-#    when{
-#        $constrainment (constrained: $constrained) isa constrainment, has constrainment-status 'violation';
-#        $constrained isa function-design;
-#    } then {
-#        $constrained has function-design-status 'unfeasible';
-#    };
-
-#rule constrainment-violation-propagation-component:
-#    when{
-#        $constrainment (constrained: $constrained) isa constrainment, has constrainment-status 'violation';
-#        $constrained isa Component;
-#    } then {
-#        $constrained has component-status 'unfeasible';
     
  rule task-status-implicit-configuration-error:
     when {
