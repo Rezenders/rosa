@@ -4,9 +4,9 @@ import math
 from model_interface import ModelInterface
 
 initial_time = time.time()
-water_visibility_period = 100
-water_visibility_min = 1.25
-water_visibility_max = 3.75
+water_visibility_period = 80
+water_visibility_min = 1.75
+water_visibility_max = 3.5
 water_visibility_amp = abs(water_visibility_max - water_visibility_min)/2
 sec_shift = 0.0
 
@@ -32,10 +32,11 @@ def monitor(kb_interface):
     water_visibility = calculate_water_visibility()
     kb_interface.update_measured_attribute(
         'water visibility', water_visibility)
+    print("Measured water visibility {}".format(water_visibility))
 
 
 def analyze(kb_interface):
-    # Status propagation solved by the inference reasone
+    # Status propagation solved by the inference reasoner
     # TODO: include adaptation to improve performance
     pass
 
@@ -46,21 +47,29 @@ def analyze(kb_interface):
 reconfiguration_plan = dict()
 
 
-def plan(kb_interface):
-    # TODO: include plan to improve peformance, and overcome config errors
+def plan(kb_interface, always_improve=True):
+    # Propagate performance
     kb_interface.propagate_performance()
-    unsolved_functions = kb_interface.get_unsolved_functions()
-    print('unsolved functions: {}'.format(unsolved_functions))
-    for function in unsolved_functions:
+
+    adaptable_functions = list()
+    adaptable_functions.extend(kb_interface.get_adaptable_functions())
+    if always_improve is True:
+        # TODO: remove functions without more than 1 feasible fd
+        adaptable_functions.extend(kb_interface.get_solved_functions())
+    for function in adaptable_functions:
         best_fd = kb_interface.get_best_function_design(function)
         if best_fd is not None:
-            kb_interface.select_function_design(best_fd, 'true')
+            kb_interface.select_function_design(function, best_fd)
 
-    unsolved_components = kb_interface.get_unsolved_components()
-    print('unsolved components: {}'.format(unsolved_components))
-    for component in unsolved_components:
+    adaptable_components = list()
+    adaptable_components.extend(kb_interface.get_adaptable_components())
+    if always_improve is True:
+        # TODO: remove components without more than 1 feasible component config
+        adaptable_components.extend(kb_interface.get_solved_components())
+    for component in adaptable_components:
         best_config = kb_interface.get_best_component_configuration(component)
-        kb_interface.select_component_configuration(best_config, 'true')
+        if best_config is not None:
+            kb_interface.select_component_configuration(component, best_config)
         reconfiguration_plan[component] = ('activate', best_config)
 
 
@@ -69,20 +78,12 @@ def execute(kb_interface):
         component = reconf_action[0]
         action = reconf_action[1]
         if action[0] == 'activate':
-            kb_interface.activate_component(component, 'true')
+            kb_interface.activate_component(component, True)
             if action[1] is not None:
-                kb_interface.activate_component_configuration(action[1], 'true')
-            print('Component {0} set to {1} state, with config {2}'.format(
-                component, action[0], action[1]))
+                kb_interface.activate_component_configuration(
+                    component, action[1], True)
         else:
-            kb_interface.activate_component(component, 'false')
-            print('Component {0} set to {1} state'.format(componet, action[0]))
-        component_status = kb_interface.get_attribute_from_entity(
-            'Component',
-            'component-name',
-            component,
-            'component-status')
-        print('Component status {}'.format(component_status))
+            kb_interface.activate_component(component, False)
     reconfiguration_plan.clear()
 
 
@@ -101,8 +102,6 @@ def main():
 
     while True:
         monitor(kb_interface)
-        measured_wv = kb_interface.get_measured_attribute('water visibility')
-        print("Measured water visibility {}".format(measured_wv))
         analyze(kb_interface)
         plan(kb_interface)
         execute(kb_interface)
