@@ -61,20 +61,38 @@ class ModelInterface(TypeDBInterface):
              'Task', 'task-name', task_name, 'task-status')
         return all(x in status for x in ['feasible'])
 
-    # Get all Functions with is-required property equal to True raw
-    def get_required_functions_raw(self):
+    # Get all entities with is-required property equal to True and
+    # function-status equal to 'solved' raw
+    def get_entity_with_status_raw(self, entity, status):
         query = f'''
             match
-                $function isa Function, has is-required true,
-                    has function-name $function-name;
-                get $function-name;
+                $e isa {entity}, has is-required true,
+                    has {entity.lower()}-name $name,
+                    has {entity.lower()}-status $status;
+                    $status like "{status}";
+                get $name;
         '''
         return self.match_database(query)
 
-    # Get all Functions with is-required property equal to True
-    def get_required_functions(self):
-        query_result = self.get_required_functions_raw()
-        return [r.get("function-name").get_value() for r in query_result]
+    def get_solved_functions(self):
+        query_result = self.get_entity_with_status_raw(
+            'Function', 'solved')
+        return [r.get("name").get_value() for r in query_result]
+
+    def get_solved_components(self):
+        query_result = self.get_entity_with_status_raw(
+            'Component', 'solved')
+        return [r.get("name").get_value() for r in query_result]
+
+    def get_adaptable_functions(self):
+        query_result = self.get_entity_with_status_raw(
+            'Function', 'unsolved|configuration error')
+        return [r.get("name").get_value() for r in query_result]
+
+    def get_adaptable_components(self):
+        query_result = self.get_entity_with_status_raw(
+            'Component', 'unsolved|configuration error')
+        return [r.get("name").get_value() for r in query_result]
 
     # Get all entities with is-required property equal to True and
     # function-status equal to 'unsolved' raw
@@ -288,34 +306,88 @@ class ModelInterface(TypeDBInterface):
         else:
             return query_result[0].get("conf-name").get_value()
 
-    def select_function_design(self, fd_name, value='true'):
+    # toogle fd and component config selection
+    def toogle_relationship_selection(self, entity, name, value):
+        is_selected = self.get_attribute_from_entity(
+            entity,
+            '{}-name'.format(entity.lower()),
+            name,
+            'is-selected')
+        if len(is_selected) > 0 and is_selected[0] is value:
+            return None
+        value = str(value).lower()
         return self.update_attribute_entity(
-            'function-design',
-            'function-design-name',
-            fd_name,
-            'is-selected',
-            value)
-
-    def select_component_configuration(self, name, value='true'):
-        return self.update_attribute_entity(
-            'component-configuration',
-            'component-configuration-name',
+            entity,
+            '{}-name'.format(entity),
             name,
             'is-selected',
             value)
 
-    def activate_component(self, name, value='true'):
+    # get selected fd or component config
+    def get_relationship_with_attribute(
+            self, entity, entity_name, relation, r_attribute, r_value):
+        query = f'''
+            match
+                $e isa {entity},
+                    has {entity.lower()}-name "{entity_name}";
+                $r ($e) isa {relation},
+                    has {r_attribute} {r_value},
+                    has {relation}-name $name;
+                get $name;
+            '''
+        query_result = self.match_database(query)
+        return [r.get("name").get_value() for r in query_result]
+
+    # select fd or component configuration
+    def select_relationship(self, entity, e_name, relation, r_name):
+        current_selected = self.get_relationship_with_attribute(
+            entity, e_name, relation, 'is-selected', 'true')
+        for r in current_selected:
+            if r != r_name:
+                self.toogle_relationship_selection(relation, r, False)
+
+        return self.toogle_relationship_selection(
+            relation, r_name, True)
+
+    def select_function_design(self, f_name, fd_name):
+        return self.select_relationship(
+            'Function', f_name, 'function-design', fd_name)
+
+    def select_component_configuration(self, c_name, cc_name):
+        return self.select_relationship(
+            'Component', c_name, 'component-configuration', cc_name)
+
+    def toogle_entity_activation(self, entity, name, value):
+        is_activated = self.get_attribute_from_entity(
+            entity,
+            '{}-name'.format(entity.lower()),
+            name,
+            'is-active')
+        if len(is_activated) > 0 and is_activated[0] is value:
+            return None
+        print('set {} to value {} '.format(name, value))
+        value = str(value).lower()
         return self.update_attribute_entity(
-            'Component',
-            'component-name',
+            entity,
+            '{}-name'.format(entity.lower()),
             name,
             'is-active',
             value)
 
-    def activate_component_configuration(self, name, value='true'):
-        return self.update_attribute_entity(
-            'component-configuration',
-            'component-configuration-name',
-            name,
-            'is-active',
-            value)
+    def activate_component(self, c_name, value):
+        return self.toogle_entity_activation('Component', c_name, value)
+
+    def activate_component_configuration(self, c_name, cc_name, value):
+        if value is True:
+            current_active = self.get_relationship_with_attribute(
+                'Component',
+                c_name,
+                'component-configuration',
+                'is-active',
+                'true')
+            for config in current_active:
+                if config != cc_name:
+                    self.toogle_entity_activation(
+                        'component-configuration', config, False)
+        return self.toogle_entity_activation(
+            'component-configuration', cc_name, value)
