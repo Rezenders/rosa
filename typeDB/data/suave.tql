@@ -22,9 +22,6 @@ $cc1 (component: $c0, parameter: $cp1) isa component-configuration, has componen
 $cc2 (component: $c0, parameter: $cp2) isa component-configuration, has component-configuration-name "high altitude", has performance 3.0;
 
 $water_visibility isa EnvironmentalAttribute, has attribute-name "water visibility";
-#$ea0 isa EnvironmentalAttribute, has attribute-name "water visibility", has attribute-value 1.25;/
-#$ea1 isa EnvironmentalAttribute, has attribute-name "water visibility", has attribute-value 2.25;/
-#$ea2 isa EnvironmentalAttribute, has attribute-name "water visibility", has attribute-value 3.25;/
 
 (constraint: $water_visibility, constrained: $cc0) isa constrainment, has attribute-value 1.25;
 (constraint: $water_visibility, constrained: $cc1) isa constrainment, has attribute-value 2.25;
@@ -52,3 +49,27 @@ $f2 isa Function, has function-name "follow pipeline";
 
 $c2 isa Component, has component-name "follow pipeline node";
 (function: $f2, required-component: $c2) isa function-design, has function-design-name "follow pipeline function design";
+
+# Extending SUAVE
+$battery_level_qa isa QualityAttribute, has attribute-name "battery level";
+$battery_consumption_qa isa QualityAttribute, has attribute-name "battery consumption";
+
+$light isa Component, has component-name "light";
+
+# value is from 0.0 (off) to 1.0 (max)
+$zero_brightness isa ComponentParameter, has parameter-key "brightness", has parameter-value "0.0";
+$low_brightness isa ComponentParameter, has parameter-key "brightness", has parameter-value "0.5";
+$high_brightness isa ComponentParameter, has parameter-key "brightness", has parameter-value "1.0";
+
+$light_zero_brightness (component: $light, parameter: $zero_brightness) isa component-configuration, has component-configuration-name "zero brightness";
+$light_low_brightness (component: $light, parameter: $low_brightness) isa component-configuration, has component-configuration-name "low brightness";
+$light_high_brightness (component: $light, parameter: $high_brightness) isa component-configuration, has component-configuration-name "high brightness";
+
+# value in watts
+$light_zero_brightnes_bat_consumption (causer: $light_zero_brightness, affected: $battery_consumption_qa) isa estimation, has estimation-value 0.0, has estimation-type "positive";
+$light_low_brightnes_bat_consumption (causer: $light_low_brightness, affected: $battery_consumption_qa) isa estimation, has estimation-value 30.0, has estimation-type "positive";
+$light_high_brightnes_bat_consumption (causer: $light_high_brightness, affected: $battery_consumption_qa) isa estimation, has estimation-value 60.0, has estimation-type "positive";
+
+$light_zero_brightnes_water_visbility (causer: $light_zero_brightness, affected: $water_visibility) isa estimation, has estimation-value 0.0, has estimation-type "positive";
+$light_low_brightnes_water_visbility (causer: $light_low_brightness, affected: $water_visibility) isa estimation, has estimation-value 0.5, has estimation-type "positive";
+$light_high_brightnes_water_visbility (causer: $light_high_brightness, affected: $water_visibility) isa estimation, has estimation-value 0.90, has estimation-type "positive";
