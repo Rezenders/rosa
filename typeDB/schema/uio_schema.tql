@@ -161,7 +161,7 @@ rule implicit-component-is-required:
 # TODO: add condition to check what type of constraint it is, still need to add a type property to constrainment. Then add more rules
 rule constrainment-status-violated-greater-equal:
     when{
-        $constrainment (constraint: $constraint, constrained: $constrained) isa constrainment, has attribute-value $value;
+        $constrainment (constraint: $constraint) isa constrainment, has attribute-value $value;
         $constraint has attribute-measurement $measurement;
         not {$measurement >= $value;};
     } then {
@@ -170,13 +170,14 @@ rule constrainment-status-violated-greater-equal:
  
 rule constrainment-status-satisfied-greater-equal:
     when{
-        $constrainment (constraint: $constraint, constrained: $constrained) isa constrainment, has attribute-value $value;
+        $constrainment (constraint: $constraint) isa constrainment, has attribute-value $value;
         $constraint has attribute-measurement $measurement;
         $measurement >= $value;
     } then {
         $constrainment has constrainment-status 'satisfied';
     };
 
+# this should also be true when only the first condition is met, i.e., when the constrainment does not have an attribute-value
 rule constrainment-status-ok-no-measurement:
     when{
         $constrainment (constraint: $constraint, constrained: $constrained) isa constrainment;
@@ -187,22 +188,22 @@ rule constrainment-status-ok-no-measurement:
     
 rule component-configuration-status-unfeasible:
     when{
-        $constrainment (constrained: $constrained) isa constrainment, has constrainment-status 'violated';
-        $constrained isa component-configuration;
+        $component-config isa component-configuration;
+        (constrained: $component-config) isa constrainment, has constrainment-status 'violated';    
     } then {
-        $constrained has component-configuration-status 'unfeasible';
+        $component-config has component-configuration-status 'unfeasible';
     };
     
 rule component-configuration-status-feasible:
     when{
-        $constrainment (constrained: $constrained) isa constrainment, has constrainment-status $constrainment-status;
-        $constrained isa component-configuration;
+        $component-config isa component-configuration;
         not {
-            $constrained has component-configuration-status 'unfeasible';
+            $component-config has component-configuration-status 'unfeasible';
         };
+        (constrained: $component-config) isa constrainment, has constrainment-status $constrainment-status;
         $constrainment-status like 'satisfied|not evaluated';        
     } then {
-        $constrained has component-configuration-status 'feasible';
+        $component-config has component-configuration-status 'feasible';
     };
 
 rule component-status-unfeasible:
