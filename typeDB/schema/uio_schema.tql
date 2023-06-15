@@ -62,6 +62,16 @@ is-selected sub attribute,
 is-active sub attribute,
     value boolean;
 
+# Should this be an attribute? or could this be represented by sub concepts?
+#estimation-type sub attribute,
+#    value "^(positive|negative|absolute)$";
+    
+estimation-value sub attribute,
+    value double;
+
+estimation-type sub attribute,
+    value string,
+    regex "^(positive|negative|absolute)$";
 #is-task-required sub is-required;
 #is-function-required sub is-required;
 #is-component-required sub is-required;
@@ -80,7 +90,8 @@ function-design sub relation,
     owns is-selected,
     owns function-design-status,
     relates function,
-    relates required-component;
+    relates required-component,
+    plays estimation:causer;
 
 component-configuration sub relation,
     owns component-configuration-name @key,
@@ -90,13 +101,25 @@ component-configuration sub relation,
     owns component-configuration-status,
     relates component,
     relates parameter,
-    plays constrainment:constrained;
+    plays constrainment:constrained,
+    plays estimation:causer;
 
 constrainment sub relation,
     owns attribute-value,
     owns constrainment-status,
     relates constraint,
     relates constrained;
+
+# TODO: find a better name
+estimation sub relation,
+    owns estimation-value,
+    owns estimation-type,
+    relates affected, #is this the right word? hehe
+    relates causer;
+
+positive-estimation sub estimation; 
+negative-estimation sub estimation; 
+absolute-estimation sub estimation; 
 
 ### Concepts
 Task sub entity,
@@ -119,7 +142,8 @@ Component sub entity,
     owns is-active,
     owns performance,
     plays function-design:required-component,
-    plays component-configuration:component;
+    plays component-configuration:component,
+    plays estimation:causer;
     
 ComponentParameter sub entity,
     owns parameter-key,
@@ -131,9 +155,11 @@ Attribute sub entity,
     abstract,
     owns attribute-name @key,
     owns attribute-measurement,
-    plays constrainment:constraint;
+    plays constrainment:constraint,
+    plays estimation:affected;
 
 EnvironmentalAttribute sub Attribute;
+QualityAttribute sub Attribute;
 
 # Rules
 rule implicit-task-requirement-is-required:
