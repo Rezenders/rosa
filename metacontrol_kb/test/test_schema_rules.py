@@ -20,8 +20,8 @@ def kb_interface():
     kb_interface = TypeDBInterface(
         "localhost:1729",
         "pytest_database",
-        "../typeDB/schema/uio_schema.tql",
-        "../typeDB/data/test_data.tql",  # TODO:better way to handle empty data
+        "config/schema.tql",
+        "test/test_data/test_data.tql",  # TODO:better way to handle empty data
         force_database=True,
         force_data=True)
     return kb_interface
