@@ -24,7 +24,7 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
-            'metacontrol_kb = metacontrol_kb.metacontrol_kb:main'
+            'metacontrol_kb_typedb = metacontrol_kb.metacontrol_kb_typedb:main'
         ],
     },
 )

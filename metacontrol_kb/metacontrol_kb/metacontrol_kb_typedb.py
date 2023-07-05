@@ -16,7 +16,7 @@ import rclpy
 
 from ament_index_python.packages import get_package_share_directory
 
-from metacontrol_kb.model_interface import ModelInterface
+from metacontrol_kb.typedb_model_interface import ModelInterface
 
 from rclpy.callback_groups import MutuallyExclusiveCallbackGroup
 from rclpy.callback_groups import ReentrantCallbackGroup
@@ -48,14 +48,14 @@ class MetacontrolKB(ROSTypeDBInterface):
 
     # TODO: Test if this works
     def diagnostics_callback(self, msg):
+        measurement_messages = [
+            'QA status',
+            'QA measurement',
+            'EA status',
+            'EA measurement',
+            'Attribute measurement']
         for diagnostic_status in msg.status:
             # Update measurement
-            measurement_messages = [
-                'QA status',
-                'QA measurement',
-                'EA status',
-                'EA measurement',
-                'Attribute measurement']
             if diagnostic_status.message in measurement_messages:
                 for value in diagnostic_status.values:
                     self.typedb_interface.update_measured_attribute(
