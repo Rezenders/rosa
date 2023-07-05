@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import pytest
-from metacontrol_kb.model_interface import ModelInterface
+from metacontrol_kb.typedb_model_interface import ModelInterface
 
 
 @pytest.fixture
@@ -129,8 +129,8 @@ def test_get_measurement_attribute(kb_interface):
 
 def test_update_measurement_attribute(kb_interface):
     value = 1.32
-    kb_interface.update_measured_attribute('ea1', 1.32)
-    measured_value = kb_interface.get_measured_attribute('ea1')
+    kb_interface.update_measured_attribute('ea_measurement', 1.32)
+    measured_value = kb_interface.get_measured_attribute('ea_measurement')
     assert value == measured_value
 
 
