@@ -15,6 +15,7 @@
 
   <exec_depend>ros_typedb</exec_depend>
   <exec_depend>ros_typedb_msgs</exec_depend>
+  <exec_depend>metacontrol_kb_msgs</exec_depend>
 
   <export>
     <build_type>ament_python</build_type>
