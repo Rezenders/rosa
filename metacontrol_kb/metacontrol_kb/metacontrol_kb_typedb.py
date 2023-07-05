@@ -17,6 +17,7 @@ import traceback
 
 from ament_index_python.packages import get_package_share_directory
 
+from metacontrol_kb_msgs.srv import Task
 from metacontrol_kb.typedb_model_interface import ModelInterface
 
 from rclpy.callback_groups import MutuallyExclusiveCallbackGroup
@@ -35,6 +36,7 @@ class MetacontrolKB(ROSTypeDBInterface):
         self.typedb_interface_class = ModelInterface
 
     def on_configure(self, state: State) -> TransitionCallbackReturn:
+        config_res = super().on_configure(state)
         self.diganostic_sub = self.create_subscription(
             DiagnosticArray,
             '/diagnostics',
@@ -42,7 +44,23 @@ class MetacontrolKB(ROSTypeDBInterface):
             1,
             callback_group=ReentrantCallbackGroup()
         )
-        return super().on_configure(state)
+
+        self.task_cb_group = MutuallyExclusiveCallbackGroup()
+        self.task_request_service = self.create_service(
+            Task,
+            self.get_name() + '/task/request',
+            self.task_request_cb,
+            callback_group=self.task_cb_group
+        )
+
+        self.task_cancel_service = self.create_service(
+            Task,
+            self.get_name() + '/task/cancel',
+            self.task_cancel_cb,
+            callback_group=self.task_cb_group
+        )
+
+        return config_res
 
     def on_cleanup(self, state: State) -> TransitionCallbackReturn:
         return super().on_cleanup(state)
