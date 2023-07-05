@@ -13,6 +13,7 @@
 # limitations under the License.
 import os
 import rclpy
+import traceback
 
 from ament_index_python.packages import get_package_share_directory
 
@@ -61,9 +62,26 @@ class MetacontrolKB(ROSTypeDBInterface):
                     self.typedb_interface.update_measured_attribute(
                         value.key, value.value)
 
+    def task_request_cb(self, req, res):
+        response = Task.Response()
+        if self.typedb_interface.is_task_feasible(req.task_name) is True:
+            self.typedb_interface.request_task(req.task_name)
+            response.success = True
+        else:
+            response.success = False
+        return response
+
+    def task_cancel_cb(self, req, res):
+        self.typedb_interface.cancel_task(req.task_name)
+        response = Task.Response()
+        response.success = True
+        return response
+
 
 def main():
     rclpy.init()
+    traceback_logger = rclpy.logging.get_logger(
+        'metacontrol_kb_traceback_logger')
 
     pkg_metacontrol_kb = get_package_share_directory('metacontrol_kb')
     schema_path = os.path.join(pkg_metacontrol_kb, 'config', 'schema.tql')
@@ -77,6 +95,11 @@ def main():
     try:
         executor.spin()
     except (KeyboardInterrupt, rclpy.executors.ExternalShutdownException):
+        pass
+    except Exception as exception:
+        traceback_logger.error(traceback.format_exc())
+        raise exception
+    finally:
         lc_node.destroy_node()
 
 
