@@ -228,7 +228,6 @@ def test_function_status_inference(
         'function-name',
         f_name,
         'function-status')
-    print(f_status_inferred)
     assert all(x in f_status_inferred for x in [f_status]) is True
 
 
@@ -272,7 +271,6 @@ def test_task_requirement_status_inference(
         'task-requirement-name',
         tr_name,
         'task-requirement-status')
-    print(tr_status_inferred)
     assert all(x in tr_status_inferred for x in [tr_status]) is True
 
 
@@ -283,7 +281,7 @@ def test_task_requirement_status_inference(
     ('task1 requirement', 'task1', 'feasible'),
     ('task1 requirement', 'task1', 'solved'),
 ])
-def test_task_status_inference(kb_interface, tr_name, t_name, status):
+def test_task_status_inference_from_req(kb_interface, tr_name, t_name, status):
     kb_interface.update_attribute_entity(
         'task-requirement',
         'task-requirement-name',
@@ -300,5 +298,13 @@ def test_task_status_inference(kb_interface, tr_name, t_name, status):
         'task-name',
         t_name,
         'task-status')
-    print(t_status_inferred)
     assert tr_status_inferred == t_status_inferred
+
+
+def test_task_status_inference(kb_interface):
+    t_status_inferred = kb_interface.get_attribute_from_entity(
+        'Task',
+        'task-name',
+        'task_constrained',
+        'task-status')
+    assert 'unfeasible' == t_status_inferred[0]

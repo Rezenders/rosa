@@ -49,6 +49,10 @@ $t_required_empty isa Task, has task-name "task_required_empty";
 $t_feasible isa Task, has task-name "task_feasible", has task-status 'feasible';
 $t_unfeasible isa Task, has task-name "task_unfeasible", has task-status 'unfeasible';
 
+$t_constrained isa Task, has task-name "task_constrained";
+$qa_t_constraint isa QualityAttribute, has attribute-name "qa_t_constraint", has attribute-measurement 0.3;
+(constraint:$qa_t_constraint, constrained:$t_constrained) isa constrainment, has attribute-value 0.5;
+
 $c_required isa Component, has component-name "c_required", has is-required true;
 
 #$f_required isa Function, has function-name "function_required", has is-required true;

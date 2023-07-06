@@ -76,7 +76,7 @@ def test_get_selectable_tasks(kb_interface):
 #     unsolved = kb_interface.get_required_tasks_not_solved()
 #     assert (task_name in unsolved) is expected_result
 
-#TODO: test_get_required_unsolved_tasks (if it is used)
+# TODO: test_get_required_unsolved_tasks (if it is used)
 
 
 # def test_has_tasks_not_solved(kb_interface):

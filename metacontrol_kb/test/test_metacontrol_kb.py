@@ -32,7 +32,6 @@ from diagnostic_msgs.msg import DiagnosticStatus
 from diagnostic_msgs.msg import KeyValue
 from lifecycle_msgs.srv import ChangeState
 from lifecycle_msgs.srv import GetState
-from metacontrol_kb_msgs.msg import Task
 from metacontrol_kb_msgs.srv import TaskRequest
 from metacontrol_kb_msgs.srv import TasksMatched
 from rclpy.callback_groups import ReentrantCallbackGroup
