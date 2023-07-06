@@ -133,8 +133,12 @@ def test_metacontrol_kb_diagnostics():
         rclpy.shutdown()
 
 
+@pytest.mark.parametrize("task_name, task_required", [
+    ('task1', True),
+    ('task_required', False),
+])
 @pytest.mark.launch(fixture=generate_test_description)
-def test_metacontrol_kb_task_request():
+def test_metacontrol_kb_task_request(task_name, task_required):
     rclpy.init()
     try:
         node = MakeTestNode()
@@ -142,16 +146,16 @@ def test_metacontrol_kb_task_request():
         node.activate_metacontrol_kb()
 
         request = TaskRequest.Request()
-        request.task.task_name = 'task1'
-        request.required = True
+        request.task.task_name = task_name
+        request.required = task_required
 
         response = node.call_service(node.task_req_srv, request)
 
         query_req = Query.Request()
         query_req.query_type = 'match'
-        query_req.query = """
+        query_req.query = f"""
             match $ea isa Task,
-                has task-name "task1",
+                has task-name "{task_name}",
                 has is-required $task-required;
             get $task-required;
         """
@@ -159,41 +163,7 @@ def test_metacontrol_kb_task_request():
         correct_res = False
         for r in query_res.result:
             if r.attribute_name == 'task-required' \
-               and r.value.bool_value is True:
-                correct_res = True
-
-        assert response.success is True and correct_res is True
-    finally:
-        rclpy.shutdown()
-
-
-@pytest.mark.launch(fixture=generate_test_description)
-def test_metacontrol_kb_task_cancel():
-    rclpy.init()
-    try:
-        node = MakeTestNode()
-        node.start_node()
-        node.activate_metacontrol_kb()
-
-        request = TaskRequest.Request()
-        request.task.task_name = 'task_required'
-        request.required = False
-
-        response = node.call_service(node.task_req_srv, request)
-
-        query_req = Query.Request()
-        query_req.query_type = 'match'
-        query_req.query = """
-            match $ea isa Task,
-                has task-name "task_required",
-                has is-required $task-required;
-            get $task-required;
-        """
-        query_res = node.call_service(node.query_srv, query_req)
-        correct_res = False
-        for r in query_res.result:
-            if r.attribute_name == 'task-required' \
-               and r.value.bool_value is False:
+               and r.value.bool_value is task_required:
                 correct_res = True
 
         assert response.success is True and correct_res is True
