@@ -1,0 +1,4 @@
+Task task
+bool required # true to activate, false to cancel
+---
+bool success
