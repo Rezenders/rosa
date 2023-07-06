@@ -74,6 +74,16 @@ class ModelInterface(TypeDBInterface):
              'Task', 'task-name', task_name, 'task-status')
         return all(x in status for x in ['feasible'])
 
+    def get_selectable_tasks(self):
+        query = """
+            match
+            $t isa Task, has task-name $task-name;
+            not {$t isa Task, has task-status 'unfeasible';};
+            get $task-name;
+        """
+        query_result = self.match_database(query)
+        return [r.get('task-name').get_value() for r in query_result]
+
     # Get all entities with is-required property equal to True and
     # function-status equal to 'solved' raw
     def get_entity_with_status_raw(self, entity, status):
