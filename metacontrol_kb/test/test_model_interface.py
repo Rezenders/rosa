@@ -57,6 +57,14 @@ def test_is_task_required(kb_interface, task_name, expected_result):
 def test_is_task_feasible(kb_interface, task_name, expected_result):
     assert kb_interface.is_task_feasible(task_name) is expected_result
 
+
+def test_get_selectable_tasks(kb_interface):
+    result = kb_interface.get_selectable_tasks()
+    expected_result = [
+        'task_feasible', 'task_required_solved']
+    assert ('task_unfeasible' not in result) \
+           and all(r in result for r in expected_result)
+
 # TODO: is this needed?
 # @pytest.mark.parametrize("task_name, expected_result", [
 #     ('task_required', True),

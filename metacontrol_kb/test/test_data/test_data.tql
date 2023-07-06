@@ -47,6 +47,7 @@ $t_required_activated isa Task, has task-name "task_required_solved", has is-req
 $t_not_required isa Task, has task-name "task_not_required", has is-required false;
 $t_required_empty isa Task, has task-name "task_required_empty";
 $t_feasible isa Task, has task-name "task_feasible", has task-status 'feasible';
+$t_unfeasible isa Task, has task-name "task_unfeasible", has task-status 'unfeasible';
 
 $c_required isa Component, has component-name "c_required", has is-required true;
 
