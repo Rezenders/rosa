@@ -152,20 +152,45 @@ def test_get_best_function_design(kb_interface):
     assert fd == 'f2_fd1_c2_c3'
 
 
-def test_select_function_design(kb_interface):
-    kb_interface.select_function_design('f2_fd1_c2_c3', 'true')
+def test_toogle_function_design_selection(kb_interface):
+    kb_interface.toogle_relationship_selection(
+        'function-design', 'f2_fd1_c2_c3', True)
     fd_selected = kb_interface.get_attribute_from_entity(
-         'function-design',
-         'function-design-name',
-         'f2_fd1_c2_c3',
-         'is-selected')
-    kb_interface.select_function_design('f2_fd1_c2_c3', 'false')
+        'function-design',
+        'function-design-name',
+        'f2_fd1_c2_c3',
+        'is-selected')
+    kb_interface.toogle_relationship_selection(
+        'function-design', 'f2_fd1_c2_c3', False)
     fd_not_selected = kb_interface.get_attribute_from_entity(
-         'function-design',
-         'function-design-name',
-         'f2_fd1_c2_c3',
-         'is-selected')
+        'function-design',
+        'function-design-name',
+        'f2_fd1_c2_c3',
+        'is-selected')
     assert fd_selected[0] is True and fd_not_selected[0] is False
+
+
+def test_select_function_design(kb_interface):
+    kb_interface.select_function_design('function2', 'f2_fd1_c2_c3')
+    fd1_selected = kb_interface.get_attribute_from_entity(
+        'function-design',
+        'function-design-name',
+        'f2_fd1_c2_c3',
+        'is-selected')
+    kb_interface.select_function_design('function2', 'f2_fd2_c4_c5')
+    fd1_not_selected = kb_interface.get_attribute_from_entity(
+        'function-design',
+        'function-design-name',
+        'f2_fd1_c2_c3',
+        'is-selected')
+    fd2_selected = kb_interface.get_attribute_from_entity(
+        'function-design',
+        'function-design-name',
+        'f2_fd2_c4_c5',
+        'is-selected')
+
+    assert fd1_selected[0] is True and fd1_not_selected[0] is False \
+           and fd2_selected[0] is True
 
 
 def test_get_component_configuration_higher_performance(kb_interface):
@@ -181,27 +206,22 @@ def test_get_best_component_configuration(kb_interface):
 
 
 def test_select_component_configuration(kb_interface):
-    kb_interface.select_component_configuration('high param', 'true')
-    selected = kb_interface.get_attribute_from_entity(
-         'component-configuration',
-         'component-configuration-name',
-         'high param',
-         'is-selected')
-    kb_interface.select_component_configuration('high param', 'false')
-    not_selected = kb_interface.get_attribute_from_entity(
-         'component-configuration',
-         'component-configuration-name',
-         'high param',
-         'is-selected')
-    assert selected[0] is True and not_selected[0] is False
-# def test_get_required_functions_from_task(kb_interface):
-#     result = kb_interface.get_required_functions_from_task('task1')
-#     assert all(x in result for x in ['function1', 'function2']) is True
-#
-#
-# def test_get_required_functions(kb_interface):
-#     assert False
-#
-#
-# def test_function_required_empty(kb_interface):
-#     assert False
+    kb_interface.select_component_configuration('component1', 'high param')
+    high_selected = kb_interface.get_attribute_from_entity(
+        'component-configuration',
+        'component-configuration-name',
+        'high param',
+        'is-selected')
+    kb_interface.select_component_configuration('component1', 'low param')
+    high_not_selected = kb_interface.get_attribute_from_entity(
+        'component-configuration',
+        'component-configuration-name',
+        'high param',
+        'is-selected')
+    low_selected = kb_interface.get_attribute_from_entity(
+        'component-configuration',
+        'component-configuration-name',
+        'low param',
+        'is-selected')
+    assert high_selected[0] is True and high_not_selected[0] is False and \
+           low_selected[0] is True
