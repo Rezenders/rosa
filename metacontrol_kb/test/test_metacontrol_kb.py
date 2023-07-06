@@ -34,6 +34,7 @@ from lifecycle_msgs.srv import ChangeState
 from lifecycle_msgs.srv import GetState
 from metacontrol_kb_msgs.msg import Task
 from metacontrol_kb_msgs.srv import TaskRequest
+from metacontrol_kb_msgs.srv import TasksMatched
 from rclpy.callback_groups import ReentrantCallbackGroup
 from rclpy.node import Node
 from ros_typedb_msgs.srv import Query
@@ -171,6 +172,25 @@ def test_metacontrol_kb_task_request(task_name, task_required):
         rclpy.shutdown()
 
 
+@pytest.mark.launch(fixture=generate_test_description)
+def test_metacontrol_kb_task_selectable():
+    rclpy.init()
+    try:
+        node = MakeTestNode()
+        node.start_node()
+        node.activate_metacontrol_kb()
+
+        request = TasksMatched.Request()
+        response = node.call_service(node.task_selectable_srv, request)
+        res_task_names = [r.task_name for r in response.tasks]
+        expected_result = [
+            'task_feasible', 'task_required_solved']
+        assert ('task_unfeasible' not in res_task_names) \
+               and all(r in res_task_names for r in expected_result)
+    finally:
+        rclpy.shutdown()
+
+
 class MakeTestNode(Node):
 
     def __init__(self, name='test_node'):
@@ -192,6 +212,9 @@ class MakeTestNode(Node):
 
         self.task_req_srv = self.create_client(
             TaskRequest, '/metacontrol_kb/task/request')
+
+        self.task_selectable_srv = self.create_client(
+            TasksMatched, '/metacontrol_kb/task/selectable')
 
     def start_node(self):
         self.ros_spin_thread = Thread(
