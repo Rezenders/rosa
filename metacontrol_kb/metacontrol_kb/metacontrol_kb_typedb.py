@@ -17,7 +17,9 @@ import traceback
 
 from ament_index_python.packages import get_package_share_directory
 
+from metacontrol_kb_msgs.msg import Task
 from metacontrol_kb_msgs.srv import TaskRequest
+from metacontrol_kb_msgs.srv import TasksMatched
 from metacontrol_kb.typedb_model_interface import ModelInterface
 
 from rclpy.callback_groups import MutuallyExclusiveCallbackGroup
@@ -53,6 +55,13 @@ class MetacontrolKB(ROSTypeDBInterface):
             callback_group=self.task_cb_group
         )
 
+        self.task_selectable_service = self.create_service(
+            TasksMatched,
+            self.get_name() + '/task/selectable',
+            self.task_selectable_cb,
+            callback_group=self.task_cb_group
+        )
+
         return config_res
 
     def on_cleanup(self, state: State) -> TransitionCallbackReturn:
@@ -73,17 +82,24 @@ class MetacontrolKB(ROSTypeDBInterface):
                         value.key, value.value)
 
     def task_request_cb(self, req, res):
-        response = TaskRequest.Response()
         if req.required is True and \
            self.typedb_interface.is_task_feasible(req.task.task_name) is True:
             self.typedb_interface.request_task(req.task.task_name)
-            response.success = True
+            res.success = True
         elif req.required is False:
             self.typedb_interface.cancel_task(req.task.task_name)
-            response.success = True
+            res.success = True
         else:
-            response.success = False
-        return response
+            res.success = False
+        return res
+
+    def task_selectable_cb(self, req, res):
+        selectable_tasks = self.typedb_interface.get_selectable_tasks()
+        for task_name in selectable_tasks:
+            task = Task()
+            task.task_name = task_name
+            res.tasks.append(task)
+        return res
 
 
 def main():
