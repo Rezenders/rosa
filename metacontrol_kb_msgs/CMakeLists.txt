@@ -12,6 +12,7 @@ find_package(std_msgs REQUIRED)
 rosidl_generate_interfaces(${PROJECT_NAME}
   "msg/Task.msg"
   "srv/TaskRequest.srv"
+  "srv/TasksMatched.srv"
   DEPENDENCIES std_msgs
 )
 
