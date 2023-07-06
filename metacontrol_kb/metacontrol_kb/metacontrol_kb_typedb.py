@@ -17,7 +17,7 @@ import traceback
 
 from ament_index_python.packages import get_package_share_directory
 
-from metacontrol_kb_msgs.srv import Task
+from metacontrol_kb_msgs.srv import TaskRequest
 from metacontrol_kb.typedb_model_interface import ModelInterface
 
 from rclpy.callback_groups import MutuallyExclusiveCallbackGroup
@@ -47,16 +47,9 @@ class MetacontrolKB(ROSTypeDBInterface):
 
         self.task_cb_group = MutuallyExclusiveCallbackGroup()
         self.task_request_service = self.create_service(
-            Task,
+            TaskRequest,
             self.get_name() + '/task/request',
             self.task_request_cb,
-            callback_group=self.task_cb_group
-        )
-
-        self.task_cancel_service = self.create_service(
-            Task,
-            self.get_name() + '/task/cancel',
-            self.task_cancel_cb,
             callback_group=self.task_cb_group
         )
 
@@ -65,7 +58,6 @@ class MetacontrolKB(ROSTypeDBInterface):
     def on_cleanup(self, state: State) -> TransitionCallbackReturn:
         return super().on_cleanup(state)
 
-    # TODO: Test if this works
     def diagnostics_callback(self, msg):
         measurement_messages = [
             'QA status',
@@ -81,18 +73,16 @@ class MetacontrolKB(ROSTypeDBInterface):
                         value.key, value.value)
 
     def task_request_cb(self, req, res):
-        response = Task.Response()
-        if self.typedb_interface.is_task_feasible(req.task_name) is True:
-            self.typedb_interface.request_task(req.task_name)
+        response = TaskRequest.Response()
+        if req.required is True and \
+           self.typedb_interface.is_task_feasible(req.task.task_name) is True:
+            self.typedb_interface.request_task(req.task.task_name)
+            response.success = True
+        elif req.required is False:
+            self.typedb_interface.cancel_task(req.task.task_name)
             response.success = True
         else:
             response.success = False
-        return response
-
-    def task_cancel_cb(self, req, res):
-        self.typedb_interface.cancel_task(req.task_name)
-        response = Task.Response()
-        response.success = True
         return response
 
 

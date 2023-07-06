@@ -32,7 +32,8 @@ from diagnostic_msgs.msg import DiagnosticStatus
 from diagnostic_msgs.msg import KeyValue
 from lifecycle_msgs.srv import ChangeState
 from lifecycle_msgs.srv import GetState
-from metacontrol_kb_msgs.srv import Task
+from metacontrol_kb_msgs.msg import Task
+from metacontrol_kb_msgs.srv import TaskRequest
 from rclpy.callback_groups import ReentrantCallbackGroup
 from rclpy.node import Node
 from ros_typedb_msgs.srv import Query
@@ -140,8 +141,9 @@ def test_metacontrol_kb_task_request():
         node.start_node()
         node.activate_metacontrol_kb()
 
-        request = Task.Request()
-        request.task_name = 'task1'
+        request = TaskRequest.Request()
+        request.task.task_name = 'task1'
+        request.required = True
 
         response = node.call_service(node.task_req_srv, request)
 
@@ -173,10 +175,11 @@ def test_metacontrol_kb_task_cancel():
         node.start_node()
         node.activate_metacontrol_kb()
 
-        request = Task.Request()
-        request.task_name = 'task_required'
+        request = TaskRequest.Request()
+        request.task.task_name = 'task_required'
+        request.required = False
 
-        response = node.call_service(node.task_cancel_srv, request)
+        response = node.call_service(node.task_req_srv, request)
 
         query_req = Query.Request()
         query_req.query_type = 'match'
@@ -218,10 +221,7 @@ class MakeTestNode(Node):
             Query, '/metacontrol_kb/query')
 
         self.task_req_srv = self.create_client(
-            Task, '/metacontrol_kb/task/request')
-
-        self.task_cancel_srv = self.create_client(
-            Task, '/metacontrol_kb/task/cancel')
+            TaskRequest, '/metacontrol_kb/task/request')
 
     def start_node(self):
         self.ros_spin_thread = Thread(
