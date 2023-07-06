@@ -126,7 +126,8 @@ Task sub entity,
     owns task-name @key,
     owns task-status,
     owns is-required,
-    plays task-requirement:task;
+    plays task-requirement:task,
+    plays constrainment:constrained;
     
 Function sub entity,
     owns function-name @key,
@@ -533,7 +534,12 @@ rule task-requirement-status-feasible:
 
 rule task-status-unfeasible:
     when {
-        $tr (task:$t) isa task-requirement, has task-requirement-status 'unfeasible';
+        $t isa Task;
+        {
+            $tr (task:$t) isa task-requirement, has task-requirement-status 'unfeasible';
+        } or {
+            (constrained: $t) isa constrainment, has constrainment-status 'violated';
+        };
     } then {
         $t has task-status 'unfeasible';
     };

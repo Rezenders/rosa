@@ -1,12 +1,12 @@
 insert
 
 #Task search pipeline
-$t0 isa Task, has task-name "search pipeline";
+$t_search_pipeline isa Task, has task-name "search pipeline";
 
 $f0 isa Function, has function-name "generate search path";
-$f1 isa Function, has function-name "recover motion";
+$f_recover_motion isa Function, has function-name "recover motion";
 
-(task:$t0, required-function:$f0, required-function:$f1) isa task-requirement, has task-requirement-name "search pipeline requirement";
+(task:$t_search_pipeline, required-function:$f0, required-function:$f_recover_motion) isa task-requirement, has task-requirement-name "search pipeline requirement";
 
 ## Component Generate spiral search path node and configurations
 $c0 isa Component, has component-name "generate spiral search path node";
@@ -37,20 +37,30 @@ $thruster4 isa Component, has component-name "thruster4";
 $thruster5 isa Component, has component-name "thruster5";
 $thruster6 isa Component, has component-name "thruster6";
 
-(function: $f1, required-component: $thruster1, required-component: $thruster2, required-component: $thruster3, required-component: $thruster4, required-component: $thruster5, required-component: $thruster6) isa function-design,
+(function: $f_recover_motion, required-component: $thruster1, required-component: $thruster2, required-component: $thruster3, required-component: $thruster4, required-component: $thruster5, required-component: $thruster6) isa function-design,
     has function-design-name "recover motion inactive", has performance 2.0;
-(function: $f1, required-component: $c1) isa function-design, has function-design-name "recover motion active", has performance 1.0;
+(function: $f_recover_motion, required-component: $c1) isa function-design, has function-design-name "recover motion active", has performance 1.0;
 
 
 # Task inspect pipeline
-$t1 isa Task, has task-name "inspect pipeline";
-$f2 isa Function, has function-name "follow pipeline";
-(task:$t1, required-function:$f1, required-function:$f2) isa task-requirement,  has task-requirement-name "inspect pipeline requirement";
+$t_inspect_pipeline isa Task, has task-name "inspect pipeline";
+$f_follow_pipeline isa Function, has function-name "follow pipeline";
+(task:$t_inspect_pipeline, required-function:$f_recover_motion, required-function:$f_follow_pipeline) isa task-requirement,  has task-requirement-name "inspect pipeline requirement";
 
 $c2 isa Component, has component-name "follow pipeline node";
-(function: $f2, required-component: $c2) isa function-design, has function-design-name "follow pipeline function design";
+(function: $f_follow_pipeline, required-component: $c2) isa function-design, has function-design-name "follow pipeline function design";
 
 # Extending SUAVE
+## Recharge task and its functions, fds, and components
+$t_recharge isa Task, has task-name "recharge";
+
+$f_generate_recharge_path isa Function, has function-name "generate recharge path";
+(task:$t_recharge, required-function:$f_generate_recharge_path, required-function:$f_recover_motion) isa task-requirement,  has task-requirement-name "recharge requirement";
+
+$c_generate_recharge_path_node isa Component, has component-name "generate recharge path node";
+(function: $f_generate_recharge_path, required-component: $c_generate_recharge_path_node) isa function-design, has function-design-name "generate recharge path function design";
+## end recharge task
+
 $battery_level_qa isa QualityAttribute, has attribute-name "battery level";
 $battery_consumption_qa isa QualityAttribute, has attribute-name "battery consumption";
 
@@ -73,3 +83,7 @@ $light_high_brightnes_bat_consumption (causer: $light_high_brightness, affected:
 $light_zero_brightnes_water_visbility (causer: $light_zero_brightness, affected: $water_visibility) isa estimation, has estimation-value 0.0, has estimation-type "positive";
 $light_low_brightnes_water_visbility (causer: $light_low_brightness, affected: $water_visibility) isa estimation, has estimation-value 0.5, has estimation-type "positive";
 $light_high_brightnes_water_visbility (causer: $light_high_brightness, affected: $water_visibility) isa estimation, has estimation-value 0.90, has estimation-type "positive";
+
+# Tasks constraints
+(constraint: $battery_level_qa, constrained: $t_search_pipeline) isa constrainment, has attribute-value 0.25;
+(constraint: $battery_level_qa, constrained: $t_inspect_pipeline) isa constrainment, has attribute-value 0.25;
