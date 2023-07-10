@@ -44,7 +44,7 @@ class MetacontrolKB(ROSTypeDBInterface):
             '/diagnostics',
             self.diagnostics_callback,
             1,
-            callback_group=ReentrantCallbackGroup()
+            callback_group=self.query_cb_group
         )
 
         self.task_cb_group = MutuallyExclusiveCallbackGroup()
@@ -109,7 +109,7 @@ def main():
 
     pkg_metacontrol_kb = get_package_share_directory('metacontrol_kb')
     schema_path = os.path.join(pkg_metacontrol_kb, 'config', 'schema.tql')
-    # data_path should not be hardcoded
+    # TODO: data_path should not be hardcoded
     data_path = os.path.join(pkg_metacontrol_kb, 'config', 'suave.tql')
 
     lc_node = MetacontrolKB('metacontrol_kb', schema_path, data_path)
