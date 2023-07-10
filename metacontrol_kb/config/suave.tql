@@ -21,7 +21,7 @@ $cc0 (component: $c0, parameter: $cp0) isa component-configuration, has componen
 $cc1 (component: $c0, parameter: $cp1) isa component-configuration, has component-configuration-name "medium altitude", has performance 2.0;
 $cc2 (component: $c0, parameter: $cp2) isa component-configuration, has component-configuration-name "high altitude", has performance 3.0;
 
-$water_visibility isa EnvironmentalAttribute, has attribute-name "water visibility";
+$water_visibility isa EnvironmentalAttribute, has attribute-name "water_visibility";
 
 (constraint: $water_visibility, constrained: $cc0) isa constrainment, has attribute-value 1.25;
 (constraint: $water_visibility, constrained: $cc1) isa constrainment, has attribute-value 2.25;
@@ -61,8 +61,8 @@ $c_generate_recharge_path_node isa Component, has component-name "generate recha
 (function: $f_generate_recharge_path, required-component: $c_generate_recharge_path_node) isa function-design, has function-design-name "generate recharge path function design";
 ## end recharge task
 
-$battery_level_qa isa QualityAttribute, has attribute-name "battery level";
-$battery_consumption_qa isa QualityAttribute, has attribute-name "battery consumption";
+$battery_level_qa isa QualityAttribute, has attribute-name "battery_level";
+$battery_consumption_qa isa QualityAttribute, has attribute-name "battery_consumption";
 
 $light isa Component, has component-name "light";
 
