@@ -52,14 +52,14 @@ class MetacontrolKB(ROSTypeDBInterface):
             TaskRequest,
             self.get_name() + '/task/request',
             self.task_request_cb,
-            callback_group=self.task_cb_group
+            callback_group=self.query_cb_group
         )
 
         self.task_selectable_service = self.create_service(
             TasksMatched,
             self.get_name() + '/task/selectable',
             self.task_selectable_cb,
-            callback_group=self.task_cb_group
+            callback_group=self.query_cb_group
         )
 
         return config_res
