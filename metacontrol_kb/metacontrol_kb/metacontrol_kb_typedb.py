@@ -83,7 +83,7 @@ class MetacontrolKB(ROSTypeDBInterface):
 
     def task_request_cb(self, req, res):
         if req.required is True and \
-           self.typedb_interface.is_task_feasible(req.task.task_name) is True:
+          self.typedb_interface.is_task_selectable(req.task.task_name) is True:
             self.typedb_interface.request_task(req.task.task_name)
             res.success = True
         elif req.required is False:

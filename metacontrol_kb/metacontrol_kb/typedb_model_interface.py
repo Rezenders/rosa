@@ -74,6 +74,11 @@ class ModelInterface(TypeDBInterface):
              'Task', 'task-name', task_name, 'task-status')
         return all(x in status for x in ['feasible'])
 
+    def is_task_selectable(self, task_name):
+        status = self.get_attribute_from_entity(
+             'Task', 'task-name', task_name, 'task-status')
+        return 'unfeasible' not in status
+
     def get_selectable_tasks(self):
         query = """
             match
