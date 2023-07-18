@@ -1,7 +1,7 @@
 insert
 
 #Task search pipeline
-$t_search_pipeline isa Task, has task-name "search pipeline";
+$t_search_pipeline isa Task, has task-name "search_pipeline";
 
 $f0 isa Function, has function-name "generate search path";
 $f_recover_motion isa Function, has function-name "recover motion";
@@ -43,7 +43,7 @@ $thruster6 isa Component, has component-name "thruster6";
 
 
 # Task inspect pipeline
-$t_inspect_pipeline isa Task, has task-name "inspect pipeline";
+$t_inspect_pipeline isa Task, has task-name "inspect_pipeline";
 $f_follow_pipeline isa Function, has function-name "follow pipeline";
 (task:$t_inspect_pipeline, required-function:$f_recover_motion, required-function:$f_follow_pipeline) isa task-requirement,  has task-requirement-name "inspect pipeline requirement";
 
