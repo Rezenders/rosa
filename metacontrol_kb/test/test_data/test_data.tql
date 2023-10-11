@@ -18,10 +18,12 @@ $cp2 isa ComponentParameter, has parameter-key "param2", has parameter-value "3.
 
 $cc1 (component: $c1, parameter: $cp1) isa component-configuration, has component-configuration-name "low param", has performance 1.0;
 $cc2 (component: $c1, parameter: $cp2) isa component-configuration, has component-configuration-name "high param", has performance 10.0;
-$cc3 (component: $c1, parameter: $cp2) isa component-configuration, has component-configuration-name "high param >=", has performance 10.0;
-$cc4 (component: $c1, parameter: $cp2) isa component-configuration, has component-configuration-name "high param >", has performance 10.0;
-$cc5 (component: $c1, parameter: $cp2) isa component-configuration, has component-configuration-name "high param <=", has performance 10.0;
-$cc6 (component: $c1, parameter: $cp2) isa component-configuration, has component-configuration-name "high param <", has performance 10.0;
+
+$c_op isa Component, has component-name "component_operators";
+$cc3 (component: $c_op, parameter: $cp2) isa component-configuration, has component-configuration-name "high param >=", has performance 9.0;
+$cc4 (component: $c_op, parameter: $cp2) isa component-configuration, has component-configuration-name "high param >", has performance 8.0;
+$cc5 (component: $c_op, parameter: $cp2) isa component-configuration, has component-configuration-name "high param <=", has performance 7.0;
+$cc6 (component: $c_op, parameter: $cp2) isa component-configuration, has component-configuration-name "high param <", has performance 6.0;
 
 $ea1 isa EnvironmentalAttribute, has attribute-name "ea1";
 $ea_measurement isa EnvironmentalAttribute, has attribute-name "ea_measurement", has attribute-measurement 1.0;
