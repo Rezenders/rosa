@@ -37,7 +37,6 @@ $c5 isa Component, has component-name "component5";
 $t2 isa Task, has task-name "task2";
 $f3 isa Function, has function-name "function3";
 (task:$t2, required-function:$f2, required-function:$f3) isa task-requirement;
-
 $c6 isa Component, has component-name "component6", has performance 2.0;
 $c7 isa Component, has component-name "component7", has performance 1.34;
 (function: $f3, required-component: $c6, required-component: $c7) isa function-design, has function-design-name "f3_fd1_c6_c7";
@@ -50,8 +49,12 @@ $t_feasible isa Task, has task-name "task_feasible", has task-status 'feasible';
 $t_unfeasible isa Task, has task-name "task_unfeasible", has task-status 'unfeasible';
 
 $t_constrained isa Task, has task-name "task_constrained";
+$f_constrained isa Function, has function-name "f_constrained";
+$fd_constrained (function:$f_constrained) isa function-design, has function-design-name "fd_constrained";
+$c_constrained isa Component, has component-name "c_constrained";
+$cc_constrained (component:$c_constrained) isa component-configuration, has component-configuration-name "cc_constrained";
 $qa_t_constraint isa QualityAttribute, has attribute-name "qa_t_constraint", has attribute-measurement 0.3;
-(constraint:$qa_t_constraint, constrained:$t_constrained) isa constrainment, has attribute-value 0.5;
+(constraint:$qa_t_constraint, constrained:$t_constrained, constrained:$fd_constrained, constrained:$c_constrained, constrained:$cc_constrained) isa constrainment, has attribute-value 0.5;
 
 $c_required isa Component, has component-name "c_required", has is-required true;
 

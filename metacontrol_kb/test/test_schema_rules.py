@@ -55,6 +55,21 @@ def test_constrainment_status_inference(
     assert inferred_status[0] == constrainment_status
 
 
+@pytest.mark.parametrize("type, name", [
+    ('Task', 'task_constrained'),
+    ('function-design', 'fd_constrained'),
+    ('Component', 'c_constrained'),
+    ('component-configuration', 'cc_constrained'),
+])
+def test_constrainment_status_propagation(kb_interface, type, name):
+    status_inferred = kb_interface.get_attribute_from_entity(
+        type,
+        type.lower()+'-name',
+        name,
+        type.lower()+'-status')
+    assert 'unfeasible' == status_inferred[0]
+
+
 @pytest.mark.parametrize("att_name, att_value, config_name, config_status", [
     ('ea1', '2.5', 'high param', 'unfeasible'),
     ('ea1', '2.5', 'low param', 'feasible'),
@@ -272,12 +287,3 @@ def test_task_status_inference(
         t_name,
         'task-status')
     assert all(x in t_status_inferred for x in [t_status]) is True
-
-
-def test_task_status_inference_constrainment(kb_interface):
-    t_status_inferred = kb_interface.get_attribute_from_entity(
-        'Task',
-        'task-name',
-        'task_constrained',
-        'task-status')
-    assert 'unfeasible' == t_status_inferred[0]
