@@ -18,12 +18,20 @@ $cp2 isa ComponentParameter, has parameter-key "param2", has parameter-value "3.
 
 $cc1 (component: $c1, parameter: $cp1) isa component-configuration, has component-configuration-name "low param", has performance 1.0;
 $cc2 (component: $c1, parameter: $cp2) isa component-configuration, has component-configuration-name "high param", has performance 10.0;
+$cc3 (component: $c1, parameter: $cp2) isa component-configuration, has component-configuration-name "high param >=", has performance 10.0;
+$cc4 (component: $c1, parameter: $cp2) isa component-configuration, has component-configuration-name "high param >", has performance 10.0;
+$cc5 (component: $c1, parameter: $cp2) isa component-configuration, has component-configuration-name "high param <=", has performance 10.0;
+$cc6 (component: $c1, parameter: $cp2) isa component-configuration, has component-configuration-name "high param <", has performance 10.0;
 
 $ea1 isa EnvironmentalAttribute, has attribute-name "ea1";
 $ea_measurement isa EnvironmentalAttribute, has attribute-name "ea_measurement", has attribute-measurement 1.0;
 
 (constraint: $ea1, constrained: $cc1) isa constrainment, has attribute-value 2.25;
 (constraint: $ea1, constrained: $cc2) isa constrainment, has attribute-value 3.25;
+(constraint: $ea1, constrained: $cc3) isa constrainment, has attribute-value 3.25, has constrainment-operator '>=';
+(constraint: $ea1, constrained: $cc4) isa constrainment, has attribute-value 3.25, has constrainment-operator '>';
+(constraint: $ea1, constrained: $cc5) isa constrainment, has attribute-value 3.25, has constrainment-operator '<=';
+(constraint: $ea1, constrained: $cc6) isa constrainment, has attribute-value 3.25, has constrainment-operator '<';
 
 $c2 isa Component, has component-name "component2";
 $c3 isa Component, has component-name "component3";

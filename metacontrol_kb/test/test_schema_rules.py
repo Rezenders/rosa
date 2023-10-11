@@ -29,6 +29,14 @@ def kb_interface():
 
 @pytest.mark.parametrize("att_name, att_value, config_name, constrainment_status", [
     ('ea1', '2.5', 'high param', 'violated'),
+    ('ea1', '2.5', 'high param >=', 'violated'),
+    ('ea1', '3.25', 'high param >=', 'satisfied'),
+    ('ea1', '3.25', 'high param >', 'violated'),
+    ('ea1', '3.5', 'high param >', 'satisfied'),
+    ('ea1', '3.5', 'high param <=', 'violated'),
+    ('ea1', '3.25', 'high param <=', 'satisfied'),
+    ('ea1', '3.25', 'high param <', 'violated'),
+    ('ea1', '2.5', 'high param <', 'satisfied'),
     ('ea1', '2.5', 'low param', 'satisfied'),
     ('ea1', '', 'low param', 'not evaluated'),
 ])
