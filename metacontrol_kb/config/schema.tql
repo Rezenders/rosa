@@ -69,6 +69,17 @@ constrainment-operator sub attribute,
     value string,
     regex "^(<|<=|>|>=)";
 
+time sub attribute,
+    abstract,
+    value datetime;
+
+start-time sub time;
+end-time sub time;
+
+result sub attribute,
+    value string,
+    regex "^(completed|failed|abandoned)$";
+
 ### Relationships
 task-requirement sub relation,
     relates task,
@@ -109,6 +120,25 @@ estimation sub relation,
     relates affected, #is this the right word? hehe
     relates causer;
 
+
+reconfiguration-plan sub relation,
+    owns start-time,
+    owns end-time,
+    owns result,
+    relates architectural-adapation,
+    relates parameter-adaptation;
+
+component-adaptation sub relation,
+    abstract,
+    relates component,
+    plays reconfiguration-plan:architectural-adapation;
+        
+component-activation sub component-adaptation;
+component-deactivation sub component-adaptation;
+
+parameter-adaptation sub relation,
+    relates component-parameter,
+    plays reconfiguration-plan:parameter-adaptation;
 
 ### Concepts
 Task sub entity,
