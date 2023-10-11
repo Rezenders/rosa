@@ -84,6 +84,7 @@ function-design sub relation,
     owns function-design-status,
     relates function,
     relates required-component,
+    plays constrainment:constrained,
     plays estimation:causer;
 
 component-configuration sub relation,
@@ -137,6 +138,7 @@ Component sub entity,
     owns performance,
     plays function-design:required-component,
     plays component-configuration:component,
+    plays constrainment:constrained,
     plays estimation:causer;
     
 ComponentParameter sub entity,
@@ -223,10 +225,14 @@ rule component-configuration-status-feasible:
 rule component-status-unfeasible:
     when{
         $c isa Component;
-        (component: $c) isa component-configuration;  # (1)
-        not {  # (2)
-            (component: $c) isa component-configuration, has component-configuration-status $status;
-            $status != 'unfeasible';
+        {        
+            (component: $c) isa component-configuration;  # (1)
+            not {  # (2)
+                (component: $c) isa component-configuration, has component-configuration-status $status;
+                $status != 'unfeasible';
+            };
+        } or {                              
+            (constrained: $c) isa constrainment, has constrainment-status 'violated';
         };
     } then {
         $c has component-status 'unfeasible';
@@ -298,11 +304,16 @@ rule component-status-feasible:
 # This might result in several unfeasible status being included if there are more than 1 component with failure or unfeasible status. I don't think this is a problem.
 rule function-design-status-unfeasible:
     when{
-        $fd (required-component: $c) isa function-design;
-        $c isa Component, has component-status $c_status;
-        not {
-            $c isa Component, has component-status $c_status2;
-            $c_status2 like 'configuration error|unsolved|solved|feasible';
+         $fd isa function-design;
+        {           
+            $fd (required-component: $c) isa function-design;
+            $c isa Component, has component-status $c_status;
+            not {
+                $c isa Component, has component-status $c_status2;
+                $c_status2 like 'configuration error|unsolved|solved|feasible';
+            };
+        } or {                        
+            (constrained: $fd) isa constrainment, has constrainment-status 'violated';
         };
     } then {
         $fd has function-design-status 'unfeasible';
@@ -456,8 +467,9 @@ rule task-status-unfeasible:
             (required-function: $f, task: $t) isa task-requirement;
             $f has function-status $f_status;
             $f_status = 'unfeasible';
-        } or {                  
-            (constrained: $t) isa constrainment, has constrainment-status 'violated'; #generic rule for all constrainments?
+        } 
+        or {                  
+            (constrained: $t) isa constrainment, has constrainment-status 'violated';
         };
     } then {
         $t has task-status 'unfeasible';
