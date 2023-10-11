@@ -231,28 +231,28 @@ def test_function_status_inference(
     assert all(x in f_status_inferred for x in [f_status]) is True
 
 
-@pytest.mark.parametrize("functions, tr_name, tr_required, tr_status", [
-    ([('function1', 'unfeasible')], 'task1 requirement', 'false', 'unfeasible'),
-    ([('function1', 'unsolved'), ('function2', 'unfeasible')], 'task1 requirement', 'true', 'unfeasible'),
-    ([('function1', 'configuration error'), ('function2', 'unfeasible')], 'task1 requirement', 'true', 'unfeasible'),
-    ([('function1', 'configuration error')], 'task1 requirement', 'true', 'implicit configuration error'),
-    ([('function1', 'configuration error'), ('function2', 'feasible')], 'task1 requirement', 'true', 'implicit configuration error'),
-    ([('function1', 'configuration error'), ('function2', 'implicit configuration error')], 'task1 requirement', 'true', 'implicit configuration error'),
-    ([('function1', 'implicit configuration error')], 'task1 requirement', 'true', 'implicit configuration error'),
-    ([('function1', 'configuration error'), ('function2', 'solved')], 'task1 requirement', 'true', 'implicit configuration error'),
-    ([('function1', 'configuration error'), ('function2', 'unsolved')], 'task1 requirement', 'true', 'implicit configuration error'),
-    ([('function1', 'unsolved')], 'task1 requirement', 'true', 'unsolved'),
-    ([('function1', 'unsolved'), ('function2', 'solved')], 'task1 requirement', 'true', 'unsolved'),
-    ([('function1', 'unsolved'), ('function2', 'unsolved')], 'task1 requirement', 'true', 'unsolved'),
-    ([('function1', 'feasible')], 'task1 requirement', 'false', 'feasible'),
-    ([('function1', 'unsolved')], 'task1 requirement', 'false', 'feasible'),
-    ([('function1', 'configuration error'), ('function2', 'unsolved')], 'task1 requirement', 'false', 'feasible'),
-    ([('function1', 'configuration error'), ('function2', 'implicit configuration error')], 'task1 requirement', 'false', 'feasible'),
-    ([('function1', 'feasible'), ('function2', 'feasible')], 'task1 requirement', 'false', 'feasible'),
-    ([('function1', 'solved'), ('function2', 'solved')], 'task1 requirement', 'true', 'solved'),
+@pytest.mark.parametrize("functions, t_name, t_required, t_status", [
+    ([('function1', 'unfeasible')], 'task1', 'false', 'unfeasible'),
+    ([('function1', 'unsolved'), ('function2', 'unfeasible')], 'task1', 'true', 'unfeasible'),
+    ([('function1', 'configuration error'), ('function2', 'unfeasible')], 'task1', 'true', 'unfeasible'),
+    ([('function1', 'configuration error')], 'task1', 'true', 'implicit configuration error'),
+    ([('function1', 'configuration error'), ('function2', 'feasible')], 'task1', 'true', 'implicit configuration error'),
+    ([('function1', 'configuration error'), ('function2', 'implicit configuration error')], 'task1', 'true', 'implicit configuration error'),
+    ([('function1', 'implicit configuration error')], 'task1', 'true', 'implicit configuration error'),
+    ([('function1', 'configuration error'), ('function2', 'solved')], 'task1', 'true', 'implicit configuration error'),
+    ([('function1', 'configuration error'), ('function2', 'unsolved')], 'task1', 'true', 'implicit configuration error'),
+    ([('function1', 'unsolved')], 'task1', 'true', 'unsolved'),
+    ([('function1', 'unsolved'), ('function2', 'solved')], 'task1', 'true', 'unsolved'),
+    ([('function1', 'unsolved'), ('function2', 'unsolved')], 'task1', 'true', 'unsolved'),
+    ([('function1', 'feasible')], 'task1', 'false', 'feasible'),
+    ([('function1', 'unsolved')], 'task1', 'false', 'feasible'),
+    ([('function1', 'configuration error'), ('function2', 'unsolved')], 'task1', 'false', 'feasible'),
+    ([('function1', 'configuration error'), ('function2', 'implicit configuration error')], 'task1', 'false', 'feasible'),
+    ([('function1', 'feasible'), ('function2', 'feasible')], 'task1', 'false', 'feasible'),
+    ([('function1', 'solved'), ('function2', 'solved')], 'task1', 'true', 'solved'),
 ])
-def test_task_requirement_status_inference(
-     kb_interface, functions, tr_name, tr_required, tr_status):
+def test_task_status_inference(
+     kb_interface, functions, t_name, t_required, t_status):
     for f in functions:
         kb_interface.update_attribute_entity(
             'Function',
@@ -261,47 +261,20 @@ def test_task_requirement_status_inference(
             'function-status',
             "'{}'".format(f[1]))
     kb_interface.update_attribute_entity(
-        'task-requirement',
-        'task-requirement-name',
-        tr_name,
+        'Task',
+        'task-name',
+        t_name,
         'is-required',
-        tr_required)
-    tr_status_inferred = kb_interface.get_attribute_from_entity(
-        'task-requirement',
-        'task-requirement-name',
-        tr_name,
-        'task-requirement-status')
-    assert all(x in tr_status_inferred for x in [tr_status]) is True
-
-
-@pytest.mark.parametrize("tr_name, t_name, status", [
-    ('task1 requirement', 'task1', 'unfeasible'),
-    ('task1 requirement', 'task1', 'implicit configuration error'),
-    ('task1 requirement', 'task1', 'unsolved'),
-    ('task1 requirement', 'task1', 'feasible'),
-    ('task1 requirement', 'task1', 'solved'),
-])
-def test_task_status_inference_from_req(kb_interface, tr_name, t_name, status):
-    kb_interface.update_attribute_entity(
-        'task-requirement',
-        'task-requirement-name',
-        tr_name,
-        'task-requirement-status',
-        "'{}'".format(status))
-    tr_status_inferred = kb_interface.get_attribute_from_entity(
-        'task-requirement',
-        'task-requirement-name',
-        tr_name,
-        'task-requirement-status')
+        t_required)
     t_status_inferred = kb_interface.get_attribute_from_entity(
         'Task',
         'task-name',
         t_name,
         'task-status')
-    assert tr_status_inferred == t_status_inferred
+    assert all(x in t_status_inferred for x in [t_status]) is True
 
 
-def test_task_status_inference(kb_interface):
+def test_task_status_inference_constrainment(kb_interface):
     t_status_inferred = kb_interface.get_attribute_from_entity(
         'Task',
         'task-name',
