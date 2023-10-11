@@ -48,9 +48,6 @@ reconfiguration_plan = dict()
 
 
 def plan(kb_interface, always_improve=True):
-    # Propagate performance
-    kb_interface.propagate_performance()
-
     adaptable_functions = list()
     adaptable_functions.extend(kb_interface.get_adaptable_functions())
     if always_improve is True:

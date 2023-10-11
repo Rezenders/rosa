@@ -104,41 +104,6 @@ def test_get_unsolved_components(kb_interface):
     assert 'c_required' in unsolved_components
 
 
-def test_propagate_component_performance(kb_interface):
-    kb_interface.propagate_components_performance()
-    performance = kb_interface.get_attribute_from_entity(
-         'Component',
-         'component-name',
-         'component1',
-         'performance')
-    assert performance[0] == 10.0
-
-
-def test_propagate_function_design_performance(kb_interface):
-    kb_interface.propagate_function_designs_performance()
-    performance = kb_interface.get_attribute_from_entity(
-         'function-design',
-         'function-design-name',
-         'f3_fd1_c6_c7',
-         'performance')
-    assert performance[0] == 3.34
-
-
-def test_propagate_performance(kb_interface):
-    kb_interface.propagate_performance()
-    c_performance = kb_interface.get_attribute_from_entity(
-         'Component',
-         'component-name',
-         'component1',
-         'performance')
-    fd_performance = kb_interface.get_attribute_from_entity(
-         'function-design',
-         'function-design-name',
-         'f1_fd1',
-         'performance')
-    assert c_performance[0] == 10.0 and fd_performance[0] == 10.0
-
-
 def test_get_measurement_attribute(kb_interface):
     value = 1.0
     measured_value = kb_interface.get_measured_attribute('ea_measurement')
