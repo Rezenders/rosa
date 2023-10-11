@@ -72,6 +72,10 @@ estimation-type sub attribute,
 #is-function-required sub is-required;
 #is-component-required sub is-required;
 
+constrainment-operator sub attribute,
+    value string,
+    regex "^(<|<=|>|>=)";
+
 ### Relationships
 task-requirement sub relation,
     relates task,
@@ -101,6 +105,7 @@ component-configuration sub relation,
 constrainment sub relation,
     owns attribute-value,
     owns constrainment-status,
+    owns constrainment-operator,
     relates constraint,
     relates constrained;
 
@@ -175,20 +180,60 @@ rule implicit-component-is-required:
     };
 
 # TODO: add condition to check what type of constraint it is, still need to add a type property to constrainment. Then add more rules
-rule constrainment-status-violated-greater-equal:
+rule constrainment-status-violated:
     when{
         $constrainment (constraint: $constraint) isa constrainment, has attribute-value $value;
         $constraint has attribute-measurement $measurement;
-        not {$measurement >= $value;};
+        {    
+            {
+                $constrainment has constrainment-operator ">=";
+            } or {
+                not {$constrainment has constrainment-operator $op;};
+            };
+            not {
+                $measurement >= $value;
+            };
+        } or {
+            $constrainment has constrainment-operator ">";
+             not {
+                $measurement > $value;
+            };
+        }  or {
+            $constrainment has constrainment-operator "<=";
+             not {
+                $measurement <= $value;
+            };
+        } or {
+            $constrainment has constrainment-operator "<";
+             not {
+                $measurement < $value;
+            };
+        };            
     } then {
         $constrainment has constrainment-status 'violated';
     };
  
-rule constrainment-status-satisfied-greater-equal:
+rule constrainment-status-satisfied:
     when{
         $constrainment (constraint: $constraint) isa constrainment, has attribute-value $value;
         $constraint has attribute-measurement $measurement;
-        $measurement >= $value;
+        {    
+            {
+                $constrainment has constrainment-operator ">=";
+            } or {
+                not {$constrainment has constrainment-operator $op;};
+            };
+            $measurement >= $value;           
+        } or {
+            $constrainment has constrainment-operator ">";
+            $measurement > $value;            
+        }  or {
+            $constrainment has constrainment-operator "<=";
+            $measurement <= $value;
+        } or {
+            $constrainment has constrainment-operator "<";
+            $measurement < $value;
+        };
     } then {
         $constrainment has constrainment-status 'satisfied';
     };
