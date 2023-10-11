@@ -11,7 +11,7 @@ $f_recover_motion isa Function, has function-name "recover motion";
 ## Component Generate spiral search path node and configurations
 $c0 isa Component, has component-name "generate spiral search path node";
 
-(function: $f0, required-component: $c0) isa function-design, has function-design-name "generate spiral search path function design";
+(function: $f0, required-component: $c0) isa function-design, has function-design-name "generate spiral search path function design", has performance 1.0;
 
 $cp0 isa ComponentParameter, has parameter-key "altitude", has parameter-value "1.0";
 $cp1 isa ComponentParameter, has parameter-key "altitude", has parameter-value "2.0";

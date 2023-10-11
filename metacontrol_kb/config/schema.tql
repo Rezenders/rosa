@@ -58,19 +58,12 @@ is-selected sub attribute,
 is-active sub attribute,
     value boolean;
 
-# Should this be an attribute? or could this be represented by sub concepts?
-#estimation-type sub attribute,
-#    value "^(positive|negative|absolute)$";
-    
 estimation-value sub attribute,
     value double;
 
 estimation-type sub attribute,
     value string,
     regex "^(positive|negative|absolute)$";
-#is-task-required sub is-required;
-#is-function-required sub is-required;
-#is-component-required sub is-required;
 
 constrainment-operator sub attribute,
     value string,
@@ -116,9 +109,6 @@ estimation sub relation,
     relates affected, #is this the right word? hehe
     relates causer;
 
-positive-estimation sub estimation; 
-negative-estimation sub estimation; 
-absolute-estimation sub estimation; 
 
 ### Concepts
 Task sub entity,
@@ -140,7 +130,6 @@ Component sub entity,
     owns component-status,
     owns is-required,
     owns is-active,
-    owns performance,
     plays function-design:required-component,
     plays component-configuration:component,
     plays constrainment:constrained,
@@ -179,7 +168,6 @@ rule implicit-component-is-required:
         $c has is-required true;
     };
 
-# TODO: add condition to check what type of constraint it is, still need to add a type property to constrainment. Then add more rules
 rule constrainment-status-violated:
     when{
         $constrainment (constraint: $constraint) isa constrainment, has attribute-value $value;
