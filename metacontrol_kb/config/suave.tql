@@ -6,7 +6,7 @@ $t_search_pipeline isa Task, has task-name "search_pipeline";
 $f0 isa Function, has function-name "generate search path";
 $f_recover_motion isa Function, has function-name "recover motion";
 
-(task:$t_search_pipeline, required-function:$f0, required-function:$f_recover_motion) isa task-requirement, has task-requirement-name "search pipeline requirement";
+(task:$t_search_pipeline, required-function:$f0, required-function:$f_recover_motion) isa task-requirement;
 
 ## Component Generate spiral search path node and configurations
 $c0 isa Component, has component-name "generate spiral search path node";
@@ -45,7 +45,7 @@ $thruster6 isa Component, has component-name "thruster6";
 # Task inspect pipeline
 $t_inspect_pipeline isa Task, has task-name "inspect_pipeline";
 $f_follow_pipeline isa Function, has function-name "follow pipeline";
-(task:$t_inspect_pipeline, required-function:$f_recover_motion, required-function:$f_follow_pipeline) isa task-requirement,  has task-requirement-name "inspect pipeline requirement";
+(task:$t_inspect_pipeline, required-function:$f_recover_motion, required-function:$f_follow_pipeline) isa task-requirement;
 
 $c2 isa Component, has component-name "follow pipeline node";
 (function: $f_follow_pipeline, required-component: $c2) isa function-design, has function-design-name "follow pipeline function design";
@@ -55,7 +55,7 @@ $c2 isa Component, has component-name "follow pipeline node";
 $t_recharge isa Task, has task-name "recharge";
 
 $f_generate_recharge_path isa Function, has function-name "generate recharge path";
-(task:$t_recharge, required-function:$f_generate_recharge_path, required-function:$f_recover_motion) isa task-requirement,  has task-requirement-name "recharge requirement";
+(task:$t_recharge, required-function:$f_generate_recharge_path, required-function:$f_recover_motion) isa task-requirement;
 
 $c_generate_recharge_path_node isa Component, has component-name "generate recharge path node";
 (function: $f_generate_recharge_path, required-component: $c_generate_recharge_path_node) isa function-design, has function-design-name "generate recharge path function design";

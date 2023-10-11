@@ -7,7 +7,7 @@ $t1 isa Task, has task-name "task1";
 $f1 isa Function, has function-name "function1";
 $f2 isa Function, has function-name "function2";
 
-(task:$t1, required-function:$f1, required-function:$f2) isa task-requirement, has task-requirement-name 'task1 requirement';
+(task:$t1, required-function:$f1, required-function:$f2) isa task-requirement;
 
 $c1 isa Component, has component-name "component1";
 
@@ -36,7 +36,7 @@ $c5 isa Component, has component-name "component5";
 # Task inspect pipeline
 $t2 isa Task, has task-name "task2";
 $f3 isa Function, has function-name "function3";
-(task:$t2, required-function:$f2, required-function:$f3) isa task-requirement, has task-requirement-name 'task2 requirement';
+(task:$t2, required-function:$f2, required-function:$f3) isa task-requirement;
 
 $c6 isa Component, has component-name "component6", has performance 2.0;
 $c7 isa Component, has component-name "component7", has performance 1.34;
