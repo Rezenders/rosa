@@ -121,7 +121,7 @@ def test_metacontrol_kb_diagnostics():
         query_res = node.call_service(node.query_srv, query_req)
         correct_measurement = False
         for r in query_res.result:
-            if r.attribute_name == 'measurement' \
+            if r.name == 'measurement' \
                and r.value.double_value == 1.72:
                 correct_measurement = True
 
@@ -162,7 +162,7 @@ def test_metacontrol_kb_task_request(task_name, task_required):
         query_res = node.call_service(node.query_srv, query_req)
         correct_res = False
         for r in query_res.result:
-            if r.attribute_name == 'task-required' \
+            if r.name == 'task-required' \
                and r.value.bool_value is task_required:
                 correct_res = True
 

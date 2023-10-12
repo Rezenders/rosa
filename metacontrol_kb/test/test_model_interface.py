@@ -119,7 +119,7 @@ def test_update_measurement_attribute(kb_interface):
 
 def test_get_function_design_higher_performance(kb_interface):
     fd = kb_interface.get_function_design_higher_performance('function2')
-    assert fd[0].get("fd-name").get_value() == 'f2_fd1_c2_c3'
+    assert fd[0].get("fd-name").get('value') == 'f2_fd1_c2_c3'
 
 
 def test_get_best_function_design(kb_interface):
@@ -171,7 +171,7 @@ def test_select_function_design(kb_interface):
 def test_get_component_configuration_higher_performance(kb_interface):
     config = kb_interface.get_component_configuration_higher_performance(
         'component1')
-    assert config[0].get("conf-name").get_value() == 'high param'
+    assert config[0].get("conf-name").get('value') == 'high param'
 
 
 def test_get_best_component_configuration(kb_interface):

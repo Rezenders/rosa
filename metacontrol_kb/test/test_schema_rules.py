@@ -59,7 +59,7 @@ def test_constrainment_status_inference(
     '''
     query_result = kb_interface.match_database(query)
     inferred_status = [
-        status.get("status").get_value() for status in query_result]
+        status.get("status").get('value') for status in query_result]
     assert inferred_status[0] == constrainment_status
 
 
@@ -99,7 +99,7 @@ def test_component_configuration_status_inference(
     '''
     query_result = kb_interface.match_database(query)
     inferred_status = [
-        status.get("status").get_value() for status in query_result]
+        status.get("status").get('value') for status in query_result]
     assert inferred_status[0] == config_status
 
 

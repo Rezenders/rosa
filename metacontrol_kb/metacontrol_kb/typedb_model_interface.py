@@ -87,7 +87,7 @@ class ModelInterface(TypeDBInterface):
             get $task-name;
         """
         query_result = self.match_database(query)
-        return [r.get('task-name').get_value() for r in query_result]
+        return [r.get('task-name').get('value') for r in query_result]
 
     # Get all entities with is-required property equal to True and
     # function-status equal to 'solved' raw
@@ -105,22 +105,22 @@ class ModelInterface(TypeDBInterface):
     def get_solved_functions(self):
         query_result = self.get_entity_with_status_raw(
             'Function', 'solved')
-        return [r.get("name").get_value() for r in query_result]
+        return [r.get("name").get('value') for r in query_result]
 
     def get_solved_components(self):
         query_result = self.get_entity_with_status_raw(
             'Component', 'solved')
-        return [r.get("name").get_value() for r in query_result]
+        return [r.get("name").get('value') for r in query_result]
 
     def get_adaptable_functions(self):
         query_result = self.get_entity_with_status_raw(
             'Function', 'unsolved|configuration error')
-        return [r.get("name").get_value() for r in query_result]
+        return [r.get("name").get('value') for r in query_result]
 
     def get_adaptable_components(self):
         query_result = self.get_entity_with_status_raw(
             'Component', 'unsolved|configuration error')
-        return [r.get("name").get_value() for r in query_result]
+        return [r.get("name").get('value') for r in query_result]
 
     # Get all entities with is-required property equal to True and
     # function-status equal to 'unsolved' raw
@@ -138,13 +138,13 @@ class ModelInterface(TypeDBInterface):
     # function-status equal to 'unsolved'
     def get_unsolved_functions(self):
         query_result = self.get_unsolved_entity_raw('Function')
-        return [r.get("name").get_value() for r in query_result]
+        return [r.get("name").get('value') for r in query_result]
 
     # Get all Components with is-required property equal to True and
     # component-status equal to 'unsolved'
     def get_unsolved_components(self):
         query_result = self.get_unsolved_entity_raw('Component')
-        return [r.get("name").get_value() for r in query_result]
+        return [r.get("name").get('value') for r in query_result]
 
     def update_function_design_performance(self, fd_name, value):
         return self.update_attribute_entity(
@@ -202,7 +202,7 @@ class ModelInterface(TypeDBInterface):
         if len(query_result) == 0:
             return None
         else:
-            return query_result[0].get("fd-name").get_value()
+            return query_result[0].get("fd-name").get('value')
 
     def get_component_configuration_higher_performance(self, c_name):
         query = f'''
@@ -238,7 +238,7 @@ class ModelInterface(TypeDBInterface):
         if len(query_result) == 0:
             return None
         else:
-            return query_result[0].get("conf-name").get_value()
+            return query_result[0].get("conf-name").get('value')
 
     # toogle fd and component config selection
     def toogle_relationship_selection(self, entity, name, value):
@@ -270,7 +270,7 @@ class ModelInterface(TypeDBInterface):
                 get $name;
             '''
         query_result = self.match_database(query)
-        return [r.get("name").get_value() for r in query_result]
+        return [r.get("name").get('value') for r in query_result]
 
     # select fd or component configuration
     def select_relationship(self, entity, e_name, relation, r_name):
