@@ -104,7 +104,8 @@ component-configuration sub relation,
     relates component,
     relates parameter,
     plays constrainment:constrained,
-    plays estimation:causer;
+    plays estimation:causer,
+    plays parameter-adaptation:component-configuration;
 
 constrainment sub relation,
     owns attribute-value,
@@ -120,24 +121,23 @@ estimation sub relation,
     relates affected, #is this the right word? hehe
     relates causer;
 
-
 reconfiguration-plan sub relation,
     owns start-time,
     owns end-time,
     owns result,
-    relates architectural-adapation,
+    relates architectural-adaptation,
     relates parameter-adaptation;
 
 component-adaptation sub relation,
     abstract,
     relates component,
-    plays reconfiguration-plan:architectural-adapation;
+    plays reconfiguration-plan:architectural-adaptation;
         
 component-activation sub component-adaptation;
 component-deactivation sub component-adaptation;
 
 parameter-adaptation sub relation,
-    relates component-parameter,
+    relates component-configuration,
     plays reconfiguration-plan:parameter-adaptation;
 
 ### Concepts
@@ -163,13 +163,15 @@ Component sub entity,
     plays function-design:required-component,
     plays component-configuration:component,
     plays constrainment:constrained,
-    plays estimation:causer;
+    plays estimation:causer,
+    plays component-adaptation:component;
     
 ComponentParameter sub entity,
     owns parameter-key,
     owns parameter-value,
     #owns is-required,
     plays component-configuration:parameter;
+
     
 Attribute sub entity,
     abstract,

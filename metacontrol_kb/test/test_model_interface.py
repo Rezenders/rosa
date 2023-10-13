@@ -200,3 +200,21 @@ def test_select_component_configuration(kb_interface):
         'is-selected')
     assert high_selected[0] is True and high_not_selected[0] is False and \
            low_selected[0] is True
+
+
+def test_create_reconfiguration_plan(kb_interface):
+    c_activate = ['component2', 'component3']
+    c_deactivate = ['component4', 'component5']
+    c_config = ['low param']
+    result = kb_interface.create_reconfiguration_plan(
+        c_activate, c_deactivate, c_config)
+
+    query = """
+        match
+        $rp (architectural-adaptation:$aa, parameter-adaptation:$pa)
+            isa reconfiguration-plan,
+            has start-time $time;
+    """
+    query_result = kb_interface.match_database(query)
+
+    assert len(query_result) > 0

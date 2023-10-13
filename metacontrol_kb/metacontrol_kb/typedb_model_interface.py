@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 from ros_typedb.typedb_interface import TypeDBInterface
+from datetime import datetime
 
 
 class ModelInterface(TypeDBInterface):
@@ -325,3 +326,54 @@ class ModelInterface(TypeDBInterface):
                         'component-configuration', config, False)
         return self.toogle_entity_activation(
             'component-configuration', cc_name, value)
+
+    def create_reconfiguration_plan(self, c_activate, c_deactivate, c_config):
+        match_query = "match "
+        insert_query = "insert "
+        prefix_list = []
+
+        _match_query, _prefix_list = self.create_match_query(
+            [('Component', 'component-name', c) for c in c_activate], 'ca')
+        match_query += _match_query
+        prefix_list.append(_prefix_list)
+
+        _match_query, _prefix_list = self.create_match_query(
+            [('Component', 'component-name', c) for c in c_deactivate], 'cd')
+        match_query += _match_query
+        prefix_list.append(_prefix_list)
+
+        _match_query, _prefix_list = self.create_match_query(
+            [('component-configuration', 'component-configuration-name', c)
+                for c in c_config],
+            'cc'
+        )
+        match_query += _match_query
+        prefix_list.append(_prefix_list)
+
+        insert_query += self.create_relationship_insert_query(
+            'component-activation',
+            {'component': prefix_list[0]},
+            prefix='rca'
+        )
+        insert_query += self.create_relationship_insert_query(
+            'component-deactivation',
+            {'component': prefix_list[1]},
+            prefix='rcd'
+        )
+        insert_query += self.create_relationship_insert_query(
+            'parameter-adaptation',
+            {'component-configuration': prefix_list[2]},
+            prefix='rcc'
+        )
+        insert_query += self.create_relationship_insert_query(
+            'reconfiguration-plan',
+            {
+                'architectural-adaptation': ['rca', 'rcd'],
+                'parameter-adaptation': ['rcc']
+            },
+            attribute_list=[('start-time',  datetime.now())],
+            prefix='rp'
+        )
+
+        query = match_query + insert_query
+        return self.insert_database(query)
