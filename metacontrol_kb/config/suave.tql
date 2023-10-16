@@ -3,7 +3,7 @@ insert
 #Task search pipeline
 $t_search_pipeline isa Task, has task-name "search_pipeline";
 
-$f0 isa Function, has function-name "generate search path";
+$f0 isa Function, has function-name "generate search path", has always-improve true;
 $f_recover_motion isa Function, has function-name "recover motion";
 
 (task:$t_search_pipeline, required-function:$f0, required-function:$f_recover_motion) isa task-requirement;
@@ -23,9 +23,9 @@ $cc2 (component: $c0, parameter: $cp2) isa component-configuration, has componen
 
 $water_visibility isa EnvironmentalAttribute, has attribute-name "water_visibility";
 
-(constraint: $water_visibility, constrained: $cc0) isa constrainment, has attribute-value 1.25;
-(constraint: $water_visibility, constrained: $cc1) isa constrainment, has attribute-value 2.25;
-(constraint: $water_visibility, constrained: $cc2) isa constrainment, has attribute-value 3.25;
+(constraint: $water_visibility, constrained: $cc0) isa constrainment, has attribute-value 1.25, has constrainment-operator ">=";
+(constraint: $water_visibility, constrained: $cc1) isa constrainment, has attribute-value 2.25, has constrainment-operator ">=";
+(constraint: $water_visibility, constrained: $cc2) isa constrainment, has attribute-value 3.25, has constrainment-operator ">=";
 
 ## Component recover motion node and configurations
 $c1 isa Component, has component-name "recover motion node";

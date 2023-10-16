@@ -80,6 +80,9 @@ result sub attribute,
     value string,
     regex "^(completed|failed|abandoned)$";
 
+always-improve sub attribute,
+    value boolean;
+
 ### Relationships
 task-requirement sub relation,
     relates task,
@@ -152,6 +155,7 @@ Function sub entity,
     owns function-name @key,
     owns function-status,
     owns is-required,
+    owns always-improve,
     plays task-requirement:required-function,
     plays function-design:function;
     
@@ -160,6 +164,7 @@ Component sub entity,
     owns component-status,
     owns is-required,
     owns is-active,
+    owns always-improve,
     plays function-design:required-component,
     plays component-configuration:component,
     plays constrainment:constrained,
