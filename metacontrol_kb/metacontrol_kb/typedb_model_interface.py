@@ -92,36 +92,46 @@ class ModelInterface(TypeDBInterface):
 
     # Get all entities with is-required property equal to True and
     # function-status equal to 'solved' raw
-    def get_entity_with_status_raw(self, entity, status):
+    def get_instances_of_thing_with_status(self, thing, status):
+        """
+        Get name of instances of a certain thing that have a certain status.
+
+        :param thing: thing type to query.
+        :type thing: str
+        :param status: status.
+        :type status: str
+        :return: Names of instances with status.
+        :rtype: list[str]
+        """
         query = f'''
             match
-                $e isa {entity}, has is-required true,
-                    has {entity.lower()}-name $name,
-                    has {entity.lower()}-status $status;
+                $e isa {thing},
+                    has {thing.lower()}-name $name,
+                    has {thing.lower()}-status $status;
                     $status like "{status}";
                 get $name;
         '''
-        return self.match_database(query)
-
-    def get_solved_functions(self):
-        query_result = self.get_entity_with_status_raw(
-            'Function', 'solved')
+        query_result = self.match_database(query)
         return [r.get("name").get('value') for r in query_result]
 
+    def get_solved_functions(self):
+        return self.get_instances_of_thing_with_status(
+            'Function', 'solved')
+
     def get_solved_components(self):
-        query_result = self.get_entity_with_status_raw(
+        return self.get_instances_of_thing_with_status(
             'Component', 'solved')
         return [r.get("name").get('value') for r in query_result]
 
     def get_adaptable_functions(self):
-        query_result = self.get_entity_with_status_raw(
+        result = self.get_instances_of_thing_with_status(
             'Function', 'unsolved|configuration error')
-        return [r.get("name").get('value') for r in query_result]
+        return result
 
     def get_adaptable_components(self):
-        query_result = self.get_entity_with_status_raw(
+        result = self.get_instances_of_thing_with_status(
             'Component', 'unsolved|configuration error')
-        return [r.get("name").get('value') for r in query_result]
+        return result
 
     # Get all entities with is-required property equal to True and
     # function-status equal to 'unsolved' raw
