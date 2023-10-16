@@ -68,6 +68,13 @@ $qa_t_constraint isa QualityAttribute, has attribute-name "qa_t_constraint", has
 
 $c_required isa Component, has component-name "c_required", has is-required true;
 
+$f_unsolved isa Function, has function-name "f_unsolved", has function-status "unsolved";
+$c_unsolved isa Component, has component-name "c_unsolved", has component-status "unsolved";
+$fd_unsolved (function:$f_unsolved, required-component:$c_unsolved) isa function-design, has function-design-name "fd_unsolved", has function-design-status "unsolved";
+
+$f_always_improve isa Function, has function-name "f_always_improve", has always-improve true;
+$c_always_improve isa Component, has component-name "c_always_improve", has always-improve true;
+
 #$f_required isa Function, has function-name "function_required", has is-required true;
 #$f_required_activated isa Function, has function-name "function_required_activated", has is-required true, has function-status 'activated';
 #$f_not_required isa Function, has function-name "function_not_required", has is-required false;

@@ -15,7 +15,7 @@ import pytest
 from metacontrol_kb.typedb_model_interface import ModelInterface
 
 
-@pytest.fixture
+@pytest.fixture(scope="module")
 def kb_interface():
     kb_interface = ModelInterface(
         "localhost:1729",
@@ -218,3 +218,37 @@ def test_create_reconfiguration_plan(kb_interface):
     query_result = kb_interface.match_database(query)
 
     assert len(query_result) > 0
+
+
+@pytest.mark.parametrize("thing, status, exp", [
+    ('Task', 'feasible', 'task_feasible'),
+    ('Task', 'unfeasible', 'task_unfeasible'),
+    ('Function', 'unsolved', 'f_unsolved'),
+    ('Component', 'unsolved', 'c_unsolved'),
+    ('function-design', 'unsolved', 'fd_unsolved'),
+])
+def test_get_instances_of_thing_with_status(kb_interface, thing, status, exp):
+    result = kb_interface.get_instances_of_thing_with_status(thing, status)
+    assert exp in result
+
+
+@pytest.mark.parametrize("thing, exp", [
+    ('Function', 'f_always_improve'),
+    ('Component', 'c_always_improve'),
+])
+def test_get_instances_thing_always_improve(kb_interface, thing, exp):
+    result = kb_interface.get_instances_thing_always_improve(thing)
+    assert exp in result
+
+
+def test_get_adaptable_functions(kb_interface):
+    expected_result = ['f_unsolved', 'f_always_improve']
+    result = kb_interface.get_adaptable_functions()
+    assert all(r in result for r in expected_result)
+
+
+def test_get_adaptable_component(kb_interface):
+    expected_result = ['c_unsolved', 'c_always_improve']
+    result = kb_interface.get_adaptable_components()
+    print(result)
+    assert all(r in result for r in expected_result)
