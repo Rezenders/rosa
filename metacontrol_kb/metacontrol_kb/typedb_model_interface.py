@@ -121,16 +121,35 @@ class ModelInterface(TypeDBInterface):
     def get_solved_components(self):
         return self.get_instances_of_thing_with_status(
             'Component', 'solved')
+
+    def get_instances_thing_always_improve(self, thing):
+        """
+        Get name of instances of a certain thing that have always-improve true.
+
+        :param thing: thing type to query.
+        :type thing: str
+        :return: Names of instances with always-improve true.
+        :rtype: list[str]
+        """
+        query = f'''
+            match
+                $f isa {thing}, has always-improve true,
+                    has {thing.lower()}-name $name;
+                get $name;
+        '''
+        query_result = self.match_database(query)
         return [r.get("name").get('value') for r in query_result]
 
     def get_adaptable_functions(self):
         result = self.get_instances_of_thing_with_status(
             'Function', 'unsolved|configuration error')
+        result.extend(self.get_instances_thing_always_improve('Function'))
         return result
 
     def get_adaptable_components(self):
         result = self.get_instances_of_thing_with_status(
             'Component', 'unsolved|configuration error')
+        result.extend(self.get_instances_thing_always_improve('Component'))
         return result
 
     # Get all entities with is-required property equal to True and
