@@ -259,9 +259,96 @@ def test_create_reconfiguration_plan(
     assert len(query_result) > 0
 
 
+@pytest.mark.parametrize("selected_fd, selected_config, exp_c_activate, exp_c_deactivate, exp_c_config ", [
+    ([('f_reconfigure_fd', 'fd_reconfig_1')], [('component_reconfig_3', 'cp_reconfig_1')], [], [], []),
+    ([('f_reconfigure_fd', 'fd_reconfig_2')], [('component_reconfig_3', 'cp_reconfig_1')], ['component_reconfig_2'], ['component_reconfig_1'], []),
+    ([('f_reconfigure_fd', 'fd_reconfig_1')], [('component_reconfig_3', 'cp_reconfig_2')], [], [], ['cp_reconfig_2']),
+    ([('f_reconfigure_fd', 'fd_reconfig_2')], [('component_reconfig_3', 'cp_reconfig_2')], ['component_reconfig_2'], ['component_reconfig_1'], ['cp_reconfig_2']),
+])
+def test_select_configuration(
+        kb_interface,
+        selected_fd,
+        selected_config,
+        exp_c_activate,
+        exp_c_deactivate,
+        exp_c_config
+     ):
+    result, start_time = kb_interface.select_configuration(
+        selected_fd, selected_config)
+
+    query = "match $rp "
+    end_query = ""
+    if len(exp_c_activate) > 0:
+        if query == "match $rp ":
+            query += '('
+        query += "architectural-adaptation:$ca"
+        _match_query, _prefix_list = kb_interface.create_match_query(
+            [('Component', 'component-name', c) for c in exp_c_activate], 'ca')
+        end_query += kb_interface.create_relationship_insert_query(
+            'component-activation',
+            {'component': _prefix_list},
+            prefix='ca'
+        )
+        end_query += _match_query
+    if len(exp_c_deactivate) > 0:
+        if query == "match $rp ":
+            query += '('
+        elif len(query) > len("match $rp ("):
+            query += ','
+        query += "architectural-adaptation:$cd"
+        _match_query, _prefix_list = kb_interface.create_match_query(
+            [('Component', 'component-name', c) for c in exp_c_deactivate], 'cd')
+        end_query += kb_interface.create_relationship_insert_query(
+            'component-deactivation',
+            {'component': _prefix_list},
+            prefix='cd'
+        )
+        end_query += _match_query
+    if len(exp_c_config) > 0:
+        if query == "match $rp ":
+            query += '('
+        elif len(query) > len("match $rp ("):
+            query += ','
+        query += "parameter-adaptation:$pa"
+        _match_query, _prefix_list = kb_interface.create_match_query(
+            [('component-configuration', 'component-configuration-name', c)
+             for c in exp_c_config], 'cc_')
+        end_query += kb_interface.create_relationship_insert_query(
+            'parameter-adaptation',
+            {'component-configuration': _prefix_list},
+            prefix='cc'
+        )
+        end_query += _match_query
+
+    if query != "match $rp ":
+        query += ')'
+
+    query += " isa reconfiguration-plan, has start-time {};".format(
+        start_time)
+    query += end_query
     query_result = kb_interface.match_database(query)
 
-    assert len(query_result) > 0
+    right_fd_selected = True
+    for fd in selected_fd:
+        _fd = kb_interface.get_relationship_with_attribute(
+            'Function',
+            fd[0],
+            'function-design',
+            'is-selected',
+            'true'
+        )
+        right_fd_selected = (fd[1] == _fd[0])
+    right_conf_selected = True
+    for config in selected_config:
+        _config = kb_interface.get_relationship_with_attribute(
+            'Component',
+            config[0],
+            'component-configuration',
+            'is-selected',
+            'true'
+        )
+        right_conf_selected = (config[1] == _config[0])
+    assert len(query_result) > 0 and right_fd_selected and right_conf_selected
 
 
 @pytest.mark.parametrize("thing, status, exp", [

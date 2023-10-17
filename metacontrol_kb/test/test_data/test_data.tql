@@ -75,6 +75,23 @@ $fd_unsolved (function:$f_unsolved, required-component:$c_unsolved) isa function
 $f_always_improve isa Function, has function-name "f_always_improve", has always-improve true;
 $c_always_improve isa Component, has component-name "c_always_improve", has always-improve true;
 
+## data to test select_reconfiguration
+$t_reconfigure isa Task, has task-name "t_reconfigure";
+$f_reconfigure_fd isa Function, has function-name "f_reconfigure_fd";
+$f_reconfigure_c_config isa Function, has function-name "f_reconfigure_f_config";
+(task: $t_reconfigure, required-function: $f_reconfigure_fd, required-function: $f_reconfigure_c_config) isa task-requirement;
+$component_reconfig_1 isa Component, has component-name "component_reconfig_1", has is-active true;
+$component_reconfig_2 isa Component, has component-name "component_reconfig_2";
+$component_reconfig_3 isa Component, has component-name "component_reconfig_3";
+(function:$f_reconfigure_fd, required-component:$component_reconfig_1) isa function-design, has function-design-name "fd_reconfig_1", has performance 10.0, has is-selected true;
+(function:$f_reconfigure_fd, required-component:$component_reconfig_2) isa function-design, has function-design-name "fd_reconfig_2", has performance 9.0;
+(function:$f_reconfigure_c_config, required-component:$component_reconfig_3) isa function-design, has function-design-name "fd_reconfig_3", has performance 9.0, has is-selected true;
+$cp_reconfig_1 isa ComponentParameter, has parameter-key "cp_reconfig_1", has parameter-value "2.0";
+$cp_reconfig_2 isa ComponentParameter, has parameter-key "cp_reconfig_2", has parameter-value "3.0";
+$c_config_reconfig_1  (component:$component_reconfig_3, parameter:$cp_reconfig_1) isa component-configuration, has component-configuration-name "cp_reconfig_1", has is-selected true;
+$c_config_reconfig_2  (component:$component_reconfig_3, parameter:$cp_reconfig_2) isa component-configuration, has component-configuration-name "cp_reconfig_2";
+
+
 #$f_required isa Function, has function-name "function_required", has is-required true;
 #$f_required_activated isa Function, has function-name "function_required_activated", has is-required true, has function-status 'activated';
 #$f_not_required isa Function, has function-name "function_not_required", has is-required false;
