@@ -394,18 +394,20 @@ class ModelInterface(TypeDBInterface):
             {'component-configuration': prefix_list[2]},
             prefix='rcc'
         )
+        start_time = datetime.now()
         insert_query += self.create_relationship_insert_query(
             'reconfiguration-plan',
             {
                 'architectural-adaptation': ['rca', 'rcd'],
                 'parameter-adaptation': ['rcc']
             },
-            attribute_list=[('start-time',  datetime.now())],
+            attribute_list=[('start-time',  start_time)],
             prefix='rp'
         )
 
         query = match_query + insert_query
-        return self.insert_database(query)
+        start_time = start_time.isoformat(timespec='milliseconds')
+        return self.insert_database(query), start_time
 
     def get_components_in_function_design(self, fd_name):
         """

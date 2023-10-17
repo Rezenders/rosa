@@ -206,14 +206,14 @@ def test_create_reconfiguration_plan(kb_interface):
     c_activate = ['component2', 'component3']
     c_deactivate = ['component4', 'component5']
     c_config = ['low param']
-    result = kb_interface.create_reconfiguration_plan(
+    result, start_time = kb_interface.create_reconfiguration_plan(
         c_activate, c_deactivate, c_config)
 
-    query = """
+    query = f"""
         match
         $rp (architectural-adaptation:$aa, parameter-adaptation:$pa)
             isa reconfiguration-plan,
-            has start-time $time;
+            has start-time {start_time};
     """
     query_result = kb_interface.match_database(query)
 
