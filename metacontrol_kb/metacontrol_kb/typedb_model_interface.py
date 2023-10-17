@@ -361,45 +361,54 @@ class ModelInterface(TypeDBInterface):
         insert_query = "insert "
         prefix_list = []
 
-        _match_query, _prefix_list = self.create_match_query(
-            [('Component', 'component-name', c) for c in c_activate], 'ca')
-        match_query += _match_query
-        prefix_list.append(_prefix_list)
+        architectural_adaptation = []
+        if len(c_activate) > 0:
+            _match_query, _prefix_list = self.create_match_query(
+                [('Component', 'component-name', c) for c in c_activate], 'ca')
+            match_query += _match_query
 
-        _match_query, _prefix_list = self.create_match_query(
-            [('Component', 'component-name', c) for c in c_deactivate], 'cd')
-        match_query += _match_query
-        prefix_list.append(_prefix_list)
+            insert_query += self.create_relationship_insert_query(
+                'component-activation',
+                {'component': _prefix_list},
+                prefix='rca'
+            )
+            architectural_adaptation.append('rca')
 
-        _match_query, _prefix_list = self.create_match_query(
-            [('component-configuration', 'component-configuration-name', c)
-                for c in c_config],
-            'cc'
-        )
-        match_query += _match_query
-        prefix_list.append(_prefix_list)
+        if len(c_deactivate) > 0:
+            _match_query, _prefix_list = self.create_match_query(
+                [('Component', 'component-name', c) for c in c_deactivate],
+                'cd')
+            match_query += _match_query
 
-        insert_query += self.create_relationship_insert_query(
-            'component-activation',
-            {'component': prefix_list[0]},
-            prefix='rca'
-        )
-        insert_query += self.create_relationship_insert_query(
-            'component-deactivation',
-            {'component': prefix_list[1]},
-            prefix='rcd'
-        )
-        insert_query += self.create_relationship_insert_query(
-            'parameter-adaptation',
-            {'component-configuration': prefix_list[2]},
-            prefix='rcc'
-        )
+            insert_query += self.create_relationship_insert_query(
+                'component-deactivation',
+                {'component': _prefix_list},
+                prefix='rcd'
+            )
+            architectural_adaptation.append('rcd')
+
+        parameter_adaptation = []
+        if len(c_config) > 0:
+            _match_query, _prefix_list = self.create_match_query(
+                [('component-configuration', 'component-configuration-name', c)
+                    for c in c_config],
+                'cc'
+            )
+            match_query += _match_query
+
+            insert_query += self.create_relationship_insert_query(
+                'parameter-adaptation',
+                {'component-configuration': _prefix_list},
+                prefix='rcc'
+            )
+            parameter_adaptation.append('rcc')
+
         start_time = datetime.now()
         insert_query += self.create_relationship_insert_query(
             'reconfiguration-plan',
             {
-                'architectural-adaptation': ['rca', 'rcd'],
-                'parameter-adaptation': ['rcc']
+                'architectural-adaptation': architectural_adaptation,
+                'parameter-adaptation': parameter_adaptation
             },
             attribute_list=[('start-time',  start_time)],
             prefix='rp'

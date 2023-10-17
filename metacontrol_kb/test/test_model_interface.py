@@ -201,13 +201,78 @@ def test_select_component_configuration(kb_interface):
     assert high_selected[0] is True and high_not_selected[0] is False and \
            low_selected[0] is True
 
-
-def test_create_reconfiguration_plan(kb_interface):
-    c_activate = ['component2', 'component3']
-    c_deactivate = ['component4', 'component5']
-    c_config = ['low param']
+@pytest.mark.parametrize("c_activate, c_deactivate, c_config", [
+    (['component2', 'component3'], ['component4', 'component5'], ['low param']),
+    ([], ['component4', 'component5'], ['low param']),
+    (['component2', 'component3'], [], ['low param']),
+    ([], [], ['low param']),
+    (['component2', 'component3'], ['component4', 'component5'], []),
+])
+def test_create_reconfiguration_plan(
+   kb_interface, c_activate, c_deactivate, c_config):
     result, start_time = kb_interface.create_reconfiguration_plan(
         c_activate, c_deactivate, c_config)
+    query = "match ("
+    end_query = ""
+    if len(c_activate) > 0:
+        query += "architectural-adaptation:$ca"
+        components = "("
+        c_name = ""
+        counter = 0
+        for c in c_activate:
+            if components != "(":
+                components += ","
+            components += "component: $ca_{}".format(counter)
+            c_name += "$ca_{0} isa Component, has component-name '{1}';".format(counter, c)
+            counter += 1
+        components += ")"
+        end_query += " $ca {} isa component-activation;".format(components)
+        end_query += c_name
+
+    if len(c_deactivate) > 0:
+        if query != "match (":
+            query += ','
+        query += "architectural-adaptation:$cd"
+        components = "("
+        c_name = ""
+        counter = 0
+        for c in c_deactivate:
+            if components != "(":
+                components += ","
+            components += "component: $cd_{}".format(counter)
+            c_name += "$cd_{0} isa Component, has component-name '{1}';" \
+                .format(counter, c)
+            counter += 1
+        components += ")"
+        end_query += " $cd {} isa component-deactivation;".format(components)
+        end_query += c_name
+
+    if len(c_config) > 0:
+        if query != "match (":
+            query += ','
+        query += "parameter-adaptation:$pa"
+        configs = "("
+        c_name = ""
+        counter = 0
+        for c in c_config:
+            if configs != "(":
+                configs += ","
+            configs += "component-configuration: $cc_{}".format(counter)
+            c_name += "$cc_{0} isa component-configuration, \
+                has component-configuration-name '{1}';".format(counter, c)
+            counter += 1
+        configs += ")"
+        end_query += " $pa {} isa parameter-adaptation;".format(configs)
+        end_query += c_name
+    query += ")"
+
+    query += f""" isa reconfiguration-plan, has start-time {start_time};"""
+    query += end_query
+    query_result = kb_interface.match_database(query)
+
+    assert len(query_result) > 0
+
+
 
     query = f"""
         match
