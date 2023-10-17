@@ -206,8 +206,9 @@ def test_select_component_configuration(kb_interface):
    (['component2', 'component3'], ['component4', 'component5'], ['low param']),
    ([], ['component4', 'component5'], ['low param']),
    (['component2', 'component3'], [], ['low param']),
-   ([], [], ['low param']),
    (['component2', 'component3'], ['component4', 'component5'], []),
+   ([], [], ['low param']),
+   ([], [], []),
 ])
 def test_create_reconfiguration_plan(
    kb_interface, c_activate, c_deactivate, c_config):
@@ -215,48 +216,55 @@ def test_create_reconfiguration_plan(
         c_activate, c_deactivate, c_config)
     query = "match ("
     end_query = ""
-    if len(c_activate) > 0:
-        query += "architectural-adaptation:$ca"
-        _match_query, _prefix_list = kb_interface.create_match_query(
-            [('Component', 'component-name', c) for c in c_activate], 'ca_')
-        end_query += kb_interface.create_relationship_insert_query(
-            'component-activation',
-            {'component': _prefix_list},
-            prefix='ca'
-        )
-        end_query += _match_query
+    if len(c_activate) == 0 and len(c_deactivate) == 0 and len(c_config) == 0:
+        assert result is True and start_time is None
+    else:
+        if len(c_activate) > 0:
+            query += "architectural-adaptation:$ca"
+            _match_query, _prefix_list = kb_interface.create_match_query(
+                [('Component', 'component-name', c) for c in c_activate],
+                'ca_')
+            end_query += kb_interface.create_relationship_insert_query(
+                'component-activation',
+                {'component': _prefix_list},
+                prefix='ca'
+            )
+            end_query += _match_query
 
-    if len(c_deactivate) > 0:
-        if query != "match (":
-            query += ','
-        query += "architectural-adaptation:$cd"
-        _match_query, _prefix_list = kb_interface.create_match_query(
-            [('Component', 'component-name', c) for c in c_deactivate], 'cd_')
-        end_query += kb_interface.create_relationship_insert_query(
-            'component-deactivation',
-            {'component': _prefix_list},
-            prefix='cd'
-        )
-        end_query += _match_query
+        if len(c_deactivate) > 0:
+            if query != "match (":
+                query += ','
+            query += "architectural-adaptation:$cd"
+            _match_query, _prefix_list = kb_interface.create_match_query(
+                [('Component', 'component-name', c) for c in c_deactivate],
+                'cd_')
+            end_query += kb_interface.create_relationship_insert_query(
+                'component-deactivation',
+                {'component': _prefix_list},
+                prefix='cd'
+            )
+            end_query += _match_query
 
-    if len(c_config) > 0:
-        if query != "match (":
-            query += ','
-        query += "parameter-adaptation:$pa"
-        _match_query, _prefix_list = kb_interface.create_match_query(
-            [('component-configuration', 'component-configuration-name', c)
-             for c in c_config], 'cc_')
-        end_query += kb_interface.create_relationship_insert_query(
-            'parameter-adaptation',
-            {'component-configuration': _prefix_list},
-            prefix='cc'
-        )
-        end_query += _match_query
+        if len(c_config) > 0:
+            if query != "match (":
+                query += ','
+            query += "parameter-adaptation:$pa"
+            _match_query, _prefix_list = kb_interface.create_match_query(
+                [('component-configuration', 'component-configuration-name', c)
+                 for c in c_config], 'cc_')
+            end_query += kb_interface.create_relationship_insert_query(
+                'parameter-adaptation',
+                {'component-configuration': _prefix_list},
+                prefix='cc'
+            )
+            end_query += _match_query
 
-    query += f""") isa reconfiguration-plan, has start-time {start_time};"""
-    query += end_query
-    query_result = kb_interface.match_database(query)
-    assert len(query_result) > 0
+        query += f"""
+            ) isa reconfiguration-plan, has start-time {start_time};
+        """
+        query += end_query
+        query_result = kb_interface.match_database(query)
+        assert len(query_result) > 0
 
 
 @pytest.mark.parametrize("selected_fd, selected_config, exp_c_activate, exp_c_deactivate, exp_c_config ", [

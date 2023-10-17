@@ -361,6 +361,10 @@ class ModelInterface(TypeDBInterface):
         insert_query = "insert "
         prefix_list = []
 
+        if len(c_activate) == 0 and len(c_deactivate) == 0 and \
+           len(c_config) == 0:
+            return True, None
+
         architectural_adaptation = []
         if len(c_activate) > 0:
             _match_query, _prefix_list = self.create_match_query(
