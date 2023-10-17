@@ -15,7 +15,7 @@ import pytest
 from metacontrol_kb.typedb_model_interface import ModelInterface
 
 
-@pytest.fixture(scope="module")
+@pytest.fixture
 def kb_interface():
     kb_interface = ModelInterface(
         "localhost:1729",
@@ -201,12 +201,13 @@ def test_select_component_configuration(kb_interface):
     assert high_selected[0] is True and high_not_selected[0] is False and \
            low_selected[0] is True
 
+
 @pytest.mark.parametrize("c_activate, c_deactivate, c_config", [
-    (['component2', 'component3'], ['component4', 'component5'], ['low param']),
-    ([], ['component4', 'component5'], ['low param']),
-    (['component2', 'component3'], [], ['low param']),
-    ([], [], ['low param']),
-    (['component2', 'component3'], ['component4', 'component5'], []),
+   (['component2', 'component3'], ['component4', 'component5'], ['low param']),
+   ([], ['component4', 'component5'], ['low param']),
+   (['component2', 'component3'], [], ['low param']),
+   ([], [], ['low param']),
+   (['component2', 'component3'], ['component4', 'component5'], []),
 ])
 def test_create_reconfiguration_plan(
    kb_interface, c_activate, c_deactivate, c_config):
@@ -216,70 +217,48 @@ def test_create_reconfiguration_plan(
     end_query = ""
     if len(c_activate) > 0:
         query += "architectural-adaptation:$ca"
-        components = "("
-        c_name = ""
-        counter = 0
-        for c in c_activate:
-            if components != "(":
-                components += ","
-            components += "component: $ca_{}".format(counter)
-            c_name += "$ca_{0} isa Component, has component-name '{1}';".format(counter, c)
-            counter += 1
-        components += ")"
-        end_query += " $ca {} isa component-activation;".format(components)
-        end_query += c_name
+        _match_query, _prefix_list = kb_interface.create_match_query(
+            [('Component', 'component-name', c) for c in c_activate], 'ca_')
+        end_query += kb_interface.create_relationship_insert_query(
+            'component-activation',
+            {'component': _prefix_list},
+            prefix='ca'
+        )
+        end_query += _match_query
 
     if len(c_deactivate) > 0:
         if query != "match (":
             query += ','
         query += "architectural-adaptation:$cd"
-        components = "("
-        c_name = ""
-        counter = 0
-        for c in c_deactivate:
-            if components != "(":
-                components += ","
-            components += "component: $cd_{}".format(counter)
-            c_name += "$cd_{0} isa Component, has component-name '{1}';" \
-                .format(counter, c)
-            counter += 1
-        components += ")"
-        end_query += " $cd {} isa component-deactivation;".format(components)
-        end_query += c_name
+        _match_query, _prefix_list = kb_interface.create_match_query(
+            [('Component', 'component-name', c) for c in c_deactivate], 'cd_')
+        end_query += kb_interface.create_relationship_insert_query(
+            'component-deactivation',
+            {'component': _prefix_list},
+            prefix='cd'
+        )
+        end_query += _match_query
 
     if len(c_config) > 0:
         if query != "match (":
             query += ','
         query += "parameter-adaptation:$pa"
-        configs = "("
-        c_name = ""
-        counter = 0
-        for c in c_config:
-            if configs != "(":
-                configs += ","
-            configs += "component-configuration: $cc_{}".format(counter)
-            c_name += "$cc_{0} isa component-configuration, \
-                has component-configuration-name '{1}';".format(counter, c)
-            counter += 1
-        configs += ")"
-        end_query += " $pa {} isa parameter-adaptation;".format(configs)
-        end_query += c_name
-    query += ")"
+        _match_query, _prefix_list = kb_interface.create_match_query(
+            [('component-configuration', 'component-configuration-name', c)
+             for c in c_config], 'cc_')
+        end_query += kb_interface.create_relationship_insert_query(
+            'parameter-adaptation',
+            {'component-configuration': _prefix_list},
+            prefix='cc'
+        )
+        end_query += _match_query
 
-    query += f""" isa reconfiguration-plan, has start-time {start_time};"""
+    query += f""") isa reconfiguration-plan, has start-time {start_time};"""
     query += end_query
     query_result = kb_interface.match_database(query)
-
     assert len(query_result) > 0
 
 
-
-    query = f"""
-        match
-        $rp (architectural-adaptation:$aa, parameter-adaptation:$pa)
-            isa reconfiguration-plan,
-            has start-time {start_time};
-    """
     query_result = kb_interface.match_database(query)
 
     assert len(query_result) > 0
