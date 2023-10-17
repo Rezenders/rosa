@@ -451,12 +451,13 @@ class ModelInterface(TypeDBInterface):
                     'is-selected',
                     'true'
                 )
-                for c in self.get_components_in_function_design(_fd[0]):
-                    c_active = self.get_attribute_from_entity(
-                        'Component', 'component-name', c, 'is-active')
-                    if c not in _c_activate and len(c_active) > 0 \
-                       and c_active[0] is True:
-                        _c_deactivate.append(c)
+                if len(_fd) > 0:
+                    for c in self.get_components_in_function_design(_fd[0]):
+                        c_active = self.get_attribute_from_entity(
+                            'Component', 'component-name', c, 'is-active')
+                        if c not in _c_activate and len(c_active) > 0 \
+                           and c_active[0] is True:
+                            _c_deactivate.append(c)
             self.select_function_design(function, fd)
         for component, config in componets_selected_config:
             config_selected = self.get_attribute_from_entity(
