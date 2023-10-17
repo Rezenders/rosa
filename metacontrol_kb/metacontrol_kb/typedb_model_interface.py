@@ -418,6 +418,60 @@ class ModelInterface(TypeDBInterface):
         start_time = start_time.isoformat(timespec='milliseconds')
         return self.insert_database(query), start_time
 
+    def select_configuration(
+       self, functions_selected_fd, componets_selected_config):
+        """
+        Select configuration and create reconfiguration plan.
+
+        :param functions_selected_fd: tuple with function and fd names.
+        :type thing: tuple(str, str)
+        :return: Reconfig plan insert result and plan start-time.
+        :rtype: bool, datetime
+        """
+        _c_activate = []
+        _c_deactivate = []
+        _configs = []
+        for function, fd in functions_selected_fd:
+            # select components that need to be activated
+            for c in self.get_components_in_function_design(fd):
+                c_active = self.get_attribute_from_entity(
+                    'Component', 'component-name', c, 'is-active')
+                if c_active is not True:
+                    _c_activate.append(c)
+
+            # select components that need to be deactivated
+            fd_selected = self.get_attribute_from_entity(
+                'function-design', 'function-design-name', fd, 'is-selected')
+            if len(fd_selected) == 0  \
+               or len(fd_selected) > 0 and fd_selected[0] is False:
+                _fd = self.get_relationship_with_attribute(
+                    'Function',
+                    function,
+                    'function-design',
+                    'is-selected',
+                    'true'
+                )
+                for c in self.get_components_in_function_design(_fd[0]):
+                    c_active = self.get_attribute_from_entity(
+                        'Component', 'component-name', c, 'is-active')
+                    if c not in _c_activate and len(c_active) > 0 \
+                       and c_active[0] is True:
+                        _c_deactivate.append(c)
+            self.select_function_design(function, fd)
+        for component, config in componets_selected_config:
+            config_selected = self.get_attribute_from_entity(
+                'component-configuration',
+                'component-configuration-name',
+                config,
+                'is-selected'
+            )
+            if len(config_selected) == 0  \
+               or len(config_selected) > 0 and config_selected[0] is False:
+                _configs.append(config)
+            self.select_component_configuration(component, config)
+        return self.create_reconfiguration_plan(
+            _c_activate, _c_deactivate, _configs)
+
     def get_components_in_function_design(self, fd_name):
         """
         Get components in relation with a function design.
