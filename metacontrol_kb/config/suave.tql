@@ -3,13 +3,13 @@ insert
 #Task search pipeline
 $t_search_pipeline isa Task, has task-name "search_pipeline";
 
-$f0 isa Function, has function-name "generate search path", has always-improve true;
+$f0 isa Function, has function-name "generate search path";
 $f_recover_motion isa Function, has function-name "recover motion";
 
 (task:$t_search_pipeline, required-function:$f0, required-function:$f_recover_motion) isa task-requirement;
 
 ## Component Generate spiral search path node and configurations
-$c0 isa Component, has component-name "generate spiral search path node";
+$c0 isa Component, has component-name "generate spiral search path node", has always-improve true;
 
 (function: $f0, required-component: $c0) isa function-design, has function-design-name "generate spiral search path function design", has performance 1.0;
 
