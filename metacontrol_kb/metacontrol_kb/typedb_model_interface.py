@@ -300,7 +300,7 @@ class ModelInterface(TypeDBInterface):
                 get $name;
             '''
         query_result = self.match_database(query)
-        return [r.get("name").get('value') for r in query_result]
+        return [r.get('name').get('value') for r in query_result]
 
     # select fd or component configuration
     def select_relationship(self, entity, e_name, relation, r_name):
@@ -406,3 +406,22 @@ class ModelInterface(TypeDBInterface):
 
         query = match_query + insert_query
         return self.insert_database(query)
+
+    def get_components_in_function_design(self, fd_name):
+        """
+        Get components in relation with a function design.
+
+        :param fd_name: name of the function design.
+        :type thing: str
+        :return: Component names in relation with fd_name.
+        :rtype: list[str]
+        """
+        query = f'''
+            match
+                $fd (required-component: $component) isa function-design,
+                    has function-design-name "{fd_name}";
+                $component isa Component, has component-name $c-name;
+                get $c-name;
+            '''
+        query_result = self.match_database(query)
+        return [r.get('c-name').get('value') for r in query_result]

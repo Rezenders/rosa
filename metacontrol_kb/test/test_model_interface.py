@@ -252,3 +252,9 @@ def test_get_adaptable_component(kb_interface):
     result = kb_interface.get_adaptable_components()
     print(result)
     assert all(r in result for r in expected_result)
+
+
+def test_get_components_in_function_design(kb_interface):
+    result = kb_interface.get_components_in_function_design('f2_fd1_c2_c3')
+    expected_result = ['component2', 'component3']
+    assert all(r in result for r in expected_result)
