@@ -491,3 +491,84 @@ class ModelInterface(TypeDBInterface):
             '''
         query_result = self.match_database(query)
         return [r.get('c-name').get('value') for r in query_result]
+
+    def get_latest_reconfiguration_plan_time(self):
+        """
+        Get start-time of the most recent reconfiguration plan.
+
+        :return: start-time of the most recent reconfiguration plan.
+        :rtype: datetime
+        """
+        query = '''
+            match $rp isa reconfiguration-plan, has start-time $time;
+            get $time;
+            sort $time desc; limit 1;
+        '''
+        result = self.match_database(query)
+        if len(result) > 0:
+            return result[0].get('time').get('value')
+        else:
+            return False
+
+    def get_reconfiguration_plan(self, start_time):
+        """
+        Get reconfiguration plan with start-time.
+
+        :param start_time: start-time of the desired reconfiguration plan.
+        :type start_time: datetime
+        :return: Dict with keys c_activate, c_deactivate, c_config
+        :rtype: dict[str, list[str]]
+        """
+        query = f'''
+            match (architectural-adaptation:$ca_) isa reconfiguration-plan,
+                has start-time {start_time};
+            $ca_ (component:$ca) isa component-activation;
+            $ca isa Component, has component-name $c_activate;
+            get $c_activate;
+        '''
+        result = self.match_database(query)
+        c_activate = [r.get('c_activate').get('value') for r in result]
+
+        query = f'''
+            match (architectural-adaptation:$cd_) isa reconfiguration-plan,
+                has start-time {start_time};
+            $cd_ (component:$cd) isa component-deactivation;
+            $cd isa Component, has component-name $c_deactivate;
+            get $c_deactivate;
+        '''
+        result = self.match_database(query)
+        c_deactivate = [r.get('c_deactivate').get('value') for r in result]
+
+        query = f'''
+            match (parameter-adaptation:$pa) isa reconfiguration-plan,
+                has start-time {start_time};
+            $pa (component-configuration:$cc) isa parameter-adaptation;
+            $cc isa component-configuration,
+                has component-configuration-name $c_config;
+            get $c_config;
+        '''
+        result = self.match_database(query)
+        c_config = [r.get('c_config').get('value') for r in result]
+        reconfig_plan_dict = {
+            'c_activate': c_activate,
+            'c_deactivate': c_deactivate,
+            'c_config': c_config,
+        }
+        return reconfig_plan_dict
+
+    def get_latest_reconfiguration_plan(self):
+        """
+        Get latest reconfiguration plan.
+
+        :param start_time: start-time of the desired reconfiguration plan.
+        :type start_time: datetime
+        :return: Dict with keys c_activate, c_deactivate, c_config
+        :rtype: dict[str, list[str]] or False
+        """
+        time = self.get_latest_reconfiguration_plan_time()
+        if time is not False:
+            reconfig_plan_dict = self.get_reconfiguration_plan(time)
+            reconfig_plan_dict['start-time'] = time
+            return reconfig_plan_dict
+        else:
+            return False

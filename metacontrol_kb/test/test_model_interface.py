@@ -389,3 +389,56 @@ def test_get_components_in_function_design(kb_interface):
     result = kb_interface.get_components_in_function_design('f2_fd1_c2_c3')
     expected_result = ['component2', 'component3']
     assert all(r in result for r in expected_result)
+
+
+def test_get_latest_reconfiguration_plan_time(kb_interface):
+    c_activate = ['component2', 'component3']
+    c_deactivate = ['component4', 'component5']
+    c_config = ['low param']
+    r, start_time_1 = kb_interface.create_reconfiguration_plan(
+        c_activate, c_deactivate, c_config)
+
+    c_activate = ['component3']
+    c_deactivate = ['component5']
+    c_config = ['low param']
+    r2, start_time_2 = kb_interface.create_reconfiguration_plan(
+        c_activate, c_deactivate, c_config)
+    lastest_plan = kb_interface.get_latest_reconfiguration_plan_time()
+    assert lastest_plan == start_time_2
+
+
+def test_get_latest_reconfiguration_plan_time_no_rp(kb_interface):
+    lastest_plan = kb_interface.get_latest_reconfiguration_plan_time()
+    assert lastest_plan is False
+
+
+def test_get_reconfiguration_plan(kb_interface):
+    c_activate = ['component2', 'component3']
+    c_deactivate = ['component4', 'component5']
+    c_config = ['low param']
+    r, start_time = kb_interface.create_reconfiguration_plan(
+        c_activate, c_deactivate, c_config)
+
+    reconfig_plan = kb_interface.get_reconfiguration_plan(start_time)
+    assert sorted(c_activate) == sorted(reconfig_plan['c_activate']) and \
+        sorted(c_deactivate) == sorted(reconfig_plan['c_deactivate']) and \
+        sorted(c_config) == sorted(reconfig_plan['c_config'])
+
+
+def test_get_latest_reconfiguration_plan(kb_interface):
+    c_activate = ['component2', 'component3']
+    c_deactivate = ['component4', 'component5']
+    c_config = ['low param']
+    r, start_time_1 = kb_interface.create_reconfiguration_plan(
+        c_activate, c_deactivate, c_config)
+
+    c_activate = ['component3']
+    c_deactivate = ['component5']
+    c_config = ['low param']
+    r2, start_time_2 = kb_interface.create_reconfiguration_plan(
+        c_activate, c_deactivate, c_config)
+    reconfig_plan = kb_interface.get_latest_reconfiguration_plan()
+    assert reconfig_plan['start-time'] == start_time_2 and \
+        sorted(c_activate) == sorted(reconfig_plan['c_activate']) and \
+        sorted(c_deactivate) == sorted(reconfig_plan['c_deactivate']) and \
+        sorted(c_config) == sorted(reconfig_plan['c_config'])
