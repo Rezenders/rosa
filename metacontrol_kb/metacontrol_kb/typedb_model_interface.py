@@ -579,3 +579,11 @@ class ModelInterface(TypeDBInterface):
             return reconfig_plan_dict
         else:
             return False
+
+    def update_reconfiguration_plan_result(self, start_time, result_value):
+        return self.update_attribute_in_thing(
+            'reconfiguration-plan',
+            'start-time',
+            start_time,
+            'result',
+            result_value)

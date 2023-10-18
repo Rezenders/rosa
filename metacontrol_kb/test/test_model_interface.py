@@ -447,7 +447,27 @@ def test_get_latest_reconfiguration_plan(kb_interface):
     r2, start_time_2 = kb_interface.create_reconfiguration_plan(
         c_activate, c_deactivate, c_config)
     reconfig_plan = kb_interface.get_latest_reconfiguration_plan()
+    # start_time_2 = start_time_2.isoformat(timespec='milliseconds')
     assert reconfig_plan['start-time'] == start_time_2 and \
         sorted(c_activate) == sorted(reconfig_plan['c_activate']) and \
         sorted(c_deactivate) == sorted(reconfig_plan['c_deactivate']) and \
         sorted(c_config) == sorted(reconfig_plan['c_config'])
+
+
+def test_update_reconfiguration_plan_result(kb_interface):
+    c_activate = ['component2', 'component3']
+    c_deactivate = ['component4', 'component5']
+    c_config = ['low param']
+    r, start_time = kb_interface.create_reconfiguration_plan(
+        c_activate, c_deactivate, c_config)
+
+    kb_interface.update_reconfiguration_plan_result(start_time, 'completed')
+    query = f'''
+        match $rp isa reconfiguration-plan,
+            has start-time {start_time.isoformat(timespec='milliseconds')},
+            has result $result;
+            get $result;
+    '''
+    query_result = kb_interface.match_database(query)
+    result = [r.get('result').get('value') for r in query_result]
+    assert len(result) > 0 and result[0] == 'completed'
