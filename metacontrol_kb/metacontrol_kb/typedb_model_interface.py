@@ -332,7 +332,6 @@ class ModelInterface(TypeDBInterface):
         if len(is_activated) > 0 and is_activated[0] is value:
             return None
         print('set {} to value {} '.format(name, value))
-        value = str(value).lower()
         return self.update_attribute_in_thing(
             thing,
             '{}-name'.format(thing.lower()),
