@@ -45,12 +45,12 @@ class ModelInterface(TypeDBInterface):
     # Request task
     def request_task(self, task_name):
         return self.update_attribute_in_thing(
-            'Task', 'task-name', task_name, 'is-required', 'true')
+            'Task', 'task-name', task_name, 'is-required', True)
 
     # Cancel task
     def cancel_task(self, task_name):
         return self.update_attribute_in_thing(
-            'Task', 'task-name', task_name, 'is-required', 'false')
+            'Task', 'task-name', task_name, 'is-required', False)
 
     # Update status of a task
     def update_task_status(self, task_name, task_status):
@@ -59,7 +59,8 @@ class ModelInterface(TypeDBInterface):
             'task-name',
             task_name,
             'task-status',
-            "'{}'".format(task_status))
+            task_status
+        )
 
     # Check if a Task is required
     def is_task_required(self, task_name):
@@ -112,7 +113,7 @@ class ModelInterface(TypeDBInterface):
                 get $name;
         '''
         query_result = self.match_database(query)
-        return [r.get("name").get('value') for r in query_result]
+        return [r.get('name').get('value') for r in query_result]
 
     def get_solved_functions(self):
         return self.get_instances_of_thing_with_status(
@@ -168,7 +169,7 @@ class ModelInterface(TypeDBInterface):
     # function-status equal to 'unsolved'
     def get_unsolved_functions(self):
         query_result = self.get_unsolved_thing_raw('Function')
-        return [r.get("name").get('value') for r in query_result]
+        return [r.get('name').get('value') for r in query_result]
 
     # Get all Components with is-required property equal to True and
     # component-status equal to 'unsolved'
@@ -279,7 +280,6 @@ class ModelInterface(TypeDBInterface):
             'is-selected')
         if len(is_selected) > 0 and is_selected[0] is value:
             return None
-        value = str(value).lower()
         return self.update_attribute_in_thing(
             thing,
             '{}-name'.format(thing),
@@ -290,10 +290,12 @@ class ModelInterface(TypeDBInterface):
     # get selected fd or component config
     def get_relationship_with_attribute(
             self, entity, entity_name, relation, r_attribute, r_value):
+        entity_name = self.convert_py_type_to_query_type(entity_name)
+        r_value = self.convert_py_type_to_query_type(r_value)
         query = f'''
             match
                 $e isa {entity},
-                    has {entity.lower()}-name "{entity_name}";
+                    has {entity.lower()}-name {entity_name};
                 $r ($e) isa {relation},
                     has {r_attribute} {r_value},
                     has {relation}-name $name;
@@ -305,7 +307,7 @@ class ModelInterface(TypeDBInterface):
     # select fd or component configuration
     def select_relationship(self, entity, e_name, relation, r_name):
         current_selected = self.get_relationship_with_attribute(
-            entity, e_name, relation, 'is-selected', 'true')
+            entity, e_name, relation, 'is-selected', True)
         for r in current_selected:
             if r != r_name:
                 self.toogle_thing_selection(relation, r, False)
@@ -348,7 +350,7 @@ class ModelInterface(TypeDBInterface):
                 c_name,
                 'component-configuration',
                 'is-active',
-                'true')
+                True)
             for config in current_active:
                 if config != cc_name:
                     self.toogle_thing_activation(
@@ -419,7 +421,8 @@ class ModelInterface(TypeDBInterface):
         )
 
         query = match_query + insert_query
-        start_time = start_time.isoformat(timespec='milliseconds')
+        start_time = datetime.fromisoformat(
+            start_time.isoformat(timespec='milliseconds'))
         return self.insert_database(query), start_time
 
     def select_configuration(
@@ -453,7 +456,7 @@ class ModelInterface(TypeDBInterface):
                     function,
                     'function-design',
                     'is-selected',
-                    'true'
+                    True
                 )
                 if len(_fd) > 0:
                     for c in self.get_components_in_function_design(_fd[0]):
@@ -510,7 +513,7 @@ class ModelInterface(TypeDBInterface):
         '''
         result = self.match_database(query)
         if len(result) > 0:
-            return result[0].get('time').get('value')
+            return self.covert_query_type_to_py_type(result[0].get('time'))
         else:
             return False
 
@@ -525,7 +528,7 @@ class ModelInterface(TypeDBInterface):
         """
         query = f'''
             match (architectural-adaptation:$ca_) isa reconfiguration-plan,
-                has start-time {start_time};
+                has start-time {start_time.isoformat(timespec='milliseconds')};
             $ca_ (component:$ca) isa component-activation;
             $ca isa Component, has component-name $c_activate;
             get $c_activate;
@@ -535,7 +538,7 @@ class ModelInterface(TypeDBInterface):
 
         query = f'''
             match (architectural-adaptation:$cd_) isa reconfiguration-plan,
-                has start-time {start_time};
+                has start-time {start_time.isoformat(timespec='milliseconds')};
             $cd_ (component:$cd) isa component-deactivation;
             $cd isa Component, has component-name $c_deactivate;
             get $c_deactivate;
@@ -545,7 +548,7 @@ class ModelInterface(TypeDBInterface):
 
         query = f'''
             match (parameter-adaptation:$pa) isa reconfiguration-plan,
-                has start-time {start_time};
+                has start-time {start_time.isoformat(timespec='milliseconds')};
             $pa (component-configuration:$cc) isa parameter-adaptation;
             $cc isa component-configuration,
                 has component-configuration-name $c_config;

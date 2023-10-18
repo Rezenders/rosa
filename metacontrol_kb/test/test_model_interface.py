@@ -260,7 +260,8 @@ def test_create_reconfiguration_plan(
             end_query += _match_query
 
         query += f"""
-            ) isa reconfiguration-plan, has start-time {start_time};
+            ) isa reconfiguration-plan,
+                has start-time {start_time.isoformat(timespec='milliseconds')};
         """
         query += end_query
         query_result = kb_interface.match_database(query)
@@ -332,7 +333,7 @@ def test_select_configuration(
         query += ')'
 
     query += " isa reconfiguration-plan, has start-time {};".format(
-        start_time)
+        start_time.isoformat(timespec='milliseconds'))
     query += end_query
     query_result = kb_interface.match_database(query)
 
@@ -343,7 +344,7 @@ def test_select_configuration(
             fd[0],
             'function-design',
             'is-selected',
-            'true'
+            True
         )
         right_fd_selected = (fd[1] == _fd[0])
     right_conf_selected = True
@@ -353,7 +354,7 @@ def test_select_configuration(
             config[0],
             'component-configuration',
             'is-selected',
-            'true'
+            True
         )
         right_conf_selected = (config[1] == _config[0])
     assert len(query_result) > 0 and right_fd_selected and right_conf_selected

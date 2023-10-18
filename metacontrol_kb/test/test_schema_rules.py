@@ -28,16 +28,16 @@ def kb_interface():
 
 
 @pytest.mark.parametrize("att_name, att_value, config_name, constrainment_status", [
-    ('ea1', '2.5', 'high param', 'violated'),
-    ('ea1', '2.5', 'high param >=', 'violated'),
-    ('ea1', '3.25', 'high param >=', 'satisfied'),
-    ('ea1', '3.25', 'high param >', 'violated'),
-    ('ea1', '3.5', 'high param >', 'satisfied'),
-    ('ea1', '3.5', 'high param <=', 'violated'),
-    ('ea1', '3.25', 'high param <=', 'satisfied'),
-    ('ea1', '3.25', 'high param <', 'violated'),
-    ('ea1', '2.5', 'high param <', 'satisfied'),
-    ('ea1', '2.5', 'low param', 'satisfied'),
+    ('ea1', 2.5, 'high param', 'violated'),
+    ('ea1', 2.5, 'high param >=', 'violated'),
+    ('ea1', 3.25, 'high param >=', 'satisfied'),
+    ('ea1', 3.25, 'high param >', 'violated'),
+    ('ea1', 3.5, 'high param >', 'satisfied'),
+    ('ea1', 3.5, 'high param <=', 'violated'),
+    ('ea1', 3.25, 'high param <=', 'satisfied'),
+    ('ea1', 3.25, 'high param <', 'violated'),
+    ('ea1', 2.5, 'high param <', 'satisfied'),
+    ('ea1', 2.5, 'low param', 'satisfied'),
     ('ea1', '', 'low param', 'not evaluated'),
 ])
 def test_constrainment_status_inference(
@@ -53,8 +53,10 @@ def test_constrainment_status_inference(
     query = f'''
         match
             $ea isa EnvironmentalAttribute, has attribute-name "{att_name}";
-            $config isa component-configuration, has component-configuration-name "{config_name}";
-            (constraint: $ea, constrained: $config) isa constrainment, has constrainment-status $status;
+            $config isa component-configuration,
+                has component-configuration-name "{config_name}";
+            (constraint: $ea, constrained: $config) isa constrainment,
+                has constrainment-status $status;
             get $status;
     '''
     query_result = kb_interface.match_database(query)
@@ -79,8 +81,8 @@ def test_constrainment_status_propagation(kb_interface, type, name):
 
 
 @pytest.mark.parametrize("att_name, att_value, config_name, config_status", [
-    ('ea1', '2.5', 'high param', 'unfeasible'),
-    ('ea1', '2.5', 'low param', 'feasible'),
+    ('ea1', 2.5, 'high param', 'unfeasible'),
+    ('ea1', 2.5, 'low param', 'feasible'),
     ('ea1', '', 'low param', 'feasible'),
 ])
 def test_component_configuration_status_inference(
@@ -94,7 +96,9 @@ def test_component_configuration_status_inference(
             att_value)
     query = f'''
         match
-            $config isa component-configuration, has component-configuration-name "{config_name}", has component-configuration-status $status;
+            $config isa component-configuration,
+                has component-configuration-name "{config_name}",
+                has component-configuration-status $status;
             get $status;
     '''
     query_result = kb_interface.match_database(query)
@@ -104,17 +108,17 @@ def test_component_configuration_status_inference(
 
 
 @pytest.mark.parametrize("configurations, c_name, c_required, c_active, c_status", [
-    ([('low param', 'unfeasible', 'true'), ('high param', 'unfeasible', 'false')], 'component1', 'false', 'false', 'unfeasible'),
-    ([('low param', 'unfeasible', 'true'), ('high param', 'feasible', 'false')], 'component1', 'true', 'false', 'configuration error'),
-    ([('low param', 'feasible', 'false'), ('high param', 'feasible', 'false')], 'component1', 'true', 'false', 'unsolved'),
-    ([('low param', 'feasible', 'true'), ('high param', 'feasible', 'false')], 'component1', 'true', 'false', 'unsolved'),
-    ([('low param', 'feasible', 'true'), ('high param', 'unfeasible', 'false')], 'component1', 'true', 'false', 'unsolved'),
-    ([], 'component1', 'true', 'false', 'unsolved'),
-    ([('low param', 'feasible', 'true'), ('high param', 'feasible', 'false')], 'component1', 'false', 'false', 'feasible'),
-    ([('low param', 'feasible', 'false'), ('high param', 'unfeasible', 'false')], 'component1', 'false', 'false', 'feasible'),
-    ([], 'component1', 'false', 'false', 'feasible'),
-    ([('low param', 'feasible', 'true'), ('high param', 'feasible', 'false')], 'component1', 'true', 'true', 'solved'),
-    ([('low param', 'feasible', 'true'), ('high param', 'unfeasible', 'false')], 'component1', 'true', 'true', 'solved'),
+    ([('low param', 'unfeasible', True), ('high param', 'unfeasible', False)], 'component1', False, False, 'unfeasible'),
+    ([('low param', 'unfeasible', True), ('high param', 'feasible', False)], 'component1', True, False, 'configuration error'),
+    ([('low param', 'feasible', False), ('high param', 'feasible', False)], 'component1', True, False, 'unsolved'),
+    ([('low param', 'feasible', True), ('high param', 'feasible', False)], 'component1', True, False, 'unsolved'),
+    ([('low param', 'feasible', True), ('high param', 'unfeasible', False)], 'component1', True, False, 'unsolved'),
+    ([], 'component1', True, False, 'unsolved'),
+    ([('low param', 'feasible', True), ('high param', 'feasible', False)], 'component1', False, False, 'feasible'),
+    ([('low param', 'feasible', False), ('high param', 'unfeasible', False)], 'component1', False, False, 'feasible'),
+    ([], 'component1', False, False, 'feasible'),
+    ([('low param', 'feasible', True), ('high param', 'feasible', False)], 'component1', True, True, 'solved'),
+    ([('low param', 'feasible', True), ('high param', 'unfeasible', False)], 'component1', True, True, 'solved'),
 ])
 def test_component_status_inference(
         kb_interface, configurations, c_name, c_required, c_active, c_status):
@@ -124,14 +128,15 @@ def test_component_status_inference(
             'component-configuration-name',
             config[0],
             'component-configuration-status',
-            "'{}'".format(config[1]))
-        if config[2] == 'true':
-            kb_interface.update_attribute_in_thing(
-                'component-configuration',
-                'component-configuration-name',
-                config[0],
-                'is-selected',
-                'true')
+            config[1]
+        )
+        # if config[2] == True:
+        kb_interface.update_attribute_in_thing(
+            'component-configuration',
+            'component-configuration-name',
+            config[0],
+            'is-selected',
+            config[2])
     kb_interface.update_attribute_in_thing(
         'Component',
         'component-name',
@@ -154,23 +159,23 @@ def test_component_status_inference(
 
 
 @pytest.mark.parametrize("components, fd_name, fd_selected, fd_status", [
-    ([('component2', 'failure')], 'f2_fd1_c2_c3', 'false', 'unfeasible'),
-    ([('component2', 'failure'), ('component3', 'feasible')], 'f2_fd1_c2_c3', 'false', 'unfeasible'),
-    ([('component2', 'failure'), ('component3', 'solved')], 'f2_fd1_c2_c3', 'true', 'unfeasible'),
-    ([('component2', 'failure'), ('component3', 'configuration error')], 'f2_fd1_c2_c3', 'true', 'unfeasible'),
-    ([('component2', 'unfeasible')], 'f2_fd1_c2_c3', 'false', 'unfeasible'),
-    ([('component2', 'unfeasible')], 'f2_fd1_c2_c3', 'true', 'unfeasible'),
-    ([('component2', 'solved'), ('component3', 'configuration error')], 'f2_fd1_c2_c3', 'true', 'implicit configuration error'),
-    ([('component2', 'configuration error'), ('component3', 'feasible')], 'f2_fd1_c2_c3', 'true', 'implicit configuration error'),
-    ([('component2', 'unsolved'), ('component3', 'unsolved')], 'f2_fd1_c2_c3', 'true', 'unsolved'),
-    ([('component2', 'feasible'), ('component3', 'feasible')], 'f2_fd1_c2_c3', 'true', 'unsolved'),
-    ([('component2', 'solved'), ('component3', 'unsolved')], 'f2_fd1_c2_c3', 'true', 'unsolved'),
-    ([('component2', 'solved'), ('component3', 'feasible')], 'f2_fd1_c2_c3', 'true', 'unsolved'),
-    ([], 'f2_fd1_c2_c3', 'true', 'unsolved'),
-    ([('component2', 'feasible'), ('component3', 'configuration error')], 'f2_fd1_c2_c3', 'false', 'feasible'),
-    ([('component2', 'feasible'), ('component3', 'feasible')], 'f2_fd1_c2_c3', 'false', 'feasible'),
-    ([], 'f2_fd1_c2_c3', 'false', 'feasible'),
-    ([('component2', 'solved'), ('component3', 'solved')], 'f2_fd1_c2_c3', 'true', 'solved'),
+    ([('component2', 'failure')], 'f2_fd1_c2_c3', False, 'unfeasible'),
+    ([('component2', 'failure'), ('component3', 'feasible')], 'f2_fd1_c2_c3', False, 'unfeasible'),
+    ([('component2', 'failure'), ('component3', 'solved')], 'f2_fd1_c2_c3', True, 'unfeasible'),
+    ([('component2', 'failure'), ('component3', 'configuration error')], 'f2_fd1_c2_c3', True, 'unfeasible'),
+    ([('component2', 'unfeasible')], 'f2_fd1_c2_c3', False, 'unfeasible'),
+    ([('component2', 'unfeasible')], 'f2_fd1_c2_c3', True, 'unfeasible'),
+    ([('component2', 'solved'), ('component3', 'configuration error')], 'f2_fd1_c2_c3', True, 'implicit configuration error'),
+    ([('component2', 'configuration error'), ('component3', 'feasible')], 'f2_fd1_c2_c3', True, 'implicit configuration error'),
+    ([('component2', 'unsolved'), ('component3', 'unsolved')], 'f2_fd1_c2_c3', True, 'unsolved'),
+    ([('component2', 'feasible'), ('component3', 'feasible')], 'f2_fd1_c2_c3', True, 'unsolved'),
+    ([('component2', 'solved'), ('component3', 'unsolved')], 'f2_fd1_c2_c3', True, 'unsolved'),
+    ([('component2', 'solved'), ('component3', 'feasible')], 'f2_fd1_c2_c3', True, 'unsolved'),
+    ([], 'f2_fd1_c2_c3', True, 'unsolved'),
+    ([('component2', 'feasible'), ('component3', 'configuration error')], 'f2_fd1_c2_c3', False, 'feasible'),
+    ([('component2', 'feasible'), ('component3', 'feasible')], 'f2_fd1_c2_c3', False, 'feasible'),
+    ([], 'f2_fd1_c2_c3', False, 'feasible'),
+    ([('component2', 'solved'), ('component3', 'solved')], 'f2_fd1_c2_c3', True, 'solved'),
 ])
 def test_function_design_status_inference(
      kb_interface, components, fd_name, fd_selected, fd_status):
@@ -181,14 +186,15 @@ def test_function_design_status_inference(
             'component-name',
             component[0],
             'component-status',
-            "'{}'".format(component[1]))
+            component[1]
+        )
         if component[1] == 'solved':
             kb_interface.update_attribute_in_thing(
                 'Component',
                 'component-name',
                 component[0],
                 'is-active',
-                'true')
+                True)
     kb_interface.update_attribute_in_thing(
         'function-design',
         'function-design-name',
@@ -204,25 +210,25 @@ def test_function_design_status_inference(
 
 
 @pytest.mark.parametrize("fds, f_name, f_required, f_status", [
-    ([], 'function_no_fd', 'false', 'unfeasible'),
-    ([('f1_fd1', 'unfeasible', 'false')], 'function1', 'false', 'unfeasible'),
-    ([('f1_fd1', 'unfeasible', 'false')], 'function1', 'true', 'unfeasible'),
-    ([('f2_fd1_c2_c3', 'unfeasible', 'true'), ('f2_fd2_c4_c5', 'unfeasible', 'false')], 'function2', 'true', 'unfeasible'),
-    ([('f2_fd1_c2_c3', 'unfeasible', 'true')], 'function2', 'true', 'configuration error'),
-    ([('f2_fd1_c2_c3', 'unfeasible', 'true'), ('f2_fd2_c4_c5', 'feasible', 'false')], 'function2', 'true', 'configuration error'),
-    ([('f2_fd1_c2_c3', 'implicit configuration error', 'true')], 'function2', 'true', 'implicit configuration error'),
-    ([('f2_fd1_c2_c3', 'implicit configuration error', 'true'), ('f2_fd2_c4_c5', 'feasible', 'false')], 'function2', 'true', 'implicit configuration error'),
-    ([], 'function1', 'true', 'unsolved'),
-    ([('f2_fd1_c2_c3', 'feasible', 'false'), ('f2_fd2_c4_c5', 'feasible', 'false')], 'function2', 'true', 'unsolved'),
-    ([('f2_fd1_c2_c3', 'feasible', 'false'), ('f2_fd2_c4_c5', 'unfeasible', 'false')], 'function2', 'true', 'unsolved'),
-    ([('f2_fd1_c2_c3', 'unsolved', 'true'), ('f2_fd2_c4_c5', 'feasible', 'false')], 'function2', 'true', 'unsolved'),
-    ([('f2_fd1_c2_c3', 'solved', 'true'), ('f2_fd2_c4_c5', 'feasible', 'false')], 'function2', 'true', 'solved'),
-    ([('f2_fd1_c2_c3', 'solved', 'true'), ('f2_fd2_c4_c5', 'unfeasible', 'false')], 'function2', 'true', 'solved'),
-    ([], 'function1', 'false', 'feasible'),
-    ([('f2_fd1_c2_c3', 'implicit configuration error', 'false')], 'function2', 'false', 'feasible'),
-    ([('f2_fd1_c2_c3', 'implicit configuration error', 'false'), ('f2_fd2_c4_c5', 'unfeasible', 'false')], 'function2', 'false', 'feasible'),
-    ([('f2_fd1_c2_c3', 'feasible', 'false'), ('f2_fd2_c4_c5', 'unfeasible', 'false')], 'function2', 'false', 'feasible'),
-    ([('f2_fd1_c2_c3', 'feasible', 'false'), ('f2_fd2_c4_c5', 'feasible', 'false')], 'function2', 'false', 'feasible'),
+    ([], 'function_no_fd', False, 'unfeasible'),
+    ([('f1_fd1', 'unfeasible', False)], 'function1', False, 'unfeasible'),
+    ([('f1_fd1', 'unfeasible', False)], 'function1', True, 'unfeasible'),
+    ([('f2_fd1_c2_c3', 'unfeasible', True), ('f2_fd2_c4_c5', 'unfeasible', False)], 'function2', True, 'unfeasible'),
+    ([('f2_fd1_c2_c3', 'unfeasible', True)], 'function2', True, 'configuration error'),
+    ([('f2_fd1_c2_c3', 'unfeasible', True), ('f2_fd2_c4_c5', 'feasible', False)], 'function2', True, 'configuration error'),
+    ([('f2_fd1_c2_c3', 'implicit configuration error', True)], 'function2', True, 'implicit configuration error'),
+    ([('f2_fd1_c2_c3', 'implicit configuration error', True), ('f2_fd2_c4_c5', 'feasible', False)], 'function2', True, 'implicit configuration error'),
+    ([], 'function1', True, 'unsolved'),
+    ([('f2_fd1_c2_c3', 'feasible', False), ('f2_fd2_c4_c5', 'feasible', False)], 'function2', True, 'unsolved'),
+    ([('f2_fd1_c2_c3', 'feasible', False), ('f2_fd2_c4_c5', 'unfeasible', False)], 'function2', True, 'unsolved'),
+    ([('f2_fd1_c2_c3', 'unsolved', True), ('f2_fd2_c4_c5', 'feasible', False)], 'function2', True, 'unsolved'),
+    ([('f2_fd1_c2_c3', 'solved', True), ('f2_fd2_c4_c5', 'feasible', False)], 'function2', True, 'solved'),
+    ([('f2_fd1_c2_c3', 'solved', True), ('f2_fd2_c4_c5', 'unfeasible', False)], 'function2', True, 'solved'),
+    ([], 'function1', False, 'feasible'),
+    ([('f2_fd1_c2_c3', 'implicit configuration error', False)], 'function2', False, 'feasible'),
+    ([('f2_fd1_c2_c3', 'implicit configuration error', False), ('f2_fd2_c4_c5', 'unfeasible', False)], 'function2', False, 'feasible'),
+    ([('f2_fd1_c2_c3', 'feasible', False), ('f2_fd2_c4_c5', 'unfeasible', False)], 'function2', False, 'feasible'),
+    ([('f2_fd1_c2_c3', 'feasible', False), ('f2_fd2_c4_c5', 'feasible', False)], 'function2', False, 'feasible'),
 ])
 def test_function_status_inference(
      kb_interface, fds, f_name, f_required, f_status):
@@ -232,14 +238,15 @@ def test_function_status_inference(
             'function-design-name',
             fd[0],
             'function-design-status',
-            "'{}'".format(fd[1]))
-        if fd[2] == 'true':
-            kb_interface.update_attribute_in_thing(
-                'function-design',
-                'function-design-name',
-                fd[0],
-                'is-selected',
-                'true')
+            fd[1]
+        )
+        # if fd[2] == True:
+        kb_interface.update_attribute_in_thing(
+            'function-design',
+            'function-design-name',
+            fd[0],
+            'is-selected',
+            fd[2])
     kb_interface.update_attribute_in_thing(
         'Function',
         'function-name',
@@ -255,24 +262,24 @@ def test_function_status_inference(
 
 
 @pytest.mark.parametrize("functions, t_name, t_required, t_status", [
-    ([('function1', 'unfeasible')], 'task1', 'false', 'unfeasible'),
-    ([('function1', 'unsolved'), ('function2', 'unfeasible')], 'task1', 'true', 'unfeasible'),
-    ([('function1', 'configuration error'), ('function2', 'unfeasible')], 'task1', 'true', 'unfeasible'),
-    ([('function1', 'configuration error')], 'task1', 'true', 'implicit configuration error'),
-    ([('function1', 'configuration error'), ('function2', 'feasible')], 'task1', 'true', 'implicit configuration error'),
-    ([('function1', 'configuration error'), ('function2', 'implicit configuration error')], 'task1', 'true', 'implicit configuration error'),
-    ([('function1', 'implicit configuration error')], 'task1', 'true', 'implicit configuration error'),
-    ([('function1', 'configuration error'), ('function2', 'solved')], 'task1', 'true', 'implicit configuration error'),
-    ([('function1', 'configuration error'), ('function2', 'unsolved')], 'task1', 'true', 'implicit configuration error'),
-    ([('function1', 'unsolved')], 'task1', 'true', 'unsolved'),
-    ([('function1', 'unsolved'), ('function2', 'solved')], 'task1', 'true', 'unsolved'),
-    ([('function1', 'unsolved'), ('function2', 'unsolved')], 'task1', 'true', 'unsolved'),
-    ([('function1', 'feasible')], 'task1', 'false', 'feasible'),
-    ([('function1', 'unsolved')], 'task1', 'false', 'feasible'),
-    ([('function1', 'configuration error'), ('function2', 'unsolved')], 'task1', 'false', 'feasible'),
-    ([('function1', 'configuration error'), ('function2', 'implicit configuration error')], 'task1', 'false', 'feasible'),
-    ([('function1', 'feasible'), ('function2', 'feasible')], 'task1', 'false', 'feasible'),
-    ([('function1', 'solved'), ('function2', 'solved')], 'task1', 'true', 'solved'),
+    ([('function1', 'unfeasible')], 'task1', False, 'unfeasible'),
+    ([('function1', 'unsolved'), ('function2', 'unfeasible')], 'task1', True, 'unfeasible'),
+    ([('function1', 'configuration error'), ('function2', 'unfeasible')], 'task1', True, 'unfeasible'),
+    ([('function1', 'configuration error')], 'task1', True, 'implicit configuration error'),
+    ([('function1', 'configuration error'), ('function2', 'feasible')], 'task1', True, 'implicit configuration error'),
+    ([('function1', 'configuration error'), ('function2', 'implicit configuration error')], 'task1', True, 'implicit configuration error'),
+    ([('function1', 'implicit configuration error')], 'task1', True, 'implicit configuration error'),
+    ([('function1', 'configuration error'), ('function2', 'solved')], 'task1', True, 'implicit configuration error'),
+    ([('function1', 'configuration error'), ('function2', 'unsolved')], 'task1', True, 'implicit configuration error'),
+    ([('function1', 'unsolved')], 'task1', True, 'unsolved'),
+    ([('function1', 'unsolved'), ('function2', 'solved')], 'task1', True, 'unsolved'),
+    ([('function1', 'unsolved'), ('function2', 'unsolved')], 'task1', True, 'unsolved'),
+    ([('function1', 'feasible')], 'task1', False, 'feasible'),
+    ([('function1', 'unsolved')], 'task1', False, 'feasible'),
+    ([('function1', 'configuration error'), ('function2', 'unsolved')], 'task1', False, 'feasible'),
+    ([('function1', 'configuration error'), ('function2', 'implicit configuration error')], 'task1', False, 'feasible'),
+    ([('function1', 'feasible'), ('function2', 'feasible')], 'task1', False, 'feasible'),
+    ([('function1', 'solved'), ('function2', 'solved')], 'task1', True, 'solved'),
 ])
 def test_task_status_inference(
      kb_interface, functions, t_name, t_required, t_status):
@@ -282,7 +289,8 @@ def test_task_status_inference(
             'function-name',
             f[0],
             'function-status',
-            "'{}'".format(f[1]))
+            f[1]
+        )
     kb_interface.update_attribute_in_thing(
         'Task',
         'task-name',
