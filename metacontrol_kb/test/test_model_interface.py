@@ -128,16 +128,16 @@ def test_get_best_function_design(kb_interface):
 
 
 def test_toogle_function_design_selection(kb_interface):
-    kb_interface.toogle_relationship_selection(
+    kb_interface.toogle_thing_selection(
         'function-design', 'f2_fd1_c2_c3', True)
-    fd_selected = kb_interface.get_attribute_from_entity(
+    fd_selected = kb_interface.get_attribute_from_thing(
         'function-design',
         'function-design-name',
         'f2_fd1_c2_c3',
         'is-selected')
-    kb_interface.toogle_relationship_selection(
+    kb_interface.toogle_thing_selection(
         'function-design', 'f2_fd1_c2_c3', False)
-    fd_not_selected = kb_interface.get_attribute_from_entity(
+    fd_not_selected = kb_interface.get_attribute_from_thing(
         'function-design',
         'function-design-name',
         'f2_fd1_c2_c3',
@@ -147,18 +147,18 @@ def test_toogle_function_design_selection(kb_interface):
 
 def test_select_function_design(kb_interface):
     kb_interface.select_function_design('function2', 'f2_fd1_c2_c3')
-    fd1_selected = kb_interface.get_attribute_from_entity(
+    fd1_selected = kb_interface.get_attribute_from_thing(
         'function-design',
         'function-design-name',
         'f2_fd1_c2_c3',
         'is-selected')
     kb_interface.select_function_design('function2', 'f2_fd2_c4_c5')
-    fd1_not_selected = kb_interface.get_attribute_from_entity(
+    fd1_not_selected = kb_interface.get_attribute_from_thing(
         'function-design',
         'function-design-name',
         'f2_fd1_c2_c3',
         'is-selected')
-    fd2_selected = kb_interface.get_attribute_from_entity(
+    fd2_selected = kb_interface.get_attribute_from_thing(
         'function-design',
         'function-design-name',
         'f2_fd2_c4_c5',
@@ -182,18 +182,18 @@ def test_get_best_component_configuration(kb_interface):
 
 def test_select_component_configuration(kb_interface):
     kb_interface.select_component_configuration('component1', 'high param')
-    high_selected = kb_interface.get_attribute_from_entity(
+    high_selected = kb_interface.get_attribute_from_thing(
         'component-configuration',
         'component-configuration-name',
         'high param',
         'is-selected')
     kb_interface.select_component_configuration('component1', 'low param')
-    high_not_selected = kb_interface.get_attribute_from_entity(
+    high_not_selected = kb_interface.get_attribute_from_thing(
         'component-configuration',
         'component-configuration-name',
         'high param',
         'is-selected')
-    low_selected = kb_interface.get_attribute_from_entity(
+    low_selected = kb_interface.get_attribute_from_thing(
         'component-configuration',
         'component-configuration-name',
         'low param',

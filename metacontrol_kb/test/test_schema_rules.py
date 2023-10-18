@@ -44,7 +44,7 @@ def test_constrainment_status_inference(
         kb_interface, att_name, att_value, config_name, constrainment_status):
 
     if att_value != '':
-        kb_interface.update_attribute_entity(
+        kb_interface.update_attribute_in_thing(
             'Attribute',
             'attribute-name',
             att_name,
@@ -70,7 +70,7 @@ def test_constrainment_status_inference(
     ('component-configuration', 'cc_constrained'),
 ])
 def test_constrainment_status_propagation(kb_interface, type, name):
-    status_inferred = kb_interface.get_attribute_from_entity(
+    status_inferred = kb_interface.get_attribute_from_thing(
         type,
         type.lower()+'-name',
         name,
@@ -86,7 +86,7 @@ def test_constrainment_status_propagation(kb_interface, type, name):
 def test_component_configuration_status_inference(
         kb_interface, att_name, att_value, config_name, config_status):
     if att_value != '':
-        kb_interface.update_attribute_entity(
+        kb_interface.update_attribute_in_thing(
             'Attribute',
             'attribute-name',
             att_name,
@@ -119,32 +119,32 @@ def test_component_configuration_status_inference(
 def test_component_status_inference(
         kb_interface, configurations, c_name, c_required, c_active, c_status):
     for config in configurations:
-        kb_interface.update_attribute_entity(
+        kb_interface.update_attribute_in_thing(
             'component-configuration',
             'component-configuration-name',
             config[0],
             'component-configuration-status',
             "'{}'".format(config[1]))
         if config[2] == 'true':
-            kb_interface.update_attribute_entity(
+            kb_interface.update_attribute_in_thing(
                 'component-configuration',
                 'component-configuration-name',
                 config[0],
                 'is-selected',
                 'true')
-    kb_interface.update_attribute_entity(
+    kb_interface.update_attribute_in_thing(
         'Component',
         'component-name',
         c_name,
         'is-required',
         c_required)
-    kb_interface.update_attribute_entity(
+    kb_interface.update_attribute_in_thing(
         'Component',
         'component-name',
         c_name,
         'is-active',
         c_active)
-    c_status_inferred = kb_interface.get_attribute_from_entity(
+    c_status_inferred = kb_interface.get_attribute_from_thing(
         'Component',
         'component-name',
         c_name,
@@ -176,26 +176,26 @@ def test_function_design_status_inference(
      kb_interface, components, fd_name, fd_selected, fd_status):
 
     for component in components:
-        kb_interface.update_attribute_entity(
+        kb_interface.update_attribute_in_thing(
             'Component',
             'component-name',
             component[0],
             'component-status',
             "'{}'".format(component[1]))
         if component[1] == 'solved':
-            kb_interface.update_attribute_entity(
+            kb_interface.update_attribute_in_thing(
                 'Component',
                 'component-name',
                 component[0],
                 'is-active',
                 'true')
-    kb_interface.update_attribute_entity(
+    kb_interface.update_attribute_in_thing(
         'function-design',
         'function-design-name',
         fd_name,
         'is-selected',
         fd_selected)
-    fd_status_inferred = kb_interface.get_attribute_from_entity(
+    fd_status_inferred = kb_interface.get_attribute_from_thing(
         'function-design',
         'function-design-name',
         fd_name,
@@ -227,26 +227,26 @@ def test_function_design_status_inference(
 def test_function_status_inference(
      kb_interface, fds, f_name, f_required, f_status):
     for fd in fds:
-        kb_interface.update_attribute_entity(
+        kb_interface.update_attribute_in_thing(
             'function-design',
             'function-design-name',
             fd[0],
             'function-design-status',
             "'{}'".format(fd[1]))
         if fd[2] == 'true':
-            kb_interface.update_attribute_entity(
+            kb_interface.update_attribute_in_thing(
                 'function-design',
                 'function-design-name',
                 fd[0],
                 'is-selected',
                 'true')
-    kb_interface.update_attribute_entity(
+    kb_interface.update_attribute_in_thing(
         'Function',
         'function-name',
         f_name,
         'is-required',
         f_required)
-    f_status_inferred = kb_interface.get_attribute_from_entity(
+    f_status_inferred = kb_interface.get_attribute_from_thing(
         'Function',
         'function-name',
         f_name,
@@ -277,19 +277,19 @@ def test_function_status_inference(
 def test_task_status_inference(
      kb_interface, functions, t_name, t_required, t_status):
     for f in functions:
-        kb_interface.update_attribute_entity(
+        kb_interface.update_attribute_in_thing(
             'Function',
             'function-name',
             f[0],
             'function-status',
             "'{}'".format(f[1]))
-    kb_interface.update_attribute_entity(
+    kb_interface.update_attribute_in_thing(
         'Task',
         'task-name',
         t_name,
         'is-required',
         t_required)
-    t_status_inferred = kb_interface.get_attribute_from_entity(
+    t_status_inferred = kb_interface.get_attribute_from_thing(
         'Task',
         'task-name',
         t_name,

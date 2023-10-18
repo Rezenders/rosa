@@ -44,17 +44,17 @@ class ModelInterface(TypeDBInterface):
 
     # Request task
     def request_task(self, task_name):
-        return self.update_attribute_entity(
+        return self.update_attribute_in_thing(
             'Task', 'task-name', task_name, 'is-required', 'true')
 
     # Cancel task
     def cancel_task(self, task_name):
-        return self.update_attribute_entity(
+        return self.update_attribute_in_thing(
             'Task', 'task-name', task_name, 'is-required', 'false')
 
     # Update status of a task
     def update_task_status(self, task_name, task_status):
-        return self.update_attribute_entity(
+        return self.update_attribute_in_thing(
             'Task',
             'task-name',
             task_name,
@@ -63,7 +63,7 @@ class ModelInterface(TypeDBInterface):
 
     # Check if a Task is required
     def is_task_required(self, task_name):
-        is_required = self.get_attribute_from_entity(
+        is_required = self.get_attribute_from_thing(
              'Task', 'task-name', task_name, 'is-required')
         if len(is_required) == 0:
             return False
@@ -71,12 +71,12 @@ class ModelInterface(TypeDBInterface):
 
     # Check if a Task is feasible
     def is_task_feasible(self, task_name):
-        status = self.get_attribute_from_entity(
+        status = self.get_attribute_from_thing(
              'Task', 'task-name', task_name, 'task-status')
         return all(x in status for x in ['feasible'])
 
     def is_task_selectable(self, task_name):
-        status = self.get_attribute_from_entity(
+        status = self.get_attribute_from_thing(
              'Task', 'task-name', task_name, 'task-status')
         return 'unfeasible' not in status
 
@@ -154,12 +154,12 @@ class ModelInterface(TypeDBInterface):
 
     # Get all entities with is-required property equal to True and
     # function-status equal to 'unsolved' raw
-    def get_unsolved_entity_raw(self, entity):
+    def get_unsolved_thing_raw(self, thing):
         query = f'''
             match
-                $e isa {entity}, has is-required true,
-                    has {entity.lower()}-name $name,
-                    has {entity.lower()}-status 'unsolved';
+                $e isa {thing}, has is-required true,
+                    has {thing.lower()}-name $name,
+                    has {thing.lower()}-status 'unsolved';
                 get $name;
         '''
         return self.match_database(query)
@@ -167,17 +167,17 @@ class ModelInterface(TypeDBInterface):
     # Get all Functions with is-required property equal to True and
     # function-status equal to 'unsolved'
     def get_unsolved_functions(self):
-        query_result = self.get_unsolved_entity_raw('Function')
+        query_result = self.get_unsolved_thing_raw('Function')
         return [r.get("name").get('value') for r in query_result]
 
     # Get all Components with is-required property equal to True and
     # component-status equal to 'unsolved'
     def get_unsolved_components(self):
-        query_result = self.get_unsolved_entity_raw('Component')
+        query_result = self.get_unsolved_thing_raw('Component')
         return [r.get("name").get('value') for r in query_result]
 
     def update_function_design_performance(self, fd_name, value):
-        return self.update_attribute_entity(
+        return self.update_attribute_in_thing(
             'function-design',
             'function-design-name',
             fd_name,
@@ -185,7 +185,7 @@ class ModelInterface(TypeDBInterface):
             value)
 
     def update_measured_attribute(self, attribute_name, value):
-        return self.update_attribute_entity(
+        return self.update_attribute_in_thing(
             'Attribute',
             'attribute-name',
             attribute_name,
@@ -193,7 +193,7 @@ class ModelInterface(TypeDBInterface):
             value)
 
     def get_measured_attribute(self, attribute_name):
-        measurement = self.get_attribute_from_entity(
+        measurement = self.get_attribute_from_thing(
              'Attribute',
              'attribute-name',
              attribute_name,
@@ -271,18 +271,18 @@ class ModelInterface(TypeDBInterface):
             return query_result[0].get("conf-name").get('value')
 
     # toogle fd and component config selection
-    def toogle_relationship_selection(self, entity, name, value):
-        is_selected = self.get_attribute_from_entity(
-            entity,
-            '{}-name'.format(entity.lower()),
+    def toogle_thing_selection(self, thing, name, value):
+        is_selected = self.get_attribute_from_thing(
+            thing,
+            '{}-name'.format(thing.lower()),
             name,
             'is-selected')
         if len(is_selected) > 0 and is_selected[0] is value:
             return None
         value = str(value).lower()
-        return self.update_attribute_entity(
-            entity,
-            '{}-name'.format(entity),
+        return self.update_attribute_in_thing(
+            thing,
+            '{}-name'.format(thing),
             name,
             'is-selected',
             value)
@@ -308,9 +308,9 @@ class ModelInterface(TypeDBInterface):
             entity, e_name, relation, 'is-selected', 'true')
         for r in current_selected:
             if r != r_name:
-                self.toogle_relationship_selection(relation, r, False)
+                self.toogle_thing_selection(relation, r, False)
 
-        return self.toogle_relationship_selection(
+        return self.toogle_thing_selection(
             relation, r_name, True)
 
     def select_function_design(self, f_name, fd_name):
@@ -321,25 +321,25 @@ class ModelInterface(TypeDBInterface):
         return self.select_relationship(
             'Component', c_name, 'component-configuration', cc_name)
 
-    def toogle_entity_activation(self, entity, name, value):
-        is_activated = self.get_attribute_from_entity(
-            entity,
-            '{}-name'.format(entity.lower()),
+    def toogle_thing_activation(self, thing, name, value):
+        is_activated = self.get_attribute_from_thing(
+            thing,
+            '{}-name'.format(thing.lower()),
             name,
             'is-active')
         if len(is_activated) > 0 and is_activated[0] is value:
             return None
         print('set {} to value {} '.format(name, value))
         value = str(value).lower()
-        return self.update_attribute_entity(
-            entity,
-            '{}-name'.format(entity.lower()),
+        return self.update_attribute_in_thing(
+            thing,
+            '{}-name'.format(thing.lower()),
             name,
             'is-active',
             value)
 
     def activate_component(self, c_name, value):
-        return self.toogle_entity_activation('Component', c_name, value)
+        return self.toogle_thing_activation('Component', c_name, value)
 
     def activate_component_configuration(self, c_name, cc_name, value):
         if value is True:
@@ -351,9 +351,9 @@ class ModelInterface(TypeDBInterface):
                 'true')
             for config in current_active:
                 if config != cc_name:
-                    self.toogle_entity_activation(
+                    self.toogle_thing_activation(
                         'component-configuration', config, False)
-        return self.toogle_entity_activation(
+        return self.toogle_thing_activation(
             'component-configuration', cc_name, value)
 
     def create_reconfiguration_plan(self, c_activate, c_deactivate, c_config):
@@ -438,13 +438,13 @@ class ModelInterface(TypeDBInterface):
         for function, fd in functions_selected_fd:
             # select components that need to be activated
             for c in self.get_components_in_function_design(fd):
-                c_active = self.get_attribute_from_entity(
+                c_active = self.get_attribute_from_thing(
                     'Component', 'component-name', c, 'is-active')
                 if c_active is not True:
                     _c_activate.append(c)
 
             # select components that need to be deactivated
-            fd_selected = self.get_attribute_from_entity(
+            fd_selected = self.get_attribute_from_thing(
                 'function-design', 'function-design-name', fd, 'is-selected')
             if len(fd_selected) == 0  \
                or len(fd_selected) > 0 and fd_selected[0] is False:
@@ -457,14 +457,14 @@ class ModelInterface(TypeDBInterface):
                 )
                 if len(_fd) > 0:
                     for c in self.get_components_in_function_design(_fd[0]):
-                        c_active = self.get_attribute_from_entity(
+                        c_active = self.get_attribute_from_thing(
                             'Component', 'component-name', c, 'is-active')
                         if c not in _c_activate and len(c_active) > 0 \
                            and c_active[0] is True:
                             _c_deactivate.append(c)
             self.select_function_design(function, fd)
         for component, config in componets_selected_config:
-            config_selected = self.get_attribute_from_entity(
+            config_selected = self.get_attribute_from_thing(
                 'component-configuration',
                 'component-configuration-name',
                 config,
