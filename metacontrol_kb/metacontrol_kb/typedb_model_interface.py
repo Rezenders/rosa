@@ -580,9 +580,17 @@ class ModelInterface(TypeDBInterface):
             return False
 
     def update_reconfiguration_plan_result(self, start_time, result_value):
-        return self.update_attribute_in_thing(
-            'reconfiguration-plan',
-            'start-time',
-            start_time,
-            'result',
-            result_value)
+        match_dict = {
+            'reconfiguration-plan': [
+                {
+                    'attributes': {
+                        'start-time': start_time
+                    },
+                    'update-attributes': {
+                        'end-time': datetime.now(),
+                        'result': result_value,
+                    }
+                }
+            ]
+        }
+        return self.update_attributes_in_thing(match_dict)

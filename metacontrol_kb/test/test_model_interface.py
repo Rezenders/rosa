@@ -465,8 +465,9 @@ def test_update_reconfiguration_plan_result(kb_interface):
     query = f'''
         match $rp isa reconfiguration-plan,
             has start-time {start_time.isoformat(timespec='milliseconds')},
+            has end-time $end-time,
             has result $result;
-            get $result;
+            get $end-time, $result;
     '''
     query_result = kb_interface.match_database(query)
     result = [r.get('result').get('value') for r in query_result]
