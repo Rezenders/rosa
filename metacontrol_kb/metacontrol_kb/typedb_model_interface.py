@@ -516,6 +516,26 @@ class ModelInterface(TypeDBInterface):
         else:
             return False
 
+    def get_latest_completed_reconfiguration_plan_time(self):
+        """
+        Get end-time of the most recent completed reconfiguration plan.
+
+        :return: end-time of the most recent completed reconfiguration plan.
+        :rtype: datetime
+        """
+        query = '''
+            match $rp isa reconfiguration-plan,
+                has end-time $time,
+                has result 'completed';
+            get $time;
+            sort $time desc; limit 1;
+        '''
+        result = self.match_database(query)
+        if len(result) > 0:
+            return self.covert_query_type_to_py_type(result[0].get('time'))
+        else:
+            return False
+
     def get_reconfiguration_plan(self, start_time):
         """
         Get reconfiguration plan with start-time.
@@ -594,3 +614,50 @@ class ModelInterface(TypeDBInterface):
             ]
         }
         return self.update_attributes_in_thing(match_dict)
+
+    def get_outdated_reconfiguration_plans(self):
+        end_time = self.get_latest_completed_reconfiguration_plan_time()
+        if type(end_time) is datetime:
+            end_time = self.convert_py_type_to_query_type(end_time)
+            query = f'''
+                match $rp isa reconfiguration-plan, has start-time $time;
+                    not {{$rp has end-time $end-time;}};
+                    $time < {end_time};
+                get $time;
+            '''
+            result = self.match_database(query)
+            if len(result) > 0:
+                return [self.covert_query_type_to_py_type(r.get('time'))
+                        for r in result]
+        return []
+
+    def update_outdated_reconfiguration_plans_result(self):
+        outdated_times = self.get_outdated_reconfiguration_plans()
+        if len(outdated_times) > 0:
+            update_plans = [{
+                'attributes': {'start-time': time},
+                'update-attributes': {
+                    'end-time': datetime.now(),
+                    'result': 'abandoned'}
+                } for time in outdated_times]
+
+            match_dict = {
+                'reconfiguration-plan': update_plans
+            }
+            return self.update_attributes_in_thing(match_dict)
+        else:
+            return False
+
+    def get_reconfiguration_plan_result(self, start_time):
+        start_time = self.convert_py_type_to_query_type(start_time)
+        query = f'''
+            match $rp isa reconfiguration-plan,
+                has start-time {start_time},
+                has result $result;
+            get $result;
+        '''
+        result = self.match_database(query)
+        if len(result) > 0:
+            return self.covert_query_type_to_py_type(result[0].get('result'))
+        else:
+            return False

@@ -13,6 +13,7 @@
 # limitations under the License.
 import pytest
 from metacontrol_kb.typedb_model_interface import ModelInterface
+from datetime import datetime
 
 
 @pytest.fixture
@@ -472,3 +473,86 @@ def test_update_reconfiguration_plan_result(kb_interface):
     query_result = kb_interface.match_database(query)
     result = [r.get('result').get('value') for r in query_result]
     assert len(result) > 0 and result[0] == 'completed'
+
+
+def test_get_latest_completed_reconfiguration_plan_time(kb_interface):
+    c_activate = ['component2', 'component3']
+    c_deactivate = ['component4', 'component5']
+    c_config = ['low param']
+    r, start_time_1 = kb_interface.create_reconfiguration_plan(
+        c_activate, c_deactivate, c_config)
+
+    kb_interface.update_reconfiguration_plan_result(start_time_1, 'completed')
+
+    c_activate = ['component3']
+    c_deactivate = ['component5']
+    c_config = ['low param']
+    r2, start_time_2 = kb_interface.create_reconfiguration_plan(
+        c_activate, c_deactivate, c_config)
+    kb_interface.update_reconfiguration_plan_result(start_time_2, 'completed')
+    end_time = kb_interface.get_latest_completed_reconfiguration_plan_time()
+    assert end_time is not False and end_time is not None \
+        and type(end_time) is datetime
+
+
+def test_get_outdated_reconfiguration_plans(kb_interface):
+    c_activate = ['component2', 'component3']
+    c_deactivate = ['component4', 'component5']
+    c_config = ['low param']
+    r, start_time_1 = kb_interface.create_reconfiguration_plan(
+        c_activate, c_deactivate, c_config)
+
+    c_activate = ['component3']
+    c_deactivate = ['component5']
+    c_config = ['low param']
+    r2, start_time_2 = kb_interface.create_reconfiguration_plan(
+        c_activate, c_deactivate, c_config)
+    kb_interface.update_reconfiguration_plan_result(start_time_2, 'completed')
+
+    times = kb_interface.get_outdated_reconfiguration_plans()
+
+    assert start_time_1 in times
+
+
+def test_get_reconfiguration_plan_result(kb_interface):
+    c_activate = ['component2', 'component3']
+    c_deactivate = ['component4', 'component5']
+    c_config = ['low param']
+    r, start_time = kb_interface.create_reconfiguration_plan(
+        c_activate, c_deactivate, c_config)
+
+    kb_interface.update_reconfiguration_plan_result(start_time, 'completed')
+    result = kb_interface.get_reconfiguration_plan_result(start_time)
+    assert result == 'completed'
+
+
+def test_update_outdated_reconfiguration_plans_result(kb_interface):
+    kb_interface.update_outdated_reconfiguration_plans_result()
+
+    c_activate = ['component2', 'component3']
+    c_deactivate = ['component4', 'component5']
+    c_config = ['low param']
+    r, start_time_1 = kb_interface.create_reconfiguration_plan(
+        c_activate, c_deactivate, c_config)
+
+    c_activate = ['component3']
+    c_deactivate = ['component5']
+    c_config = ['low param']
+    r2, start_time_2 = kb_interface.create_reconfiguration_plan(
+        c_activate, c_deactivate, c_config)
+
+    c_activate = ['component2']
+    c_deactivate = ['component4']
+    c_config = ['high param']
+    r3, start_time_3 = kb_interface.create_reconfiguration_plan(
+        c_activate, c_deactivate, c_config)
+
+    kb_interface.update_reconfiguration_plan_result(start_time_2, 'completed')
+    kb_interface.update_outdated_reconfiguration_plans_result()
+
+    result1 = kb_interface.get_reconfiguration_plan_result(start_time_1)
+    result2 = kb_interface.get_reconfiguration_plan_result(start_time_2)
+    result3 = kb_interface.get_reconfiguration_plan_result(start_time_3)
+
+    assert result1 == 'abandoned' and result2 == 'completed' \
+           and result3 == 'abandoned'
