@@ -1,7 +1,10 @@
 #!/usr/bin/env python
-import time
 import math
-from model_interface import ModelInterface
+import os
+import time
+
+from ament_index_python.packages import get_package_share_directory
+from metacontrol_kb.typedb_model_interface import ModelInterface
 
 initial_time = time.time()
 water_visibility_period = 80
@@ -31,7 +34,7 @@ def calculate_water_visibility():
 def monitor(kb_interface):
     water_visibility = calculate_water_visibility()
     kb_interface.update_measured_attribute(
-        'water visibility', water_visibility)
+        'water_visibility', water_visibility)
     print("Measured water visibility {}".format(water_visibility))
 
 
@@ -44,63 +47,97 @@ def analyze(kb_interface):
 # This should be included in the knowledge model
 # the reconfig plan should include the components and component conf that
 # needs to be deactivated
-reconfiguration_plan = dict()
+# reconfiguration_plan = dict()
 
 
 def plan(kb_interface, always_improve=True):
     adaptable_functions = list()
     adaptable_functions.extend(kb_interface.get_adaptable_functions())
-    if always_improve is True:
-        # TODO: remove functions without more than 1 feasible fd
-        adaptable_functions.extend(kb_interface.get_solved_functions())
+    print('adaptable_functions ', adaptable_functions)
+    selected_functions_fds = []
     for function in adaptable_functions:
         best_fd = kb_interface.get_best_function_design(function)
         if best_fd is not None:
-            kb_interface.select_function_design(function, best_fd)
+            # kb_interface.select_function_design(function, best_fd)
+            selected_functions_fds.append((function, best_fd))
 
     adaptable_components = list()
     adaptable_components.extend(kb_interface.get_adaptable_components())
-    if always_improve is True:
-        # TODO: remove components without more than 1 feasible component config
-        adaptable_components.extend(kb_interface.get_solved_components())
+    print('adaptable_components ', adaptable_components)
+    c_config_list = []
+    selected_component_configs = []
     for component in adaptable_components:
         best_config = kb_interface.get_best_component_configuration(component)
         if best_config is not None:
-            kb_interface.select_component_configuration(component, best_config)
-        reconfiguration_plan[component] = ('activate', best_config)
+            selected_component_configs.append((component, best_config))
+        #     kb_interface.select_component_configuration(component, best_config)
+        # reconfiguration_plan[component] = ('activate', best_config)
+    # print(reconfiguration_plan)
+    print('selected_functions_fds: ', selected_functions_fds)
+    print('selected_component_configs: ', selected_component_configs)
+    kb_interface.select_configuration(
+        selected_functions_fds, selected_component_configs)
 
 
 def execute(kb_interface):
-    for reconf_action in reconfiguration_plan.items():
-        component = reconf_action[0]
-        action = reconf_action[1]
-        if action[0] == 'activate':
-            kb_interface.activate_component(component, True)
-            if action[1] is not None:
-                kb_interface.activate_component_configuration(
-                    component, action[1], True)
-        else:
-            kb_interface.activate_component(component, False)
-    reconfiguration_plan.clear()
+    # TODO: get latest plan without result
+    reconfiguration_plan = kb_interface.get_latest_pending_reconfiguration_plan()
+    print('reconfiguration plan: ', reconfiguration_plan)
+    if reconfiguration_plan is False:
+        return False
+    reconfig_plan_result = True
+    if 'c_activate' in reconfiguration_plan:
+        for component in reconfiguration_plan['c_activate']:
+            r = kb_interface.activate_component(component, True)
+            if r is None or r is False:
+                reconfig_plan_result = False
+
+    if 'c_deactivate' in reconfiguration_plan:
+        for component in reconfiguration_plan['c_deactivate']:
+            r = kb_interface.activate_component(component, False)
+            if r is None or r is False:
+                reconfig_plan_result = False
+
+    if 'c_config' in reconfiguration_plan:
+        for config in reconfiguration_plan['c_deactivate']:
+            pass  # get parameters and set them
+
+    kb_interface.update_reconfiguration_plan_result(
+        reconfiguration_plan['start-time'], 'completed')
+    kb_interface.update_outdated_reconfiguration_plans_result()
 
 
 def main():
+    pkg_mc_kb_path = get_package_share_directory('metacontrol_kb')
+    schema_path = os.path.join(
+        pkg_mc_kb_path,
+        'config',
+        'schema.tql')
+    suave_data_path = os.path.join(
+        pkg_mc_kb_path,
+        'config',
+        'suave.tql')
     kb_interface = ModelInterface(
-        "localhost:1729",
-        "suave",
-        "../typeDB/schema/uio_schema.tql",
-        "../typeDB/data/suave.tql",
+        'localhost:1729',
+        'suave',
+        schema_path,
+        suave_data_path,
         force_database=True,
         force_data=True)
 
-    request_result = request_task(kb_interface, 'search pipeline')
+    request_result = request_task(kb_interface, 'search_pipeline')
+    print('request_result: ', request_result)
     if request_result is False:
         return False
 
     while True:
+        print('Monitor')
         monitor(kb_interface)
+        print('Analyze')
         analyze(kb_interface)
+        print('Plan')
         plan(kb_interface)
+        print('Execute')
         execute(kb_interface)
         time.sleep(1)
 
