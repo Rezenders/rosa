@@ -518,6 +518,25 @@ class ModelInterface(TypeDBInterface):
         else:
             return False
 
+    def get_latest_pending_reconfiguration_plan_time(self):
+        """
+        Get start-time of the most recent pending reconfiguration plan.
+
+        :return: start-time of the most recent pending reconfiguration plan.
+        :rtype: datetime
+        """
+        query = '''
+            match
+            not {$rp isa reconfiguration-plan, has result $result;};
+            $rp has start-time $time;
+            sort $time desc; limit 1;
+        '''
+        result = self.match_database(query)
+        if len(result) > 0:
+            return self.covert_query_type_to_py_type(result[0].get('time'))
+        else:
+            return False
+
     def get_latest_completed_reconfiguration_plan_time(self):
         """
         Get end-time of the most recent completed reconfiguration plan.
@@ -588,12 +607,25 @@ class ModelInterface(TypeDBInterface):
         """
         Get latest reconfiguration plan.
 
-        :param start_time: start-time of the desired reconfiguration plan.
-        :type start_time: datetime
         :return: Dict with keys c_activate, c_deactivate, c_config
         :rtype: dict[str, list[str]] or False
         """
         time = self.get_latest_reconfiguration_plan_time()
+        if time is not False:
+            reconfig_plan_dict = self.get_reconfiguration_plan(time)
+            reconfig_plan_dict['start-time'] = time
+            return reconfig_plan_dict
+        else:
+            return False
+
+    def get_latest_pending_reconfiguration_plan(self):
+        """
+        Get latest pending reconfiguration plan.
+
+        :return: Dict with keys c_activate, c_deactivate, c_config
+        :rtype: dict[str, list[str]] or False
+        """
+        time = self.get_latest_pending_reconfiguration_plan_time()
         if time is not False:
             reconfig_plan_dict = self.get_reconfiguration_plan(time)
             reconfig_plan_dict['start-time'] = time

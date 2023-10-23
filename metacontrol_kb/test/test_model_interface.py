@@ -448,7 +448,6 @@ def test_get_latest_reconfiguration_plan(kb_interface):
     r2, start_time_2 = kb_interface.create_reconfiguration_plan(
         c_activate, c_deactivate, c_config)
     reconfig_plan = kb_interface.get_latest_reconfiguration_plan()
-    # start_time_2 = start_time_2.isoformat(timespec='milliseconds')
     assert reconfig_plan['start-time'] == start_time_2 and \
         sorted(c_activate) == sorted(reconfig_plan['c_activate']) and \
         sorted(c_deactivate) == sorted(reconfig_plan['c_deactivate']) and \
@@ -493,6 +492,24 @@ def test_get_latest_completed_reconfiguration_plan_time(kb_interface):
     end_time = kb_interface.get_latest_completed_reconfiguration_plan_time()
     assert end_time is not False and end_time is not None \
         and type(end_time) is datetime
+
+
+def test_get_latest_pending_reconfiguration_plan_time(kb_interface):
+    c_activate = ['component2', 'component3']
+    c_deactivate = ['component4', 'component5']
+    c_config = ['low param']
+    r, start_time_1 = kb_interface.create_reconfiguration_plan(
+        c_activate, c_deactivate, c_config)
+
+    c_activate = ['component3']
+    c_deactivate = ['component5']
+    c_config = ['low param']
+    r2, start_time_2 = kb_interface.create_reconfiguration_plan(
+        c_activate, c_deactivate, c_config)
+    kb_interface.update_reconfiguration_plan_result(start_time_2, 'completed')
+    r_start_time = kb_interface.get_latest_pending_reconfiguration_plan_time()
+    assert r_start_time is not False and r_start_time is not None \
+        and type(r_start_time) is datetime and r_start_time == start_time_1
 
 
 def test_get_outdated_reconfiguration_plans(kb_interface):
