@@ -144,13 +144,15 @@ class ModelInterface(TypeDBInterface):
     def get_adaptable_functions(self):
         result = self.get_instances_of_thing_with_status(
             'Function', 'unsolved|configuration error')
-        result.extend(self.get_instances_thing_always_improve('Function'))
+        result2 = self.get_instances_thing_always_improve('Function')
+        result.extend(x for x in result2 if x not in result)
         return result
 
     def get_adaptable_components(self):
         result = self.get_instances_of_thing_with_status(
             'Component', 'unsolved|configuration error')
-        result.extend(self.get_instances_thing_always_improve('Component'))
+        result2 = self.get_instances_thing_always_improve('Component')
+        result.extend(x for x in result2 if x not in result)
         return result
 
     # Get all entities with is-required property equal to True and
