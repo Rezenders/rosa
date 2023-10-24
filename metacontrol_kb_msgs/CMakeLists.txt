@@ -12,13 +12,15 @@ find_package(rcl_interfaces REQUIRED)
 
 rosidl_generate_interfaces(${PROJECT_NAME}
   "msg/Task.msg"
-  "msg/Attribute.msg"
-  "msg/Entity.msg"
-  "msg/Related.msg"
-  "msg/Relationship.msg"
+  "msg/Component.msg"
+  "msg/Function.msg"
+  "msg/FunctionDesign.msg"
+  "srv/AdaptableFunctions.srv"
+  "srv/AdaptableComponents.srv"
+  "srv/GetFDPerformance.srv"
+  "srv/SelectableFDs.srv"
   "srv/TaskRequest.srv"
   "srv/TasksMatched.srv"
-  "srv/KBQuery.srv"
   DEPENDENCIES std_msgs rcl_interfaces
 )
 
