@@ -247,6 +247,11 @@ class ModelInterface(TypeDBInterface):
         result = self.get_selectable_fds_raw(function)
         return [r.get('name').get('value') for r in result]
 
+    def get_function_design_performance(self, fd):
+        return self.get_attribute_from_thing(
+            'function-design', 'function-design-name', fd, 'performance')
+
+
     def get_function_design_higher_performance(self, function_name):
         query = f'''
             match
