@@ -8,12 +8,18 @@ endif()
 find_package(ament_cmake REQUIRED)
 find_package(rosidl_default_generators REQUIRED)
 find_package(std_msgs REQUIRED)
+find_package(rcl_interfaces REQUIRED)
 
 rosidl_generate_interfaces(${PROJECT_NAME}
   "msg/Task.msg"
+  "msg/Attribute.msg"
+  "msg/Entity.msg"
+  "msg/Related.msg"
+  "msg/Relationship.msg"
   "srv/TaskRequest.srv"
   "srv/TasksMatched.srv"
-  DEPENDENCIES std_msgs
+  "srv/KBQuery.srv"
+  DEPENDENCIES std_msgs rcl_interfaces
 )
 
 if(BUILD_TESTING)

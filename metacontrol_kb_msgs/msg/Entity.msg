@@ -1,0 +1,2 @@
+string type
+Attribute[] attributes
