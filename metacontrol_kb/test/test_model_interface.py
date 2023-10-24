@@ -573,3 +573,9 @@ def test_update_outdated_reconfiguration_plans_result(kb_interface):
 
     assert result1 == 'abandoned' and result2 == 'completed' \
            and result3 == 'abandoned'
+
+
+def test_get_selectable_fds(kb_interface):
+    result = kb_interface.get_selectable_fds('f_fd_feasible_unfeasible')
+    expected_result = ['f_fd_feasible']
+    assert all(r in result for r in expected_result)

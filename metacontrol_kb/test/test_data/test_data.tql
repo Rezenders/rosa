@@ -91,7 +91,9 @@ $cp_reconfig_2 isa ComponentParameter, has parameter-key "cp_reconfig_2", has pa
 $c_config_reconfig_1  (component:$component_reconfig_3, parameter:$cp_reconfig_1) isa component-configuration, has component-configuration-name "cp_reconfig_1", has is-selected true;
 $c_config_reconfig_2  (component:$component_reconfig_3, parameter:$cp_reconfig_2) isa component-configuration, has component-configuration-name "cp_reconfig_2";
 
-
+$f_fd_feasible_unfeasible isa Function, has function-name "f_fd_feasible_unfeasible";
+(function: $f_fd_feasible_unfeasible) isa function-design, has function-design-name "f_fd_feasible", has function-design-status 'feasible';
+(function: $f_fd_feasible_unfeasible) isa function-design, has function-design-name "f_fd_unfeasible", has function-design-status 'unfeasible';
 #$f_required isa Function, has function-name "function_required", has is-required true;
 #$f_required_activated isa Function, has function-name "function_required_activated", has is-required true, has function-status 'activated';
 #$f_not_required isa Function, has function-name "function_not_required", has is-required false;
