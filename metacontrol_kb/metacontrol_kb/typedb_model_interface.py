@@ -19,9 +19,11 @@ class ModelInterface(TypeDBInterface):
     def __init__(self, address, database_name, schema_path, data_path=None,
                  force_database=False, force_data=False,
                  function_designs_ordering_funcs=dict(),
-                 default_function_design_ordering_func='get_function_design_higher_performance',
+                 default_function_design_ordering_func=
+                 'get_function_design_higher_performance',
                  component_configuration_ordering_funcs=dict(),
-                 default_component_configuration_ordering_func='get_component_configuration_higher_performance'):
+                 default_component_configuration_ordering_func=
+                 'get_component_configuration_higher_performance'):
 
         super().__init__(
             address,
@@ -33,11 +35,15 @@ class ModelInterface(TypeDBInterface):
         )
 
         # TODO: I am not sure I like this anymore
-        self.function_designs_ordering_funcs = function_designs_ordering_funcs
-        self.default_function_design_ordering_func = default_function_design_ordering_func
+        self.function_designs_ordering_funcs = \
+            function_designs_ordering_funcs
+        self.default_function_design_ordering_func = \
+            default_function_design_ordering_func
 
-        self.component_configuration_ordering_funcs = component_configuration_ordering_funcs
-        self.default_component_configuration_ordering_func = default_component_configuration_ordering_func
+        self.component_configuration_ordering_funcs = \
+            component_configuration_ordering_funcs
+        self.default_component_configuration_ordering_func = \
+            default_component_configuration_ordering_func
 
         # self.component_ordering_funcs = component_ordering_funcs
         # self.default_component_ordering_func = default_component_ordering_func
@@ -81,15 +87,19 @@ class ModelInterface(TypeDBInterface):
              'Task', 'task-name', task_name, 'task-status')
         return 'unfeasible' not in status
 
-    def get_selectable_tasks(self):
-        query = """
+    def get_selectable_thing_raw(self, thing):
+        query = f'''
             match
-            $t isa Task, has task-name $task-name;
-            not {$t isa Task, has task-status 'unfeasible';};
-            get $task-name;
-        """
+            $t isa {thing}, has name $name;
+            not {{$t has status 'unfeasible';}};
+            get $name;
+        '''
         query_result = self.match_database(query)
-        return [r.get('task-name').get('value') for r in query_result]
+        return query_result
+
+    def get_selectable_tasks(self):
+        query_result = self.get_selectable_thing_raw('Task')
+        return [r.get('name').get('value') for r in query_result]
 
     # Get all entities with is-required property equal to True and
     # function-status equal to 'solved' raw
@@ -139,21 +149,36 @@ class ModelInterface(TypeDBInterface):
                 get $name;
         '''
         query_result = self.match_database(query)
-        return [r.get("name").get('value') for r in query_result]
+        return [r.get('name').get('value') for r in query_result]
+
+    def get_adaptable_things_raw(self, thing):
+        query = f'''
+            match
+                $t isa {thing}, has {thing.lower()}-name $name;
+                {{
+                    $t has {thing.lower()}-status $status;
+                        $status like 'unsolved|configuration error';
+                }} or {{
+                    $t has always-improve true;
+                }};
+                get $name;
+        '''
+        query_result = self.match_database(query)
+        return query_result
 
     def get_adaptable_functions(self):
-        result = self.get_instances_of_thing_with_status(
-            'Function', 'unsolved|configuration error')
-        result2 = self.get_instances_thing_always_improve('Function')
-        result.extend(x for x in result2 if x not in result)
-        return result
+        query_result = self.get_adaptable_things_raw('Function')
+        if query_result is not None or query_result is not False:
+            return [r.get('name').get('value') for r in query_result]
+        else:
+            return False
 
     def get_adaptable_components(self):
-        result = self.get_instances_of_thing_with_status(
-            'Component', 'unsolved|configuration error')
-        result2 = self.get_instances_thing_always_improve('Component')
-        result.extend(x for x in result2 if x not in result)
-        return result
+        query_result = self.get_adaptable_things_raw('Component')
+        if query_result is not None or query_result is not False:
+            return [r.get('name').get('value') for r in query_result]
+        else:
+            return False
 
     # Get all entities with is-required property equal to True and
     # function-status equal to 'unsolved' raw
@@ -205,6 +230,23 @@ class ModelInterface(TypeDBInterface):
             return None
         return measurement[0]
 
+    def get_selectable_fds_raw(self, function):
+        query = f'''
+            match
+                $f isa Function, has function-name "{function}";
+                $fd (function: $f) isa function-design,
+                    has function-design-name $name;
+                not {{
+                    $fd has function-design-status 'unfeasible';
+                }};
+                get $name;
+        '''
+        return self.match_database(query)
+
+    def get_selectable_fds(self, function):
+        result = self.get_selectable_fds_raw(function)
+        return [r.get('name').get('value') for r in result]
+
     def get_function_design_higher_performance(self, function_name):
         query = f'''
             match
@@ -235,7 +277,7 @@ class ModelInterface(TypeDBInterface):
         if len(query_result) == 0:
             return None
         else:
-            return query_result[0].get("fd-name").get('value')
+            return query_result[0].get('fd-name').get('value')
 
     def get_component_configuration_higher_performance(self, c_name):
         query = f'''
