@@ -17,13 +17,18 @@ import traceback
 
 from ament_index_python.packages import get_package_share_directory
 
-from metacontrol_kb_msgs.msg import Attribute
-from metacontrol_kb_msgs.msg import Relationship
-from metacontrol_kb_msgs.msg import Related
 from metacontrol_kb_msgs.msg import Task
+from metacontrol_kb_msgs.msg import Component
+from metacontrol_kb_msgs.msg import Function
+from metacontrol_kb_msgs.msg import FunctionDesign
+
+from metacontrol_kb_msgs.srv import AdaptableFunctions
+from metacontrol_kb_msgs.srv import AdaptableComponents
+from metacontrol_kb_msgs.srv import GetFDPerformance
+from metacontrol_kb_msgs.srv import SelectableFDs
 from metacontrol_kb_msgs.srv import TaskRequest
 from metacontrol_kb_msgs.srv import TasksMatched
-from metacontrol_kb_msgs.srv import KBQuery
+
 from metacontrol_kb.typedb_model_interface import ModelInterface
 
 from rclpy.callback_groups import MutuallyExclusiveCallbackGroup
@@ -35,21 +40,6 @@ from ros_typedb.ros_typedb_interface import ROSTypeDBInterface
 from ros_typedb.ros_typedb_interface import set_query_result_value
 
 from diagnostic_msgs.msg import DiagnosticArray
-
-
-def match_query_result_to_ros_msg(query_result):
-    response = KBQuery.Response()
-    for result in query_result:
-        for key, value_dict in result.items():
-            _attr = Attribute()
-            if 'type' in value_dict:
-                _attr.type = value_dict['type']
-            if 'value' in value_dict:
-                _attr.value = set_query_result_value(
-                    value_dict['value'],
-                    value_dict['value_type'])
-            response.attributes.append(_attr)
-    return response
 
 
 class MetacontrolKB(ROSTypeDBInterface):
@@ -83,23 +73,30 @@ class MetacontrolKB(ROSTypeDBInterface):
         )
 
         self.get_adaptable_functions_service = self.create_service(
-            KBQuery,
+            AdaptableFunctions,
             self.get_name() + '/function/adaptable',
             self.function_adaptable_cb,
             callback_group=self.query_cb_group
         )
 
         self.get_adaptable_components_service = self.create_service(
-            KBQuery,
+            AdaptableComponents,
             self.get_name() + '/component/adaptable',
             self.component_adaptable_cb,
             callback_group=self.query_cb_group
         )
 
         self.get_selectable_fds_service = self.create_service(
-            KBQuery,
+            SelectableFDs,
             self.get_name() + '/function_designs/selectable',
             self.selectable_fd_cb,
+            callback_group=self.query_cb_group
+        )
+
+        self.get_fds_performance_service = self.create_service(
+            GetFDPerformance,
+            self.get_name() + '/function_designs/performance',
+            self.function_design_performance_cb,
             callback_group=self.query_cb_group
         )
 
@@ -143,48 +140,46 @@ class MetacontrolKB(ROSTypeDBInterface):
         return res
 
     def function_adaptable_cb(self, req, res):
-        result = self.typedb_interface.get_adaptable_things_raw('Function')
+        result = self.typedb_interface.get_adaptable_functions()
         if result is not None:
-            res = match_query_result_to_ros_msg(result)
             res.success = True
+            for r in result:
+                _f = Function()
+                _f.name = r
+                res.functions.append(_f)
         else:
             res.success = False
         return res
 
     def component_adaptable_cb(self, req, res):
-        result = self.typedb_interface.get_adaptable_things_raw('Component')
+        result = self.typedb_interface.get_adaptable_components()
         if result is not None:
-            res = match_query_result_to_ros_msg(result)
             res.success = True
+            for r in result:
+                _c = Component()
+                _c.name = r
+                res.components.append(_c)
         else:
             res.success = False
         return res
 
     def selectable_fd_cb(self, req, res):
-        if req.entity.type == 'Function':
-            fds = []
-            f_name = ''
-            for attr in req.entity.attributes:
-                if attr.type == 'function-name':
-                    f_name = attr.value.string_value
-                    fds = self.typedb_interface.get_selectable_fds(f_name)
-                    break
-            for fd in fds:
-                _attr = Attribute()
-                _attr.type = 'function-design-name'
-                _attr.value.type = 4  # TODO: create dict/func to convert
-                _attr.value.string_value = fd
+        fds = []
+        fds = self.typedb_interface.get_selectable_fds(req.function.name)
+        for fd in fds:
+            _fd = FunctionDesign()
+            _fd.name = fd
+            res.fds.append(_fd)
+        res.success = True
+        return res
 
-                _related = Related()
-                _related.role = 'function'
-                _related.name = f_name
-
-                _fd = Relationship()
-                _fd.type = 'function-design'
-                _fd.attributes.append(_attr)
-                _fd.related.append(_related)
-                res.relationships.append(_fd)
-            res.success = True
+    def function_design_performance_cb(self, req, res):
+        for fd in req.fds:
+            p = self.typedb_interface.get_function_design_performance(fd.name)
+            if p is not None and len(p) > 0:
+                fd.performance = p[0]
+                res.fds.append(fd)
+        res.success = True
         return res
 
 

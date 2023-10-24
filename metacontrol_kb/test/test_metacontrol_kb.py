@@ -30,15 +30,23 @@ import sys
 from diagnostic_msgs.msg import DiagnosticArray
 from diagnostic_msgs.msg import DiagnosticStatus
 from diagnostic_msgs.msg import KeyValue
+
 from lifecycle_msgs.srv import ChangeState
 from lifecycle_msgs.srv import GetState
-from metacontrol_kb_msgs.srv import TaskRequest
+
+from metacontrol_kb_msgs.msg import Function
+
+from metacontrol_kb_msgs.srv import AdaptableFunctions
+from metacontrol_kb_msgs.srv import AdaptableComponents
+from metacontrol_kb_msgs.srv import GetFDPerformance
+from metacontrol_kb_msgs.srv import SelectableFDs
 from metacontrol_kb_msgs.srv import TasksMatched
+from metacontrol_kb_msgs.srv import TaskRequest
+
+from ros_typedb_msgs.srv import Query
+
 from rclpy.callback_groups import ReentrantCallbackGroup
 from rclpy.node import Node
-from ros_typedb_msgs.srv import Query
-from metacontrol_kb_msgs.srv import KBQuery
-from metacontrol_kb_msgs.msg import Attribute
 
 
 @launch_pytest.fixture
@@ -200,11 +208,11 @@ def test_metacontrol_kb_functions_adaptable():
         node.start_node()
         node.activate_metacontrol_kb()
         node.function_adaptable_srv = node.create_client(
-            KBQuery, '/metacontrol_kb/function/adaptable')
+            AdaptableFunctions, '/metacontrol_kb/function/adaptable')
 
-        request = KBQuery.Request()
+        request = AdaptableFunctions.Request()
         response = node.call_service(node.function_adaptable_srv, request)
-        result = [r.value.string_value for r in response.attributes]
+        result = [r.name for r in response.functions]
         expected_result = ['f_unsolved', 'f_always_improve']
         assert all(r in result for r in expected_result) \
             and response.success is True
@@ -220,11 +228,11 @@ def test_metacontrol_kb_components_adaptable():
         node.start_node()
         node.activate_metacontrol_kb()
         node.component_adaptable_srv = node.create_client(
-            KBQuery, '/metacontrol_kb/component/adaptable')
+            AdaptableComponents, '/metacontrol_kb/component/adaptable')
 
-        request = KBQuery.Request()
+        request = AdaptableComponents.Request()
         response = node.call_service(node.component_adaptable_srv, request)
-        result = [r.value.string_value for r in response.attributes]
+        result = [r.name for r in response.components]
         expected_result = ['c_unsolved', 'c_always_improve']
         assert all(r in result for r in expected_result) \
             and response.success is True
@@ -240,27 +248,50 @@ def test_metacontrol_kb_selectable_fds():
         node.start_node()
         node.activate_metacontrol_kb()
         node.selectable_fds_srv = node.create_client(
-            KBQuery, '/metacontrol_kb/function_designs/selectable')
+            SelectableFDs, '/metacontrol_kb/function_designs/selectable')
 
-        request = KBQuery.Request()
-        request.entity.type = 'Function'
+        request = SelectableFDs.Request()
 
-        _attr = Attribute()
-        _attr.type = 'function-name'
-        _attr.value.type = 4  # TODO: create dict/func to convert
-        _attr.value.string_value = 'f_fd_feasible_unfeasible'
-
-        request.entity.attributes = [_attr]
+        _f = Function()
+        _f.name = 'f_fd_feasible_unfeasible'
+        request.function = _f
 
         response = node.call_service(node.selectable_fds_srv, request)
-        result = []
-        for r in response.relationships:
-            for attr in r.attributes:
-                if attr.type == 'function-design-name':
-                    result.append(attr.value.string_value)
+        result = [fd.name for fd in response.fds]
         expected_result = ['f_fd_feasible']
         assert all(r in result for r in expected_result) \
             and response.success is True
+    finally:
+        rclpy.shutdown()
+
+
+@pytest.mark.launch(fixture=generate_test_description)
+def test_metacontrol_kb_get_fds_performance():
+    rclpy.init()
+    try:
+        node = MakeTestNode()
+        node.start_node()
+        node.activate_metacontrol_kb()
+        node.selectable_fds_srv = node.create_client(
+            SelectableFDs, '/metacontrol_kb/function_designs/selectable')
+        node.fd_performance_srv = node.create_client(
+            GetFDPerformance, '/metacontrol_kb/function_designs/performance')
+
+        request_fds = SelectableFDs.Request()
+
+        _f = Function()
+        _f.name = 'f_fd_feasible_unfeasible'
+        request_fds.function = _f
+
+        response_fd = node.call_service(node.selectable_fds_srv, request_fds)
+
+        request_p = GetFDPerformance.Request()
+        request_p.fds = response_fd.fds
+        response_p = node.call_service(node.fd_performance_srv, request_p)
+        result = [fd.performance for fd in response_p.fds]
+        expected_result = [1.0]
+        assert all(r in result for r in expected_result) \
+            and response_p.success is True
     finally:
         rclpy.shutdown()
 

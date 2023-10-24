@@ -44,12 +44,6 @@ def analyze(kb_interface):
     pass
 
 
-# This should be included in the knowledge model
-# the reconfig plan should include the components and component conf that
-# needs to be deactivated
-# reconfiguration_plan = dict()
-
-
 def plan(kb_interface, always_improve=True):
     adaptable_functions = list()
     adaptable_functions.extend(kb_interface.get_adaptable_functions())
@@ -58,7 +52,6 @@ def plan(kb_interface, always_improve=True):
     for function in adaptable_functions:
         best_fd = kb_interface.get_best_function_design(function)
         if best_fd is not None:
-            # kb_interface.select_function_design(function, best_fd)
             selected_functions_fds.append((function, best_fd))
 
     adaptable_components = list()
@@ -70,9 +63,6 @@ def plan(kb_interface, always_improve=True):
         best_config = kb_interface.get_best_component_configuration(component)
         if best_config is not None:
             selected_component_configs.append((component, best_config))
-        #     kb_interface.select_component_configuration(component, best_config)
-        # reconfiguration_plan[component] = ('activate', best_config)
-    # print(reconfiguration_plan)
     print('selected_functions_fds: ', selected_functions_fds)
     print('selected_component_configs: ', selected_component_configs)
     kb_interface.select_configuration(

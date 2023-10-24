@@ -22,9 +22,12 @@ from rclpy.lifecycle import State
 from rclpy.lifecycle import Publisher
 from rclpy.lifecycle import TransitionCallbackReturn
 
-# from ros_typedb.typedb_interface import TypeDBInterface
-# from ros_typedb_msgs.msg import QueryResult
-# from ros_typedb_msgs.srv import Query
+from metacontrol_kb_msgs.msg import Function
+
+from metacontrol_kb_msgs.srv import AdaptableFunctions
+from metacontrol_kb_msgs.srv import AdaptableComponents
+from metacontrol_kb_msgs.srv import GetFDPerformance
+from metacontrol_kb_msgs.srv import SelectableFDs
 
 from std_msgs.msg import String
 
@@ -44,6 +47,18 @@ class ConfigurationPlanner(Node):
             self.event_cb,
             10)
 
+        self.component_adaptable_srv = self.create_client(
+            AdaptableComponents, '/metacontrol_kb/component/adaptable')
+
+        self.function_adaptable_srv = self.create_client(
+            AdaptableFunctions, '/metacontrol_kb/function/adaptable')
+
+        self.selectable_fds_srv = self.create_client(
+            SelectableFDs, '/metacontrol_kb/function_designs/selectable')
+
+        self.get_fds_performance_srv = self.create_client(
+            GetFDPerformance, '/metacontrol_kb/function_designs/performance')
+
         self.get_logger().info('on_configure() completed.')
         return TransitionCallbackReturn.SUCCESS
 
@@ -60,13 +75,37 @@ class ConfigurationPlanner(Node):
     def event_cb(self, msg):
         if msg.data == 'insert':
             # TODO: get adaptable functions
-            # TODO: get fds performance
-            # TODO: select best fds
+            functions = self.call_service(
+                self.function_adaptable_srv, AdaptableFunctions.Request())
+            # TODO: get feasible fds
+            for function in functions.functions:
+                request = SelectableFDs.Request()
+                request.function = function
+                fds = self.call_service(self.selectable_fds_srv, request)
+                # TODO: get fds performance
+                request = GetFDPerformance.Request()
+                request.fds = fds.fds
+                fds = self.call_service(self.get_fds_performance_srv, request)
+                # TODO: select best fds
 
             # TODO: get adaptable components
+            components = self.call_service(
+                self.component_adaptable_srv, AdaptableComponents.Request())
             # TODO: get components config performance
             # TODO: select best component config
 
             # TODO: updated kb with selected fds and component configs
             pass
         pass
+
+    def call_service(self, cli, request):
+        if cli.wait_for_service(timeout_sec=5.0) is False:
+            self.get_logger().error(
+                'service not available {}'.format(cli.srv_name))
+            return None
+        future = cli.call_async(request)
+        if self.executor.spin_until_future_complete(
+                future, timeout_sec=5.0) is False:
+            self.get_logger().error(
+                'Future not completed {}'.format(cli.srv_name))
+            return None
