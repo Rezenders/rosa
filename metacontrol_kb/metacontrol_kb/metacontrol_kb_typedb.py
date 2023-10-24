@@ -17,9 +17,13 @@ import traceback
 
 from ament_index_python.packages import get_package_share_directory
 
+from metacontrol_kb_msgs.msg import Attribute
+from metacontrol_kb_msgs.msg import Relationship
+from metacontrol_kb_msgs.msg import Related
 from metacontrol_kb_msgs.msg import Task
 from metacontrol_kb_msgs.srv import TaskRequest
 from metacontrol_kb_msgs.srv import TasksMatched
+from metacontrol_kb_msgs.srv import KBQuery
 from metacontrol_kb.typedb_model_interface import ModelInterface
 
 from rclpy.callback_groups import MutuallyExclusiveCallbackGroup
@@ -28,8 +32,24 @@ from rclpy.lifecycle import State
 from rclpy.lifecycle import TransitionCallbackReturn
 
 from ros_typedb.ros_typedb_interface import ROSTypeDBInterface
+from ros_typedb.ros_typedb_interface import set_query_result_value
 
 from diagnostic_msgs.msg import DiagnosticArray
+
+
+def match_query_result_to_ros_msg(query_result):
+    response = KBQuery.Response()
+    for result in query_result:
+        for key, value_dict in result.items():
+            _attr = Attribute()
+            if 'type' in value_dict:
+                _attr.type = value_dict['type']
+            if 'value' in value_dict:
+                _attr.value = set_query_result_value(
+                    value_dict['value'],
+                    value_dict['value_type'])
+            response.attributes.append(_attr)
+    return response
 
 
 class MetacontrolKB(ROSTypeDBInterface):
@@ -59,6 +79,27 @@ class MetacontrolKB(ROSTypeDBInterface):
             TasksMatched,
             self.get_name() + '/task/selectable',
             self.task_selectable_cb,
+            callback_group=self.query_cb_group
+        )
+
+        self.get_adaptable_functions_service = self.create_service(
+            KBQuery,
+            self.get_name() + '/function/adaptable',
+            self.function_adaptable_cb,
+            callback_group=self.query_cb_group
+        )
+
+        self.get_adaptable_components_service = self.create_service(
+            KBQuery,
+            self.get_name() + '/component/adaptable',
+            self.component_adaptable_cb,
+            callback_group=self.query_cb_group
+        )
+
+        self.get_selectable_fds_service = self.create_service(
+            KBQuery,
+            self.get_name() + '/function_designs/selectable',
+            self.selectable_fd_cb,
             callback_group=self.query_cb_group
         )
 
@@ -99,6 +140,51 @@ class MetacontrolKB(ROSTypeDBInterface):
             task = Task()
             task.task_name = task_name
             res.tasks.append(task)
+        return res
+
+    def function_adaptable_cb(self, req, res):
+        result = self.typedb_interface.get_adaptable_things_raw('Function')
+        if result is not None:
+            res = match_query_result_to_ros_msg(result)
+            res.success = True
+        else:
+            res.success = False
+        return res
+
+    def component_adaptable_cb(self, req, res):
+        result = self.typedb_interface.get_adaptable_things_raw('Component')
+        if result is not None:
+            res = match_query_result_to_ros_msg(result)
+            res.success = True
+        else:
+            res.success = False
+        return res
+
+    def selectable_fd_cb(self, req, res):
+        if req.entity.type == 'Function':
+            fds = []
+            f_name = ''
+            for attr in req.entity.attributes:
+                if attr.type == 'function-name':
+                    f_name = attr.value.string_value
+                    fds = self.typedb_interface.get_selectable_fds(f_name)
+                    break
+            for fd in fds:
+                _attr = Attribute()
+                _attr.type = 'function-design-name'
+                _attr.value.type = 4  # TODO: create dict/func to convert
+                _attr.value.string_value = fd
+
+                _related = Related()
+                _related.role = 'function'
+                _related.name = f_name
+
+                _fd = Relationship()
+                _fd.type = 'function-design'
+                _fd.attributes.append(_attr)
+                _fd.related.append(_related)
+                res.relationships.append(_fd)
+            res.success = True
         return res
 
 

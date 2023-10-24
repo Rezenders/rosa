@@ -37,6 +37,8 @@ from metacontrol_kb_msgs.srv import TasksMatched
 from rclpy.callback_groups import ReentrantCallbackGroup
 from rclpy.node import Node
 from ros_typedb_msgs.srv import Query
+from metacontrol_kb_msgs.srv import KBQuery
+from metacontrol_kb_msgs.msg import Attribute
 
 
 @launch_pytest.fixture
@@ -161,7 +163,7 @@ def test_metacontrol_kb_task_request(task_name, task_required):
         """
         query_res = node.call_service(node.query_srv, query_req)
         correct_res = False
-        for r in query_res.result:
+        for r in query_res.attributes:
             if r.name == 'task-required' \
                and r.value.bool_value is task_required:
                 correct_res = True
@@ -186,6 +188,79 @@ def test_metacontrol_kb_task_selectable():
             'task_feasible', 'task_required_solved']
         assert ('task_unfeasible' not in res_task_names) \
                and all(r in res_task_names for r in expected_result)
+    finally:
+        rclpy.shutdown()
+
+
+@pytest.mark.launch(fixture=generate_test_description)
+def test_metacontrol_kb_functions_adaptable():
+    rclpy.init()
+    try:
+        node = MakeTestNode()
+        node.start_node()
+        node.activate_metacontrol_kb()
+        node.function_adaptable_srv = node.create_client(
+            KBQuery, '/metacontrol_kb/function/adaptable')
+
+        request = KBQuery.Request()
+        response = node.call_service(node.function_adaptable_srv, request)
+        result = [r.value.string_value for r in response.attributes]
+        expected_result = ['f_unsolved', 'f_always_improve']
+        assert all(r in result for r in expected_result) \
+            and response.success is True
+    finally:
+        rclpy.shutdown()
+
+
+@pytest.mark.launch(fixture=generate_test_description)
+def test_metacontrol_kb_components_adaptable():
+    rclpy.init()
+    try:
+        node = MakeTestNode()
+        node.start_node()
+        node.activate_metacontrol_kb()
+        node.component_adaptable_srv = node.create_client(
+            KBQuery, '/metacontrol_kb/component/adaptable')
+
+        request = KBQuery.Request()
+        response = node.call_service(node.component_adaptable_srv, request)
+        result = [r.value.string_value for r in response.attributes]
+        expected_result = ['c_unsolved', 'c_always_improve']
+        assert all(r in result for r in expected_result) \
+            and response.success is True
+    finally:
+        rclpy.shutdown()
+
+
+@pytest.mark.launch(fixture=generate_test_description)
+def test_metacontrol_kb_selectable_fds():
+    rclpy.init()
+    try:
+        node = MakeTestNode()
+        node.start_node()
+        node.activate_metacontrol_kb()
+        node.selectable_fds_srv = node.create_client(
+            KBQuery, '/metacontrol_kb/function_designs/selectable')
+
+        request = KBQuery.Request()
+        request.entity.type = 'Function'
+
+        _attr = Attribute()
+        _attr.type = 'function-name'
+        _attr.value.type = 4  # TODO: create dict/func to convert
+        _attr.value.string_value = 'f_fd_feasible_unfeasible'
+
+        request.entity.attributes = [_attr]
+
+        response = node.call_service(node.selectable_fds_srv, request)
+        result = []
+        for r in response.relationships:
+            for attr in r.attributes:
+                if attr.type == 'function-design-name':
+                    result.append(attr.value.string_value)
+        expected_result = ['f_fd_feasible']
+        assert all(r in result for r in expected_result) \
+            and response.success is True
     finally:
         rclpy.shutdown()
 
