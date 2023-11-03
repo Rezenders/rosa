@@ -71,7 +71,8 @@ def plan(kb_interface, always_improve=True):
 
 def execute(kb_interface):
     # TODO: get latest plan without result
-    reconfiguration_plan = kb_interface.get_latest_pending_reconfiguration_plan()
+    reconfiguration_plan = \
+        kb_interface.get_latest_pending_reconfiguration_plan()
     print('reconfiguration plan: ', reconfiguration_plan)
     if reconfiguration_plan is False:
         return False

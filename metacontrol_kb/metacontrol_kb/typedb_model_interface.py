@@ -230,6 +230,23 @@ class ModelInterface(TypeDBInterface):
             return None
         return measurement[0]
 
+    def get_selectable_c_configs_raw(self, component):
+        query = f'''
+            match
+                $c isa Component, has component-name "{component}";
+                $cc (component: $c) isa component-configuration,
+                    has component-configuration-name $name;
+                not {{
+                    $cc has component-configuration-status 'unfeasible';
+                }};
+                get $name;
+        '''
+        return self.match_database(query)
+
+    def get_selectable_c_configs(self, component):
+        result = self.get_selectable_c_configs_raw(component)
+        return [r.get('name').get('value') for r in result]
+
     def get_selectable_fds_raw(self, function):
         query = f'''
             match
@@ -250,7 +267,6 @@ class ModelInterface(TypeDBInterface):
     def get_function_design_performance(self, fd):
         return self.get_attribute_from_thing(
             'function-design', 'function-design-name', fd, 'performance')
-
 
     def get_function_design_higher_performance(self, function_name):
         query = f'''
@@ -409,7 +425,6 @@ class ModelInterface(TypeDBInterface):
     def create_reconfiguration_plan(self, c_activate, c_deactivate, c_config):
         match_query = "match "
         insert_query = "insert "
-        prefix_list = []
 
         if len(c_activate) == 0 and len(c_deactivate) == 0 and \
            len(c_config) == 0:

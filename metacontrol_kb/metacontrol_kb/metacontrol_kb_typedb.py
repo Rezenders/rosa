@@ -19,12 +19,14 @@ from ament_index_python.packages import get_package_share_directory
 
 from metacontrol_kb_msgs.msg import Task
 from metacontrol_kb_msgs.msg import Component
+from metacontrol_kb_msgs.msg import ComponentConfig
 from metacontrol_kb_msgs.msg import Function
 from metacontrol_kb_msgs.msg import FunctionDesign
 
 from metacontrol_kb_msgs.srv import AdaptableFunctions
 from metacontrol_kb_msgs.srv import AdaptableComponents
 from metacontrol_kb_msgs.srv import GetFDPerformance
+from metacontrol_kb_msgs.srv import SelectableComponentConfigs
 from metacontrol_kb_msgs.srv import SelectableFDs
 from metacontrol_kb_msgs.srv import TaskRequest
 from metacontrol_kb_msgs.srv import TasksMatched
@@ -90,6 +92,13 @@ class MetacontrolKB(ROSTypeDBInterface):
             SelectableFDs,
             self.get_name() + '/function_designs/selectable',
             self.selectable_fd_cb,
+            callback_group=self.query_cb_group
+        )
+
+        self.get_selectable_c_configs_service = self.create_service(
+            SelectableComponentConfigs,
+            self.get_name() + '/component_configuration/selectable',
+            self.selectable_c_config_cb,
             callback_group=self.query_cb_group
         )
 
@@ -170,6 +179,17 @@ class MetacontrolKB(ROSTypeDBInterface):
             _fd = FunctionDesign()
             _fd.name = fd
             res.fds.append(_fd)
+        res.success = True
+        return res
+
+    def selectable_c_config_cb(self, req, res):
+        c_configs = []
+        c_configs = self.typedb_interface.get_selectable_c_configs(
+            req.component.name)
+        for c_config in c_configs:
+            _c_config = ComponentConfig()
+            _c_config.name = c_config
+            res.c_configs.append(_c_config)
         res.success = True
         return res
 

@@ -27,6 +27,7 @@ from metacontrol_kb_msgs.msg import Function
 from metacontrol_kb_msgs.srv import AdaptableFunctions
 from metacontrol_kb_msgs.srv import AdaptableComponents
 from metacontrol_kb_msgs.srv import GetFDPerformance
+from metacontrol_kb_msgs.srv import SelectableComponentConfigs
 from metacontrol_kb_msgs.srv import SelectableFDs
 
 from std_msgs.msg import String
@@ -56,6 +57,10 @@ class ConfigurationPlanner(Node):
         self.selectable_fds_srv = self.create_client(
             SelectableFDs, '/metacontrol_kb/function_designs/selectable')
 
+        self.selectable_c_configs_srv = self.create_client(
+            SelectableFDs,
+            '/metacontrol_kb/component_configuration/selectable')
+
         self.get_fds_performance_srv = self.create_client(
             GetFDPerformance, '/metacontrol_kb/function_designs/performance')
 
@@ -74,24 +79,36 @@ class ConfigurationPlanner(Node):
 
     def event_cb(self, msg):
         if msg.data == 'insert':
-            # TODO: get adaptable functions
+            # get adaptable functions
             functions = self.call_service(
                 self.function_adaptable_srv, AdaptableFunctions.Request())
-            # TODO: get feasible fds
+            # get feasible fds
             for function in functions.functions:
                 request = SelectableFDs.Request()
                 request.function = function
                 fds = self.call_service(self.selectable_fds_srv, request)
-                # TODO: get fds performance
+
+                # get fds performance
                 request = GetFDPerformance.Request()
                 request.fds = fds.fds
                 fds = self.call_service(self.get_fds_performance_srv, request)
-                # TODO: select best fds
+
+                # sort fds
+                sorted_fds = sorted(
+                    fds, key=lambda x: x.performance, reverse=True)
 
             # TODO: get adaptable components
             components = self.call_service(
                 self.component_adaptable_srv, AdaptableComponents.Request())
-            # TODO: get components config performance
+
+            # get feasible component configs
+            for component in components:
+                request = SelectableComponentConfigs.Request()
+                request.component = component
+                c_configs = self.call_service(
+                    self.selectable_c_configs_srv, request)
+
+                # TODO: get components config performance
             # TODO: select best component config
 
             # TODO: updated kb with selected fds and component configs
