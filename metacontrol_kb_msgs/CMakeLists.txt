@@ -19,6 +19,7 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   "srv/AdaptableFunctions.srv"
   "srv/AdaptableComponents.srv"
   "srv/GetFDPerformance.srv"
+  "srv/GetComponentConfigPerformance.srv"
   "srv/SelectableComponentConfigs.srv"
   "srv/SelectableFDs.srv"
   "srv/TaskRequest.srv"
