@@ -13,11 +13,13 @@ find_package(rcl_interfaces REQUIRED)
 rosidl_generate_interfaces(${PROJECT_NAME}
   "msg/Task.msg"
   "msg/Component.msg"
+  "msg/ComponentConfig.msg"
   "msg/Function.msg"
   "msg/FunctionDesign.msg"
   "srv/AdaptableFunctions.srv"
   "srv/AdaptableComponents.srv"
   "srv/GetFDPerformance.srv"
+  "srv/SelectableComponentConfigs.srv"
   "srv/SelectableFDs.srv"
   "srv/TaskRequest.srv"
   "srv/TasksMatched.srv"
