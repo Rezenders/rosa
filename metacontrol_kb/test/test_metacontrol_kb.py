@@ -22,7 +22,6 @@ import pytest
 import rclpy
 import traceback
 
-from threading import Event
 from threading import Thread
 
 import sys
@@ -34,18 +33,19 @@ from diagnostic_msgs.msg import KeyValue
 from lifecycle_msgs.srv import ChangeState
 from lifecycle_msgs.srv import GetState
 
+from metacontrol_kb_msgs.msg import Component
 from metacontrol_kb_msgs.msg import Function
 
 from metacontrol_kb_msgs.srv import AdaptableFunctions
 from metacontrol_kb_msgs.srv import AdaptableComponents
 from metacontrol_kb_msgs.srv import GetFDPerformance
+from metacontrol_kb_msgs.srv import SelectableComponentConfigs
 from metacontrol_kb_msgs.srv import SelectableFDs
 from metacontrol_kb_msgs.srv import TasksMatched
 from metacontrol_kb_msgs.srv import TaskRequest
 
 from ros_typedb_msgs.srv import Query
 
-from rclpy.callback_groups import ReentrantCallbackGroup
 from rclpy.node import Node
 
 
@@ -259,6 +259,32 @@ def test_metacontrol_kb_selectable_fds():
         response = node.call_service(node.selectable_fds_srv, request)
         result = [fd.name for fd in response.fds]
         expected_result = ['f_fd_feasible']
+        assert all(r in result for r in expected_result) \
+            and response.success is True
+    finally:
+        rclpy.shutdown()
+
+
+@pytest.mark.launch(fixture=generate_test_description)
+def test_metacontrol_kb_selectable_c_configs():
+    rclpy.init()
+    try:
+        node = MakeTestNode()
+        node.start_node()
+        node.activate_metacontrol_kb()
+        node.selectable_c_configs_srv = node.create_client(
+            SelectableComponentConfigs,
+            '/metacontrol_kb/component_configuration/selectable')
+
+        request = SelectableComponentConfigs.Request()
+
+        _c = Component()
+        _c.name = 'c_cc_feasible_unfeasible'
+        request.component = _c
+
+        response = node.call_service(node.selectable_c_configs_srv, request)
+        result = [c_config.name for c_config in response.c_configs]
+        expected_result = ['c_cc_feasible']
         assert all(r in result for r in expected_result) \
             and response.success is True
     finally:

@@ -98,3 +98,7 @@ $f_fd_feasible_unfeasible isa Function, has function-name "f_fd_feasible_unfeasi
 #$f_required_activated isa Function, has function-name "function_required_activated", has is-required true, has function-status 'activated';
 #$f_not_required isa Function, has function-name "function_not_required", has is-required false;
 #$f_required_empty isa Function, has function-name "function_required_empty";
+
+$c_cc_feasible_unfeasible isa Component, has component-name "c_cc_feasible_unfeasible";
+(component: $c_cc_feasible_unfeasible) isa component-configuration, has component-configuration-name "c_cc_feasible", has component-configuration-status "feasible", has performance 1.0;
+(component: $c_cc_feasible_unfeasible) isa component-configuration, has component-configuration-name "c_cc_unfeasible", has component-configuration-status "unfeasible", has performance 2.0;
