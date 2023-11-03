@@ -38,6 +38,7 @@ from metacontrol_kb_msgs.msg import Function
 
 from metacontrol_kb_msgs.srv import AdaptableFunctions
 from metacontrol_kb_msgs.srv import AdaptableComponents
+from metacontrol_kb_msgs.srv import GetComponentConfigPerformance
 from metacontrol_kb_msgs.srv import GetFDPerformance
 from metacontrol_kb_msgs.srv import SelectableComponentConfigs
 from metacontrol_kb_msgs.srv import SelectableFDs
@@ -315,6 +316,41 @@ def test_metacontrol_kb_get_fds_performance():
         request_p.fds = response_fd.fds
         response_p = node.call_service(node.fd_performance_srv, request_p)
         result = [fd.performance for fd in response_p.fds]
+        expected_result = [1.0]
+        assert all(r in result for r in expected_result) \
+            and response_p.success is True
+    finally:
+        rclpy.shutdown()
+
+
+@pytest.mark.launch(fixture=generate_test_description)
+def test_metacontrol_kb_get_component_configuration_performance():
+    rclpy.init()
+    try:
+        node = MakeTestNode()
+        node.start_node()
+        node.activate_metacontrol_kb()
+        node.selectable_c_configs_srv = node.create_client(
+            SelectableComponentConfigs,
+            '/metacontrol_kb/component_configuration/selectable')
+        node.c_configs_performance_srv = node.create_client(
+            GetComponentConfigPerformance,
+            '/metacontrol_kb/component_configuration/performance')
+
+        request_c_configs = SelectableComponentConfigs.Request()
+
+        _cc = Component()
+        _cc.name = 'c_cc_feasible_unfeasible'
+        request_c_configs.component = _cc
+
+        response_c_configs = node.call_service(
+            node.selectable_c_configs_srv, request_c_configs)
+
+        request_p = GetComponentConfigPerformance.Request()
+        request_p.c_configs = response_c_configs.c_configs
+        response_p = node.call_service(
+            node.c_configs_performance_srv, request_p)
+        result = [c_config.performance for c_config in response_p.c_configs]
         expected_result = [1.0]
         assert all(r in result for r in expected_result) \
             and response_p.success is True

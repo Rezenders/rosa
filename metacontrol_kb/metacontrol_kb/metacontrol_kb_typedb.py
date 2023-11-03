@@ -25,6 +25,7 @@ from metacontrol_kb_msgs.msg import FunctionDesign
 
 from metacontrol_kb_msgs.srv import AdaptableFunctions
 from metacontrol_kb_msgs.srv import AdaptableComponents
+from metacontrol_kb_msgs.srv import GetComponentConfigPerformance
 from metacontrol_kb_msgs.srv import GetFDPerformance
 from metacontrol_kb_msgs.srv import SelectableComponentConfigs
 from metacontrol_kb_msgs.srv import SelectableFDs
@@ -106,6 +107,13 @@ class MetacontrolKB(ROSTypeDBInterface):
             GetFDPerformance,
             self.get_name() + '/function_designs/performance',
             self.function_design_performance_cb,
+            callback_group=self.query_cb_group
+        )
+
+        self.get_c_configs_performance_service = self.create_service(
+            GetComponentConfigPerformance,
+            self.get_name() + '/component_configuration/performance',
+            self.component_configuration_performance_cb,
             callback_group=self.query_cb_group
         )
 
@@ -199,6 +207,16 @@ class MetacontrolKB(ROSTypeDBInterface):
             if p is not None and len(p) > 0:
                 fd.performance = p[0]
                 res.fds.append(fd)
+        res.success = True
+        return res
+
+    def component_configuration_performance_cb(self, req, res):
+        for c_config in req.c_configs:
+            p = self.typedb_interface.get_component_configuration_performance(
+                c_config.name)
+            if p is not None and len(p) > 0:
+                c_config.performance = p[0]
+                res.c_configs.append(c_config)
         res.success = True
         return res
 

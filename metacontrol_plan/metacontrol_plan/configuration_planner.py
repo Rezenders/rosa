@@ -12,20 +12,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import rclpy
-
-# from rcl_interfaces.msg import ParameterValue
-# from rclpy.callback_groups import MutuallyExclusiveCallbackGroup
-# from rclpy.callback_groups import ReentrantCallbackGroup
 from rclpy.lifecycle import Node
 from rclpy.lifecycle import State
-from rclpy.lifecycle import Publisher
 from rclpy.lifecycle import TransitionCallbackReturn
-
-from metacontrol_kb_msgs.msg import Function
 
 from metacontrol_kb_msgs.srv import AdaptableFunctions
 from metacontrol_kb_msgs.srv import AdaptableComponents
+from metacontrol_kb_msgs.srv import GetComponentConfigPerformance
 from metacontrol_kb_msgs.srv import GetFDPerformance
 from metacontrol_kb_msgs.srv import SelectableComponentConfigs
 from metacontrol_kb_msgs.srv import SelectableFDs
@@ -63,6 +56,10 @@ class ConfigurationPlanner(Node):
 
         self.get_fds_performance_srv = self.create_client(
             GetFDPerformance, '/metacontrol_kb/function_designs/performance')
+
+        self.get_c_configs_performance_srv = self.create_client(
+            GetComponentConfigPerformance,
+            '/metacontrol_kb/component_configuration/performance')
 
         self.get_logger().info('on_configure() completed.')
         return TransitionCallbackReturn.SUCCESS
@@ -108,8 +105,15 @@ class ConfigurationPlanner(Node):
                 c_configs = self.call_service(
                     self.selectable_c_configs_srv, request)
 
-                # TODO: get components config performance
-            # TODO: select best component config
+                # get component configs performance
+                request = GetComponentConfigPerformance.Request()
+                request.c_configs = c_configs.c_configs
+                c_configs = self.call_service(
+                    self.get_c_configs_performance_srv, request)
+
+                # sort fds
+                sorted_c_configs = sorted(
+                    c_configs, key=lambda x: x.performance, reverse=True)
 
             # TODO: updated kb with selected fds and component configs
             pass

@@ -268,6 +268,13 @@ class ModelInterface(TypeDBInterface):
         return self.get_attribute_from_thing(
             'function-design', 'function-design-name', fd, 'performance')
 
+    def get_component_configuration_performance(self, cc):
+        return self.get_attribute_from_thing(
+            'component-configuration',
+            'component-configuration-name',
+            cc,
+            'performance')
+
     def get_function_design_higher_performance(self, function_name):
         query = f'''
             match
