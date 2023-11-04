@@ -35,11 +35,14 @@ from lifecycle_msgs.srv import GetState
 
 from metacontrol_kb_msgs.msg import Component
 from metacontrol_kb_msgs.msg import Function
+from metacontrol_kb_msgs.msg import SelectedComponentConfig
+from metacontrol_kb_msgs.msg import SelectedFunctionDesign
 
 from metacontrol_kb_msgs.srv import AdaptableFunctions
 from metacontrol_kb_msgs.srv import AdaptableComponents
 from metacontrol_kb_msgs.srv import GetComponentConfigPerformance
 from metacontrol_kb_msgs.srv import GetFDPerformance
+from metacontrol_kb_msgs.srv import SelectedConfig
 from metacontrol_kb_msgs.srv import SelectableComponentConfigs
 from metacontrol_kb_msgs.srv import SelectableFDs
 from metacontrol_kb_msgs.srv import TasksMatched
@@ -323,6 +326,7 @@ def test_metacontrol_kb_get_fds_performance():
         rclpy.shutdown()
 
 
+
 @pytest.mark.launch(fixture=generate_test_description)
 def test_metacontrol_kb_get_component_configuration_performance():
     rclpy.init()
@@ -354,6 +358,37 @@ def test_metacontrol_kb_get_component_configuration_performance():
         expected_result = [1.0]
         assert all(r in result for r in expected_result) \
             and response_p.success is True
+    finally:
+        rclpy.shutdown()
+
+
+@pytest.mark.launch(fixture=generate_test_description)
+def test_metacontrol_kb_select_configuration():
+    rclpy.init()
+    try:
+        node = MakeTestNode()
+        node.start_node()
+        node.activate_metacontrol_kb()
+        node.selected_config_srv = node.create_client(
+            SelectedConfig, '/metacontrol_kb/select_configuration')
+
+        selected_config = SelectedConfig.Request()
+
+        selected_fd = SelectedFunctionDesign()
+        selected_fd.function_name = 'f_reconfigure_fd'
+        selected_fd.function_design_name = 'fd_reconfig_2'
+
+        selected_cc = SelectedComponentConfig()
+        selected_cc.component_name = 'component_reconfig_3'
+        selected_cc.component_configuration_name = 'cp_reconfig_2'
+
+        selected_config.selected_fds.append(selected_fd)
+        selected_config.selected_component_configs.append(selected_cc)
+
+        response_select_config = node.call_service(
+            node.selected_config_srv, selected_config)
+
+        assert response_select_config.success is True
     finally:
         rclpy.shutdown()
 

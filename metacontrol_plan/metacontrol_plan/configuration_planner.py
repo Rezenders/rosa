@@ -16,10 +16,14 @@ from rclpy.lifecycle import Node
 from rclpy.lifecycle import State
 from rclpy.lifecycle import TransitionCallbackReturn
 
+from metacontrol_kb_msgs.msg import SelectedComponentConfig
+from metacontrol_kb_msgs.msg import SelectedFunctionDesign
+
 from metacontrol_kb_msgs.srv import AdaptableFunctions
 from metacontrol_kb_msgs.srv import AdaptableComponents
 from metacontrol_kb_msgs.srv import GetComponentConfigPerformance
 from metacontrol_kb_msgs.srv import GetFDPerformance
+from metacontrol_kb_msgs.srv import SelectedConfig
 from metacontrol_kb_msgs.srv import SelectableComponentConfigs
 from metacontrol_kb_msgs.srv import SelectableFDs
 
@@ -61,6 +65,10 @@ class ConfigurationPlanner(Node):
             GetComponentConfigPerformance,
             '/metacontrol_kb/component_configuration/performance')
 
+        self.select_configuration_srv = self.create_client(
+            SelectedConfig,
+            '/metacontrol_kb/select_configuration')
+
         self.get_logger().info('on_configure() completed.')
         return TransitionCallbackReturn.SUCCESS
 
@@ -79,6 +87,7 @@ class ConfigurationPlanner(Node):
             # get adaptable functions
             functions = self.call_service(
                 self.function_adaptable_srv, AdaptableFunctions.Request())
+            selected_functions_fds = []
             # get feasible fds
             for function in functions.functions:
                 request = SelectableFDs.Request()
@@ -94,10 +103,16 @@ class ConfigurationPlanner(Node):
                 sorted_fds = sorted(
                     fds, key=lambda x: x.performance, reverse=True)
 
-            # TODO: get adaptable components
+                if len(sorted_fds) > 0:
+                    selected_fd = SelectedFunctionDesign()
+                    selected_fd.function_name = function
+                    selected_fd.function_design_name = sorted_fds[0]
+                    selected_functions_fds.append(selected_fd)
+
+            # get adaptable components
             components = self.call_service(
                 self.component_adaptable_srv, AdaptableComponents.Request())
-
+            selected_component_configs = []
             # get feasible component configs
             for component in components:
                 request = SelectableComponentConfigs.Request()
@@ -112,12 +127,19 @@ class ConfigurationPlanner(Node):
                     self.get_c_configs_performance_srv, request)
 
                 # sort fds
-                sorted_c_configs = sorted(
+                sorted_cc = sorted(
                     c_configs, key=lambda x: x.performance, reverse=True)
+                if len(sorted_cc) > 0:
+                    selected_cc = SelectedComponentConfig()
+                    selected_cc.component_name = component
+                    selected_cc.component_configuration_name = sorted_cc[0]
+                    selected_component_configs.append(selected_cc)
 
-            # TODO: updated kb with selected fds and component configs
-            pass
-        pass
+            selected_config = SelectedConfig.Request()
+            selected_config.selected_fds = selected_functions_fds
+            selected_config.selected_component_configs = selected_functions_fds
+            # update kb with selected fds and component configs
+            self.call_service(self.select_configuration_srv, selected_config)
 
     def call_service(self, cli, request):
         if cli.wait_for_service(timeout_sec=5.0) is False:

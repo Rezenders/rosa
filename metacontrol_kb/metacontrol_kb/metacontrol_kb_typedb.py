@@ -27,6 +27,7 @@ from metacontrol_kb_msgs.srv import AdaptableFunctions
 from metacontrol_kb_msgs.srv import AdaptableComponents
 from metacontrol_kb_msgs.srv import GetComponentConfigPerformance
 from metacontrol_kb_msgs.srv import GetFDPerformance
+from metacontrol_kb_msgs.srv import SelectedConfig
 from metacontrol_kb_msgs.srv import SelectableComponentConfigs
 from metacontrol_kb_msgs.srv import SelectableFDs
 from metacontrol_kb_msgs.srv import TaskRequest
@@ -114,6 +115,13 @@ class MetacontrolKB(ROSTypeDBInterface):
             GetComponentConfigPerformance,
             self.get_name() + '/component_configuration/performance',
             self.component_configuration_performance_cb,
+            callback_group=self.query_cb_group
+        )
+
+        self.select_configuration_service = self.create_service(
+            SelectedConfig,
+            self.get_name() + '/select_configuration',
+            self.select_configuration_cb,
             callback_group=self.query_cb_group
         )
 
@@ -218,6 +226,22 @@ class MetacontrolKB(ROSTypeDBInterface):
                 c_config.performance = p[0]
                 res.c_configs.append(c_config)
         res.success = True
+        return res
+
+    def select_configuration_cb(self, req, res):
+        _selected_fds = [
+            (selected_fd.function_name, selected_fd.function_design_name)
+            for selected_fd in req.selected_fds]
+        _selected_component_configs = [
+            (selected_cc.component_name,
+                selected_cc.component_configuration_name)
+            for selected_cc in req.selected_component_configs]
+        result = self.typedb_interface.select_configuration(
+            _selected_fds, _selected_component_configs)
+        if result is False:
+            res.success = False
+        else:
+            res.success = True
         return res
 
 
