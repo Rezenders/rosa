@@ -20,9 +20,9 @@ from datetime import datetime
 def kb_interface():
     kb_interface = ModelInterface(
         "localhost:1729",
-        "pytest_database",
+        "test_model_interface",
         "config/schema.tql",
-        "test/test_data/test_data.tql",  # TODO:better way to handle empty data
+        "test/test_data/test_data.tql",
         force_database=True,
         force_data=True)
     return kb_interface

@@ -36,12 +36,10 @@ from metacontrol_kb_msgs.srv import TasksMatched
 from metacontrol_kb.typedb_model_interface import ModelInterface
 
 from rclpy.callback_groups import MutuallyExclusiveCallbackGroup
-from rclpy.callback_groups import ReentrantCallbackGroup
 from rclpy.lifecycle import State
 from rclpy.lifecycle import TransitionCallbackReturn
 
 from ros_typedb.ros_typedb_interface import ROSTypeDBInterface
-from ros_typedb.ros_typedb_interface import set_query_result_value
 
 from diagnostic_msgs.msg import DiagnosticArray
 
@@ -166,6 +164,7 @@ class MetacontrolKB(ROSTypeDBInterface):
 
     def function_adaptable_cb(self, req, res):
         result = self.typedb_interface.get_adaptable_functions()
+        res = AdaptableFunctions.Response()
         if result is not None:
             res.success = True
             for r in result:

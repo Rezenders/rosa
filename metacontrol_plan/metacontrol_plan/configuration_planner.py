@@ -37,7 +37,7 @@ class ConfigurationPlanner(Node):
         super().__init__(node_name, **kwargs)
 
     def on_configure(self, state: State) -> TransitionCallbackReturn:
-        self.get_logger().info('on_configure() is called.')
+        self.get_logger().info(self.get_name() + ': on_configure() is called.')
 
         self.event_sub = self.create_subscription(
             String,
@@ -55,7 +55,7 @@ class ConfigurationPlanner(Node):
             SelectableFDs, '/metacontrol_kb/function_designs/selectable')
 
         self.selectable_c_configs_srv = self.create_client(
-            SelectableFDs,
+            SelectableComponentConfigs,
             '/metacontrol_kb/component_configuration/selectable')
 
         self.get_fds_performance_srv = self.create_client(
@@ -69,11 +69,11 @@ class ConfigurationPlanner(Node):
             SelectedConfig,
             '/metacontrol_kb/select_configuration')
 
-        self.get_logger().info('on_configure() completed.')
+        self.get_logger().info(self.get_name() + ': on_configure() completed.')
         return TransitionCallbackReturn.SUCCESS
 
     def on_activate(self, state: State) -> TransitionCallbackReturn:
-        self.get_logger().info("on_activate() is called.")
+        self.get_logger().info(self.get_name() + ': on_activate() is called.')
         return super().on_activate(state)
 
     def on_cleanup(self, state: State) -> TransitionCallbackReturn:
@@ -82,13 +82,13 @@ class ConfigurationPlanner(Node):
         self.get_logger().info('on_cleanup() is called.')
         return TransitionCallbackReturn.SUCCESS
 
-    def event_cb(self, msg):
-        if msg.data == 'insert':
-            # get adaptable functions
-            functions = self.call_service(
-                self.function_adaptable_srv, AdaptableFunctions.Request())
-            selected_functions_fds = []
-            # get feasible fds
+    def plan_function_adaptation(self):
+        # get adaptable functions
+        selected_functions_fds = []
+        functions = self.call_service(
+            self.function_adaptable_srv, AdaptableFunctions.Request())
+        # get feasible fds
+        if functions is not None:
             for function in functions.functions:
                 request = SelectableFDs.Request()
                 request.function = function
@@ -98,23 +98,24 @@ class ConfigurationPlanner(Node):
                 request = GetFDPerformance.Request()
                 request.fds = fds.fds
                 fds = self.call_service(self.get_fds_performance_srv, request)
-
                 # sort fds
                 sorted_fds = sorted(
-                    fds, key=lambda x: x.performance, reverse=True)
-
+                    fds.fds, key=lambda x: x.performance, reverse=True)
                 if len(sorted_fds) > 0:
                     selected_fd = SelectedFunctionDesign()
-                    selected_fd.function_name = function
-                    selected_fd.function_design_name = sorted_fds[0]
+                    selected_fd.function_name = function.name
+                    selected_fd.function_design_name = sorted_fds[0].name
                     selected_functions_fds.append(selected_fd)
+        return selected_functions_fds
 
-            # get adaptable components
-            components = self.call_service(
-                self.component_adaptable_srv, AdaptableComponents.Request())
-            selected_component_configs = []
-            # get feasible component configs
-            for component in components:
+    def plan_component_adaptation(self):
+        # get adaptable components
+        selected_component_configs = []
+        components = self.call_service(
+            self.component_adaptable_srv, AdaptableComponents.Request())
+        # get feasible component configs
+        if components is not None:
+            for component in components.components:
                 request = SelectableComponentConfigs.Request()
                 request.component = component
                 c_configs = self.call_service(
@@ -128,16 +129,32 @@ class ConfigurationPlanner(Node):
 
                 # sort fds
                 sorted_cc = sorted(
-                    c_configs, key=lambda x: x.performance, reverse=True)
+                    c_configs.c_configs,
+                    key=lambda x: x.performance,
+                    reverse=True
+                )
                 if len(sorted_cc) > 0:
                     selected_cc = SelectedComponentConfig()
-                    selected_cc.component_name = component
-                    selected_cc.component_configuration_name = sorted_cc[0]
+                    selected_cc.component_name = component.name
+                    selected_cc.component_configuration_name = \
+                        sorted_cc[0].name
                     selected_component_configs.append(selected_cc)
 
-            selected_config = SelectedConfig.Request()
-            selected_config.selected_fds = selected_functions_fds
-            selected_config.selected_component_configs = selected_functions_fds
+        return selected_component_configs
+
+    def plan_adaptation(self):
+        selected_functions_fds = self.plan_function_adaptation()
+        selected_component_configs = self.plan_component_adaptation()
+
+        selected_config = SelectedConfig.Request()
+        selected_config.selected_fds = selected_functions_fds
+        selected_config.selected_component_configs = \
+            selected_component_configs
+        return selected_config
+
+    def event_cb(self, msg):
+        if msg.data == 'insert':
+            selected_config = self.plan_adaptation()
             # update kb with selected fds and component configs
             self.call_service(self.select_configuration_srv, selected_config)
 
@@ -152,3 +169,4 @@ class ConfigurationPlanner(Node):
             self.get_logger().error(
                 'Future not completed {}'.format(cli.srv_name))
             return None
+        return future.result()
