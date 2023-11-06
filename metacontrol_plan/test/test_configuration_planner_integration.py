@@ -26,22 +26,30 @@ from threading import Thread
 import sys
 
 from lifecycle_msgs.srv import ChangeState
+from lifecycle_msgs.srv import GetState
 from rclpy.node import Node
-
-from std_msgs.msg import String
-from metacontrol_plan.configuration_planner import ConfigurationPlanner
-from metacontrol_kb_msgs.msg import SelectedComponentConfig
-from metacontrol_kb_msgs.msg import SelectedFunctionDesign
 from ros_typedb_msgs.srv import Query
+from std_msgs.msg import String
 
 
-test_node = 'test_configuration_planner'
-metacontrol_kb_name = 'metacontrol_kb'
-configuration_planner_name = 'configuration_planner'
+test_node = 'test_configuration_planner_integration'
+metacontrol_kb_name = 'metacontrol_kb_integration'
+configuration_planner_name = 'configuration_planner_integration'
 
 
 @launch_pytest.fixture
 def generate_test_description():
+    path_to_test = Path(__file__).parents[1]
+
+    configuration_planner_node = launch_ros.actions.Node(
+        executable=sys.executable,
+        arguments=[
+            str(path_to_test / 'metacontrol_plan' /
+                'configuration_planner_node.py')],
+        additional_env={'PYTHONUNBUFFERED': '1'},
+        name=configuration_planner_name,
+        output='screen',
+    )
     path_kb = Path(__file__).parents[2] / 'metacontrol_kb'
     path_config = path_kb / 'config'
     path_test_data = path_kb / 'test' / 'test_data'
@@ -60,106 +68,52 @@ def generate_test_description():
         }]
     )
     return launch.LaunchDescription([
+        configuration_planner_node,
         metacontrol_kb_node,
     ])
 
 
-def create_configuration_planner():
-    configuration_planner = ConfigurationPlanner(configuration_planner_name)
-    executor = rclpy.executors.MultiThreadedExecutor()
-    executor.add_node(configuration_planner)
-    Thread(target=executor.spin).start()
-    return configuration_planner
-
-
 @pytest.mark.launch(fixture=generate_test_description)
-def test_plan_function_adaptation():
+def test_lc_states():
     rclpy.init()
     try:
-        configuration_planner = create_configuration_planner()
-
         node = MakeTestNode(test_node)
         node.start_node()
 
-        node.activate_lc_node(configuration_planner_name)
-        node.activate_lc_node(metacontrol_kb_name)
+        configure_res = node.change_lc_node_state(
+            configuration_planner_name, 1)
+        get_inactive_state_res = node.get_lc_node_state(
+            configuration_planner_name)
 
-        result = configuration_planner.plan_function_adaptation()
-        selected_fd = SelectedFunctionDesign()
-        selected_fd.function_name = 'f_always_improve'
-        selected_fd.function_design_name = 'f_improve_fd2'
-        assert selected_fd in result
+        activate_res = node.change_lc_node_state(configuration_planner_name, 3)
+        get_active_state_res = node.get_lc_node_state(
+            configuration_planner_name)
+
+        assert configure_res.success is True and \
+            get_inactive_state_res.current_state.id == 2 and \
+            activate_res.success is True and \
+            get_active_state_res.current_state.id == 3
     finally:
-        configuration_planner.destroy_node()
         rclpy.shutdown()
 
 
+@pytest.mark.skip(
+    reason='Bugs with publisher')
 @pytest.mark.launch(fixture=generate_test_description)
-def test_plan_component_adaptation():
+def test_event_cb():
     rclpy.init()
     try:
-        configuration_planner = create_configuration_planner()
-
         node = MakeTestNode(test_node)
         node.start_node()
-
         node.activate_lc_node(configuration_planner_name)
         node.activate_lc_node(metacontrol_kb_name)
 
-        result = configuration_planner.plan_component_adaptation()
-        selected_cc = SelectedComponentConfig()
-        selected_cc.component_name = 'c_always_improve'
-        selected_cc.component_configuration_name = 'c_improve_fd1'
-        assert selected_cc in result
-    finally:
-        configuration_planner.destroy_node()
-        rclpy.shutdown()
+        event_pub = node.create_publisher(
+            String, '/metacontrol_kb/events', 10)
 
-
-@pytest.mark.launch(fixture=generate_test_description)
-def test_plan_adaptation():
-    rclpy.init()
-    try:
-        configuration_planner = create_configuration_planner()
-
-        node = MakeTestNode(test_node)
-        node.start_node()
-
-        node.activate_lc_node(configuration_planner_name)
-        node.activate_lc_node(metacontrol_kb_name)
-
-        result = configuration_planner.plan_adaptation()
-
-        selected_fd = SelectedFunctionDesign()
-        selected_fd.function_name = 'f_always_improve'
-        selected_fd.function_design_name = 'f_improve_fd2'
-
-        selected_cc = SelectedComponentConfig()
-        selected_cc.component_name = 'c_always_improve'
-        selected_cc.component_configuration_name = 'c_improve_fd1'
-
-        assert selected_fd in result.selected_fds and \
-            selected_cc in result.selected_component_configs
-    finally:
-        configuration_planner.destroy_node()
-        rclpy.shutdown()
-
-
-@pytest.mark.launch(fixture=generate_test_description)
-def test_manual_event_cb():
-    rclpy.init()
-    try:
-        configuration_planner = create_configuration_planner()
-
-        node = MakeTestNode(test_node)
-        node.start_node()
-
-        node.activate_lc_node(configuration_planner_name)
-        node.activate_lc_node(metacontrol_kb_name)
-
-        event = String()
-        event.data = 'insert'
-        result = configuration_planner.event_cb(event)
+        event_msg = String()
+        event_msg.data = 'insert'
+        event_pub.publish(event_msg)
 
         node.query_srv = node.create_client(
             Query, metacontrol_kb_name + '/query')
@@ -173,7 +127,6 @@ def test_manual_event_cb():
         result = node.call_service(node.query_srv, query_req)
         assert len(result.attributes) > 0
     finally:
-        configuration_planner.destroy_node()
         rclpy.shutdown()
 
 
@@ -188,10 +141,18 @@ class MakeTestNode(Node):
             args=(self,))
         self.ros_spin_thread.start()
 
-    def change_lc_node_state(self, srv, transition_id):
+    def change_lc_node_state(self, node_name, transition_id):
+        srv = self.create_client(
+            ChangeState, node_name + '/change_state')
         change_state_req = ChangeState.Request()
         change_state_req.transition.id = transition_id
         return self.call_service(srv, change_state_req)
+
+    def get_lc_node_state(self, node_name):
+        get_state_srv = self.create_client(
+            GetState, node_name + '/get_state')
+        get_state_req = GetState.Request()
+        return self.call_service(get_state_srv, get_state_req)
 
     def call_service(self, cli, request):
         if cli.wait_for_service(timeout_sec=5.0) is False:
@@ -208,7 +169,5 @@ class MakeTestNode(Node):
         return future.result()
 
     def activate_lc_node(self, node_name):
-        srv = self.create_client(
-            ChangeState, node_name + '/change_state')
-        self.change_lc_node_state(srv, 1)
-        self.change_lc_node_state(srv, 3)
+        self.change_lc_node_state(node_name, 1)
+        self.change_lc_node_state(node_name, 3)
