@@ -267,6 +267,8 @@ class MetacontrolKB(ROSTypeDBInterface):
                 _c_config = ComponentConfig()
                 _c_config.name = c_config
                 res.reconfig_plan.component_configurations.append(_c_config)
+            res.reconfig_plan.start_time = reconfig_plan_dict['start-time']\
+                .isoformat(timespec='milliseconds')
             res.success = True
         else:
             res.success = False

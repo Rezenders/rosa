@@ -1,3 +1,4 @@
+string start_time
 metacontrol_kb_msgs/Component[] components_activate
 metacontrol_kb_msgs/Component[] components_deactivate
 metacontrol_kb_msgs/ComponentConfig[] component_configurations

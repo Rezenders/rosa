@@ -433,7 +433,8 @@ def test_metacontrol_kb_get_reconfiguration_plan():
         _cc.name = 'cp_reconfig_2'
         assert reconfig_plan.success is True \
             and _c in reconfig_plan.reconfig_plan.components_activate \
-            and _cc in reconfig_plan.reconfig_plan.component_configurations
+            and _cc in reconfig_plan.reconfig_plan.component_configurations \
+            and reconfig_plan.reconfig_plan.start_time != ''
     finally:
         rclpy.shutdown()
 
