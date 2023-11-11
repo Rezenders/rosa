@@ -64,7 +64,7 @@ def generate_test_description():
     metacontrol_kb_node = launch_ros.actions.Node(
         executable=sys.executable,
         arguments=[
-            str(path_to_pkg / 'metacontrol_kb' / 'metacontrol_kb_typedb.py')],
+            str(path_to_pkg / 'metacontrol_kb' / 'metacontrol_kb_node.py')],
         additional_env={'PYTHONUNBUFFERED': '1'},
         name='metacontrol_kb',
         output='screen',

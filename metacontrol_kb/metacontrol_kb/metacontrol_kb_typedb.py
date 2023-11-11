@@ -11,12 +11,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-import os
-import rclpy
-import traceback
-
-from ament_index_python.packages import get_package_share_directory
-
 from metacontrol_kb_msgs.msg import Task
 from metacontrol_kb_msgs.msg import Component
 from metacontrol_kb_msgs.msg import ComponentConfig
@@ -273,32 +267,3 @@ class MetacontrolKB(ROSTypeDBInterface):
         else:
             res.success = False
         return res
-
-
-def main():
-    rclpy.init()
-    traceback_logger = rclpy.logging.get_logger(
-        'metacontrol_kb_traceback_logger')
-
-    pkg_metacontrol_kb = get_package_share_directory('metacontrol_kb')
-    schema_path = os.path.join(pkg_metacontrol_kb, 'config', 'schema.tql')
-    # TODO: data_path should not be hardcoded
-    data_path = os.path.join(pkg_metacontrol_kb, 'config', 'suave.tql')
-
-    lc_node = MetacontrolKB('metacontrol_kb', schema_path, data_path)
-
-    executor = rclpy.executors.MultiThreadedExecutor()
-    executor.add_node(lc_node)
-    try:
-        executor.spin()
-    except (KeyboardInterrupt, rclpy.executors.ExternalShutdownException):
-        pass
-    except Exception as exception:
-        traceback_logger.error(traceback.format_exc())
-        raise exception
-    finally:
-        lc_node.destroy_node()
-
-
-if __name__ == '__main__':
-    main()
