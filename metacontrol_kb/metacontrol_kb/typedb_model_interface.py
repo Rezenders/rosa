@@ -17,13 +17,7 @@ from datetime import datetime
 
 class ModelInterface(TypeDBInterface):
     def __init__(self, address, database_name, schema_path, data_path=None,
-                 force_database=False, force_data=False,
-                 function_designs_ordering_funcs=dict(),
-                 default_function_design_ordering_func=
-                 'get_function_design_higher_performance',
-                 component_configuration_ordering_funcs=dict(),
-                 default_component_configuration_ordering_func=
-                 'get_component_configuration_higher_performance'):
+                 force_database=False, force_data=False):
 
         super().__init__(
             address,
@@ -33,20 +27,6 @@ class ModelInterface(TypeDBInterface):
             force_database,
             force_data
         )
-
-        # TODO: I am not sure I like this anymore
-        self.function_designs_ordering_funcs = \
-            function_designs_ordering_funcs
-        self.default_function_design_ordering_func = \
-            default_function_design_ordering_func
-
-        self.component_configuration_ordering_funcs = \
-            component_configuration_ordering_funcs
-        self.default_component_configuration_ordering_func = \
-            default_component_configuration_ordering_func
-
-        # self.component_ordering_funcs = component_ordering_funcs
-        # self.default_component_ordering_func = default_component_ordering_func
 
     # Request task
     def request_task(self, task_name):
@@ -274,74 +254,6 @@ class ModelInterface(TypeDBInterface):
             'component-configuration-name',
             cc,
             'performance')
-
-    def get_function_design_higher_performance(self, function_name):
-        query = f'''
-            match
-                $f isa Function, has function-name "{function_name}";
-                $fd (function: $f) isa function-design,
-                    has function-design-name $fd-name,
-                    has performance $fd-performance;
-                not {{
-                    $fd has function-design-status 'unfeasible';
-                }};
-                get $fd-name, $fd-performance;
-                sort $fd-performance desc; limit 1;
-        '''
-        return self.match_database(query)
-
-    def get_best_function_design_raw(self, function_name):
-        _func = None
-        if function_name in self.function_designs_ordering_funcs:
-            _func = getattr(
-                self, self.function_designs_ordering_funcs[function_name])
-        else:
-            _func = getattr(self, self.default_function_design_ordering_func)
-
-        return _func(function_name)
-
-    def get_best_function_design(self, function_name):
-        query_result = self.get_best_function_design_raw(function_name)
-        if len(query_result) == 0:
-            return None
-        else:
-            return query_result[0].get('fd-name').get('value')
-
-    def get_component_configuration_higher_performance(self, c_name):
-        query = f'''
-            match
-                $component isa Component, has component-name "{c_name}";
-                $component-configuration (component: $component)
-                    isa component-configuration,
-                    has performance $conf-performance,
-                    has component-configuration-name $conf-name;
-                not {{
-                    $component-configuration
-                        has component-configuration-status 'unfeasible';
-                }};
-                get $conf-name, $conf-performance;
-                sort $conf-performance desc; limit 1;
-        '''
-        return self.match_database(query)
-
-    def get_best_component_configuration_raw(self, component_name):
-        _func = None
-        if component_name in self.component_configuration_ordering_funcs:
-            _func = getattr(
-                self,
-                self.component_configuration_ordering_funcs[component_name])
-        else:
-            _func = getattr(
-                self, self.default_component_configuration_ordering_func)
-
-        return _func(component_name)
-
-    def get_best_component_configuration(self, function_name):
-        query_result = self.get_best_component_configuration_raw(function_name)
-        if len(query_result) == 0:
-            return None
-        else:
-            return query_result[0].get("conf-name").get('value')
 
     # toogle fd and component config selection
     def toogle_thing_selection(self, thing, name, value):

@@ -76,22 +76,6 @@ def test_get_selectable_tasks(kb_interface):
     assert ('task_unfeasible' not in result) \
            and all(r in result for r in expected_result)
 
-# TODO: is this needed?
-# @pytest.mark.parametrize("task_name, expected_result", [
-#     ('task_required', True),
-#     ('task_required_solved', False),
-#     ('task_not_required', False),
-#     ('task_required_empty', False),
-# ])
-# def test_get_tasks_not_solved(kb_interface, task_name, expected_result):
-#     unsolved = kb_interface.get_required_tasks_not_solved()
-#     assert (task_name in unsolved) is expected_result
-
-# TODO: test_get_required_unsolved_tasks (if it is used)
-
-
-# def test_has_tasks_not_solved(kb_interface):
-#     assert kb_interface.has_required_tasks_not_solved() is True
 
 def test_get_unsolved_functions(kb_interface):
     kb_interface.request_task('task1')
@@ -116,16 +100,6 @@ def test_update_measurement_attribute(kb_interface):
     kb_interface.update_measured_attribute('ea_measurement', 1.32)
     measured_value = kb_interface.get_measured_attribute('ea_measurement')
     assert value == measured_value
-
-
-def test_get_function_design_higher_performance(kb_interface):
-    fd = kb_interface.get_function_design_higher_performance('function2')
-    assert fd[0].get("fd-name").get('value') == 'f2_fd1_c2_c3'
-
-
-def test_get_best_function_design(kb_interface):
-    fd = kb_interface.get_best_function_design('function2')
-    assert fd == 'f2_fd1_c2_c3'
 
 
 def test_toogle_function_design_selection(kb_interface):
@@ -167,18 +141,6 @@ def test_select_function_design(kb_interface):
 
     assert fd1_selected[0] is True and fd1_not_selected[0] is False \
            and fd2_selected[0] is True
-
-
-def test_get_component_configuration_higher_performance(kb_interface):
-    config = kb_interface.get_component_configuration_higher_performance(
-        'component1')
-    assert config[0].get("conf-name").get('value') == 'high param'
-
-
-def test_get_best_component_configuration(kb_interface):
-    config = kb_interface.get_best_component_configuration(
-        'component1')
-    assert config == 'high param'
 
 
 def test_select_component_configuration(kb_interface):
