@@ -26,6 +26,7 @@ from metacontrol_kb_msgs.msg import FunctionDesign
 from metacontrol_kb_msgs.srv import AdaptableFunctions
 from metacontrol_kb_msgs.srv import AdaptableComponents
 from metacontrol_kb_msgs.srv import GetComponentConfigPerformance
+from metacontrol_kb_msgs.srv import GetReconfigurationPlan
 from metacontrol_kb_msgs.srv import GetFDPerformance
 from metacontrol_kb_msgs.srv import SelectedConfig
 from metacontrol_kb_msgs.srv import SelectableComponentConfigs
@@ -120,6 +121,13 @@ class MetacontrolKB(ROSTypeDBInterface):
             SelectedConfig,
             self.get_name() + '/select_configuration',
             self.select_configuration_cb,
+            callback_group=self.query_cb_group
+        )
+
+        self.get_reconfiguration_plan_service = self.create_service(
+            GetReconfigurationPlan,
+            self.get_name() + '/reconfiguration_plan/get',
+            self.get_reconfiguration_plan_cb,
             callback_group=self.query_cb_group
         )
 
@@ -241,6 +249,27 @@ class MetacontrolKB(ROSTypeDBInterface):
             res.success = False
         else:
             res.success = True
+        return res
+
+    def get_reconfiguration_plan_cb(self, req, res):
+        reconfig_plan_dict = \
+            self.typedb_interface.get_latest_pending_reconfiguration_plan()
+        if reconfig_plan_dict is not False:
+            for c_activate in reconfig_plan_dict['c_activate']:
+                _component = Component()
+                _component.name = c_activate
+                res.reconfig_plan.components_activate.append(_component)
+            for c_deactivate in reconfig_plan_dict['c_deactivate']:
+                _component = Component()
+                _component.name = c_deactivate
+                res.reconfig_plan.components_deactivate.append(_component)
+            for c_config in reconfig_plan_dict['c_config']:
+                _c_config = ComponentConfig()
+                _c_config.name = c_config
+                res.reconfig_plan.component_configurations.append(_c_config)
+            res.success = True
+        else:
+            res.success = False
         return res
 
 
