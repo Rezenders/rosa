@@ -22,15 +22,26 @@ import pytest
 import sys
 
 from ros_pytest.fixture import tester_node
-from metacontrol_execute.executor import Executor
 
-test_node = 'test_executor'
-metacontrol_kb_name = 'metacontrol_kb_executor'
-tested_node = 'executor'
+
+test_node = 'test_executor_integration'
+tested_node = 'executor_integration'
+metacontrol_kb_name = 'metacontrol_kb_executor_integration'
 
 
 @launch_pytest.fixture
 def generate_test_description():
+    path_to_test = Path(__file__).parents[1]
+
+    executor_node = launch_ros.actions.Node(
+        executable=sys.executable,
+        arguments=[
+            str(path_to_test / 'metacontrol_execute' /
+                'executor_node.py')],
+        additional_env={'PYTHONUNBUFFERED': '1'},
+        name=tested_node,
+        output='screen',
+    )
     path_kb = Path(__file__).parents[2] / 'metacontrol_kb'
     path_config = path_kb / 'config'
     path_test_data = path_kb / 'test' / 'test_data'
@@ -49,20 +60,18 @@ def generate_test_description():
         }]
     )
     return launch.LaunchDescription([
+        executor_node,
         metacontrol_kb_node,
     ])
 
 
-@pytest.fixture()
+@pytest.mark.launch(fixture=generate_test_description)
 @pytest.mark.usefixtures(fixture=tester_node)
-def executor_node(tester_node):
-    node = Executor(tested_node)
-    tester_node.start_node(node)
-    tester_node.lc_configure_activate(tested_node)
-    tester_node.lc_configure_activate(metacontrol_kb_name)
-    yield node
+def test_lc_configure(tester_node):
+    assert tester_node.lc_configure(tested_node)
 
 
 @pytest.mark.launch(fixture=generate_test_description)
-def test_start_ros_node(executor_node):
-    assert True
+@pytest.mark.usefixtures(fixture=tester_node)
+def test_lc_configure_activate(tester_node):
+    assert tester_node.lc_configure_activate(tested_node)
