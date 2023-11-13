@@ -18,6 +18,9 @@ from rclpy.lifecycle import TransitionCallbackReturn
 from std_msgs.msg import String
 from metacontrol_kb_msgs.srv import GetReconfigurationPlan
 
+import subprocess
+import shlex
+
 
 class Executor(Node):
     """Executor."""
@@ -50,15 +53,6 @@ class Executor(Node):
         self.get_logger().info('on_cleanup() is called.')
         return TransitionCallbackReturn.SUCCESS
 
-    def deactivate_components(self, components):
-        pass
-
-    def activate_components(self, components):
-        pass
-
-    def update_component_params(self, configurations):
-        pass
-
     def event_cb(self, msg):
         if msg.data == 'insert':
             reconfig_plan = self.call_service(
@@ -85,3 +79,32 @@ class Executor(Node):
                 'Future not completed {}'.format(cli.srv_name))
             return None
         return future.result()
+
+    def deactivate_components(self, components):
+        pass
+
+    def activate_components(self, components):
+        pass
+
+    def update_component_params(self, configurations):
+        pass
+
+    def start_ros_node(self, node_dict):
+        cmd = 'ros2 run '
+        if 'package' in node_dict and 'executable' in node_dict:
+            cmd += node_dict['package'] + ' '
+            cmd += node_dict['executable']
+            if 'name' in node_dict or 'parameters' in node_dict:
+                cmd += ' --ros-args '
+                if 'name' in node_dict:
+                    cmd += ' -r __node:=' + node_dict['name']
+                if 'parameters' in node_dict:
+                    for param in node_dict['parameters']:
+                        for key, value in param.items():
+                            cmd += ' -r ' + str(key) + ':=' + str(value)
+            return subprocess.Popen(shlex.split(cmd))
+        else:
+            return False
+
+    def start_ros_launchfile(self, launch_dict, **kwargs):
+        pass
