@@ -102,9 +102,43 @@ class Executor(Node):
                     for param in node_dict['parameters']:
                         for key, value in param.items():
                             cmd += ' -r ' + str(key) + ':=' + str(value)
-            return subprocess.Popen(shlex.split(cmd))
+            return self.run_process(cmd, 'start_ros_node', node_dict)
         else:
             return False
 
     def start_ros_launchfile(self, launch_dict, **kwargs):
-        pass
+        cmd = 'ros2 launch '
+        if 'package' in launch_dict and 'launch_file' in launch_dict:
+            cmd += launch_dict['package'] + ' '
+            cmd += launch_dict['launch_file']
+            if 'parameters' in launch_dict:
+                if 'parameters' in launch_dict:
+                    for param in launch_dict['parameters']:
+                        for key, value in param.items():
+                            cmd += ' ' + str(key) + ':=' + str(value)
+            return self.run_process(cmd, 'start_ros_launchfile', launch_dict)
+        else:
+            return False
+
+    def run_process(self, cmd, _func, _dict):
+        try:
+            process = subprocess.Popen(
+                shlex.split(cmd),
+                stderr=subprocess.PIPE
+            )
+            try:
+                outs, errs = process.communicate(timeout=.5)
+                self.get_logger().error(f'''
+                    {_func} failed!
+                    input _dict: {_dict}
+                    resulting erros: {errs}''')
+                return False
+            except subprocess.TimeoutExpired:
+                return process
+            # return process
+        except Exception as e:
+            self.get_logger().error(f'''
+                {_func} failed!
+                input _dict: {_dict}
+                raised exception: {e}''')
+            return False

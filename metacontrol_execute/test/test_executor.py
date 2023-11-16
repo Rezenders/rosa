@@ -15,7 +15,7 @@ import rclpy
 
 from metacontrol_execute.executor import Executor
 
-tested_node = 'executor'
+tested_node = 'executor_tested'
 
 
 def test_start_ros_node():
@@ -24,12 +24,29 @@ def test_start_ros_node():
         node_dict = {
             'package': 'metacontrol_execute',
             'executable': 'executor',
-            'name': 'executor_test',
+            'name': 'executor_mock',
             'parameters': [{'test': 'test'}],
         }
         executor_node = Executor(tested_node)
         process = executor_node.start_ros_node(node_dict)
-        assert process.poll() is None
+        assert process is not False and process.poll() is None
     finally:
+        process.terminate()
+        process.wait()
+
+
+def test_start_ros_launchfile():
+    rclpy.init()
+    try:
+        node_dict = {
+            'package': 'metacontrol_execute',
+            'launch_file': 'executor.launch.py',
+            'parameters': [{'test': 'test'}],
+        }
+        executor_node = Executor(tested_node)
+        process = executor_node.start_ros_launchfile(node_dict)
+        assert process is not False and process.poll() is None
+    finally:
+        pass
         process.terminate()
         process.wait()
