@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import rclpy
+import os
+import signal
 
 from metacontrol_execute.executor import Executor
 
@@ -21,18 +23,22 @@ tested_node = 'executor_tested'
 def test_start_ros_node():
     rclpy.init()
     try:
+        node_name = 'executor_mock'
         node_dict = {
             'package': 'metacontrol_execute',
             'executable': 'executor',
-            'name': 'executor_mock',
+            'name': node_name,
             'parameters': [{'test': 'test'}],
         }
         executor_node = Executor(tested_node)
         process = executor_node.start_ros_node(node_dict)
-        assert process is not False and process.poll() is None
+        assert process is not False and process.poll() is None and \
+            node_name in executor_node.get_node_names()
     finally:
-        process.terminate()
+        os.killpg(os.getpgid(process.pid), signal.SIGTERM)
+        process.kill()
         process.wait()
+        rclpy.shutdown()
 
 
 def test_start_ros_launchfile():
@@ -45,8 +51,10 @@ def test_start_ros_launchfile():
         }
         executor_node = Executor(tested_node)
         process = executor_node.start_ros_launchfile(node_dict)
-        assert process is not False and process.poll() is None
+        assert process is not False and process.poll() is None and \
+            'executor' in executor_node.get_node_names()
     finally:
-        pass
-        process.terminate()
+        os.killpg(os.getpgid(process.pid), signal.SIGTERM)
+        process.kill()
         process.wait()
+        rclpy.shutdown()

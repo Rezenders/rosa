@@ -11,15 +11,16 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+import os
+import subprocess
+import shlex
+
 from rclpy.lifecycle import Node
 from rclpy.lifecycle import State
 from rclpy.lifecycle import TransitionCallbackReturn
 
 from std_msgs.msg import String
 from metacontrol_kb_msgs.srv import GetReconfigurationPlan
-
-import subprocess
-import shlex
 
 
 class Executor(Node):
@@ -124,7 +125,9 @@ class Executor(Node):
         try:
             process = subprocess.Popen(
                 shlex.split(cmd),
-                stderr=subprocess.PIPE
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                preexec_fn=os.setsid,
             )
             try:
                 outs, errs = process.communicate(timeout=.5)
@@ -135,7 +138,6 @@ class Executor(Node):
                 return False
             except subprocess.TimeoutExpired:
                 return process
-            # return process
         except Exception as e:
             self.get_logger().error(f'''
                 {_func} failed!
