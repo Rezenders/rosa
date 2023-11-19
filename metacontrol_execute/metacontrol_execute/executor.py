@@ -19,8 +19,29 @@ from rclpy.lifecycle import Node
 from rclpy.lifecycle import State
 from rclpy.lifecycle import TransitionCallbackReturn
 
+from lifecycle_msgs.srv import ChangeState
+from lifecycle_msgs.srv import GetState
+
 from std_msgs.msg import String
 from metacontrol_kb_msgs.srv import GetReconfigurationPlan
+
+
+def get_parameter_value(param_value):
+    _param_type = {
+        1: 'bool_value',
+        2: 'integer_value',
+        3: 'double_value',
+        4: 'string_value',
+        5: 'byte_array_value',
+        6: 'bool_array_value',
+        7: 'integer_array_value',
+        8: 'double_array_value',
+        9: 'string_array_value',
+    }
+    value = None
+    if param_value.type != 0:
+        value = getattr(param_value, _param_type[param_value.type])
+    return value
 
 
 class Executor(Node):
@@ -68,6 +89,19 @@ class Executor(Node):
                 and result_update
             # TODO: update reconfig plan result
 
+    def change_lc_node_state(self, node_name, transition_id):
+        srv = self.create_client(
+            ChangeState, node_name + '/change_state')
+        change_state_req = ChangeState.Request()
+        change_state_req.transition.id = transition_id
+        return self.call_service(srv, change_state_req)
+
+    def get_lc_node_state(self, node_name):
+        get_state_srv = self.create_client(
+            GetState, node_name + '/get_state')
+        get_state_req = GetState.Request()
+        return self.call_service(get_state_srv, get_state_req)
+
     def call_service(self, cli, request):
         if cli.wait_for_service(timeout_sec=5.0) is False:
             self.get_logger().error(
@@ -85,7 +119,37 @@ class Executor(Node):
         pass
 
     def activate_components(self, components):
-        pass
+        return_value = True
+        for component in components:
+            if component.name not in self.get_node_names():
+                parameters = []
+                for parameter in component.parameters:
+                    _param_value = get_parameter_value(parameter.value)
+                    if _param_value is not None:
+                        parameters.append({parameter.name: _param_value})
+                node_dict = {
+                    'package': component.package,
+                    'executable': component.executable,
+                    'name': component.name,
+                    'parameters': parameters,
+                }
+                result_start = self.start_ros_node(node_dict)
+                if result_start is False:
+                    return_value = False
+            if component.node_type == 'lifecycle' and \
+               component.name in self.get_node_names():
+                _state = self.get_lc_node_state(component.name)
+                if _state.current_state.id == 1:
+                    self.change_lc_node_state(component.name, 1)
+                _state = self.get_lc_node_state(component.name)
+                if _state._state.current_state.id == 2:
+                    self.change_lc_node_state(component.name, 3)
+                _state = self.get_lc_node_state(component.name)
+                if _state._state.current_state.id != 3:
+                    return_value = False
+        # TODO: set attribute in the component to indicate if it is running
+        # and in which state it is (in case of LC nodes)
+        return return_value
 
     def update_component_params(self, configurations):
         pass
