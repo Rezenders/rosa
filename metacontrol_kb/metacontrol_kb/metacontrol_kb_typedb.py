@@ -286,7 +286,7 @@ class MetacontrolKB(ROSTypeDBInterface):
     def set_component_active_cb(self, req, res):
         result = self.typedb_interface.activate_component(
             req.component.name, req.component.is_active)
-        if result is not None:
+        if result is not None and result is not False:
             res.success = True
             res.component = req.component
             res.component.is_active = req.component.is_active
