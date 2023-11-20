@@ -315,7 +315,6 @@ class ModelInterface(TypeDBInterface):
             'is-active')
         if len(is_activated) > 0 and is_activated[0] is value:
             return None
-        print('set {} to value {} '.format(name, value))
         return self.update_attribute_in_thing(
             thing,
             '{}-name'.format(thing.lower()),
@@ -325,6 +324,17 @@ class ModelInterface(TypeDBInterface):
 
     def activate_component(self, c_name, value):
         return self.toogle_thing_activation('Component', c_name, value)
+
+    def is_component_active(self, name):
+        is_activated = self.get_attribute_from_thing(
+            'Component',
+            'component-name',
+            name,
+            'is-active')
+        if len(is_activated) > 0:
+            return is_activated[0]
+        else:
+            return False
 
     def activate_component_configuration(self, c_name, cc_name, value):
         if value is True:
