@@ -15,6 +15,9 @@ import os
 import subprocess
 import shlex
 
+from rclpy.callback_groups import MutuallyExclusiveCallbackGroup
+from rclpy.callback_groups import ReentrantCallbackGroup
+
 from rclpy.lifecycle import Node
 from rclpy.lifecycle import State
 from rclpy.lifecycle import TransitionCallbackReturn
@@ -23,6 +26,7 @@ from lifecycle_msgs.srv import ChangeState
 from lifecycle_msgs.srv import GetState
 
 from std_msgs.msg import String
+from metacontrol_kb_msgs.srv import ComponentQuery
 from metacontrol_kb_msgs.srv import GetReconfigurationPlan
 
 
@@ -58,10 +62,20 @@ class Executor(Node):
             String,
             '/metacontrol_kb/events',
             self.event_cb,
-            10)
+            10,
+            callback_group=MutuallyExclusiveCallbackGroup())
 
         self.get_reconfig_plan_srv = self.create_client(
-            GetReconfigurationPlan, '/metacontrol_kb/reconfiguration_plan/get')
+            GetReconfigurationPlan,
+            '/metacontrol_kb/reconfiguration_plan/get',
+            callback_group=MutuallyExclusiveCallbackGroup()
+        )
+
+        self.set_component_active_srv = self.create_client(
+            ComponentQuery,
+            '/metacontrol_kb/component/active/set',
+            callback_group=MutuallyExclusiveCallbackGroup(),
+        )
 
         self.get_logger().info(self.get_name() + ': on_configure() completed.')
         return TransitionCallbackReturn.SUCCESS
@@ -109,8 +123,8 @@ class Executor(Node):
                 'service not available {}'.format(cli.srv_name))
             return None
         future = cli.call_async(request)
-        if self.executor.spin_until_future_complete(
-                future, timeout_sec=5.0) is False:
+        self.executor.spin_until_future_complete(future, timeout_sec=5.0)
+        if future.done() is False:
             self.get_logger().error(
                 'Future not completed {}'.format(cli.srv_name))
             return None
@@ -150,9 +164,24 @@ class Executor(Node):
                 _state = self.get_lc_node_state(component.name)
                 if _state.current_state.id != 3:
                     return_value = False
-        # TODO: set attribute in the component to indicate if it is running
-        # and in which state it is (in case of LC nodes)
+            if return_value is True:
+                result_activate = self.set_component_active(component, True)
+                if result_activate.success is not True:
+                    return_value = False
+        # TODO: set attribute in the component to indicate which state it is
+        # in case of LC nodes
         return return_value
+
+    def set_component_active(self, component, is_active):
+        _ca = ComponentQuery.Request()
+        _ca.component = component
+        _ca.component.is_active = is_active
+        result = self.call_service(self.set_component_active_srv, _ca)
+        if result.success is not True:
+            self.get_logger().error(
+                'error seting component {0} to active {1} in the KB'.format(
+                    component.name, is_active))
+        return result
 
     def update_component_params(self, configurations):
         pass

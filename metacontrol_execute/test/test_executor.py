@@ -13,6 +13,12 @@
 # limitations under the License.
 import os
 import signal
+import sys
+from pathlib import Path
+
+import launch
+import launch_pytest
+import launch_ros
 
 import pytest
 from ros_pytest.fixture import tester_node
@@ -20,16 +26,50 @@ from ros_pytest.fixture import tester_node
 from metacontrol_execute.executor import Executor
 
 from metacontrol_kb_msgs.msg import Component
+from metacontrol_kb_msgs.srv import ComponentQuery
 from rcl_interfaces.msg import Parameter
 
-tested_node = 'executor_tested'
+executor_node_name = 'executor_tested'
+metacontrol_kb_name = 'metacontrol_kb'
+
+
+@launch_pytest.fixture
+def generate_test_description():
+    path_execute_test_data = Path(__file__).parents[0] / 'test_data'
+    path_kb = Path(__file__).parents[2] / 'metacontrol_kb'
+    path_config = path_kb / 'config'
+    path_test_data = path_kb / 'test' / 'test_data'
+
+    metacontrol_kb_node = launch_ros.actions.Node(
+        executable=sys.executable,
+        arguments=[
+            str(path_kb / 'metacontrol_kb' / 'metacontrol_kb_node.py')],
+        additional_env={'PYTHONUNBUFFERED': '1'},
+        name=metacontrol_kb_name,
+        output='screen',
+        parameters=[{
+            'schema_path': [
+                str(path_config / 'schema.tql'),
+                str(path_config / 'ros_schema.tql')
+            ],
+            'data_path': [
+                str(path_test_data / 'test_data.tql'),
+                str(path_execute_test_data / 'test_data.tql')
+            ],
+            'database_name': 'test_' + executor_node_name
+        }]
+    )
+    return launch.LaunchDescription([
+        metacontrol_kb_node,
+    ])
 
 
 @pytest.mark.usefixtures(fixture=tester_node)
-@pytest.fixture(scope="module")
+@pytest.fixture()
 def executor_node(tester_node):
-    executor_node = Executor(tested_node)
+    executor_node = Executor(executor_node_name)
     tester_node.start_node(executor_node)
+    tester_node.activate_lc_node(executor_node_name)
     yield executor_node
 
 
@@ -46,7 +86,7 @@ def test_start_ros_node(executor_node):
         assert process is not False and process.poll() is None and \
             node_name in executor_node.get_node_names()
     finally:
-        os.killpg(os.getpgid(process.pid), signal.SIGTERM)
+        os.killpg(os.getpgid(process.pid), signal.SIGKILL)
         process.kill()
         process.wait()
 
@@ -62,13 +102,17 @@ def test_start_ros_launchfile(executor_node):
         assert process is not False and process.poll() is None and \
             'executor' in executor_node.get_node_names()
     finally:
-        os.killpg(os.getpgid(process.pid), signal.SIGTERM)
+        os.killpg(os.getpgid(process.pid), signal.SIGKILL)
         process.kill()
         process.wait()
 
 
-def test_activate_components(executor_node):
+@pytest.mark.launch(fixture=generate_test_description)
+@pytest.mark.usefixtures(fixture=tester_node)
+def test_activate_components(executor_node, tester_node):
     try:
+        tester_node.activate_lc_node(metacontrol_kb_name)
+
         component = Component()
         component.name = 'executor_mock'
         component.package = 'metacontrol_execute'
@@ -96,12 +140,52 @@ def test_activate_components(executor_node):
 
         result = executor_node.activate_components([component, component2])
         component2_state = executor_node.get_lc_node_state(component2.name)
+
+        srv_get = executor_node.create_client(
+            ComponentQuery, '/metacontrol_kb/component/active/get')
+        component_query = ComponentQuery.Request()
+        component_query.component = component
+        result_get = executor_node.call_service(srv_get, component_query)
+
+        component_query_2 = ComponentQuery.Request()
+        component_query_2.component = component2
+        result_get_2 = executor_node.call_service(srv_get, component_query_2)
+
         assert result is True \
-            and component2_state.current_state.id == 3
+            and component2_state.current_state.id == 3 \
+            and component_query.component.is_active is True \
+            and component_query_2.component.is_active is True
     finally:
         os.killpg(
             os.getpgid(executor_node.component_pids_dict['executor_mock']),
-            signal.SIGTERM)
+            signal.SIGKILL)
         os.killpg(
             os.getpgid(executor_node.component_pids_dict['executor_mock_2']),
-            signal.SIGTERM)
+            signal.SIGKILL)
+
+
+@pytest.mark.launch(fixture=generate_test_description)
+@pytest.mark.usefixtures(fixture=tester_node)
+def test_set_component_active(executor_node, tester_node):
+    tester_node.activate_lc_node(metacontrol_kb_name)
+
+    component = Component()
+    component.name = 'executor_mock'
+    component.package = 'metacontrol_execute'
+    component.executable = 'executor'
+
+    param = Parameter()
+    param.name = 'teste'
+    param.value.type = 4
+    param.value.string_value = 'teste'
+
+    component.parameters.append(param)
+    result = executor_node.set_component_active(component, True)
+
+    srv_get = executor_node.create_client(
+        ComponentQuery, '/metacontrol_kb/component/active/get')
+    component_query = ComponentQuery.Request()
+    component_query.component = component
+    result_get = executor_node.call_service(srv_get, component_query)
+
+    assert result.success is True and result_get.component.is_active is True
