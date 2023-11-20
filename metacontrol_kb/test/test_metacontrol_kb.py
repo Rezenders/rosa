@@ -70,8 +70,8 @@ def generate_test_description():
         name='metacontrol_kb',
         output='screen',
         parameters=[{
-            'schema_path': str(path_config / 'schema.tql'),
-            'data_path': str(path_test_data / 'test_data.tql'),
+            'schema_path': [str(path_config / 'schema.tql')],
+            'data_path': [str(path_test_data / 'test_data.tql')],
             'database_name': 'test_metacontrol_kb'
         }]
     )

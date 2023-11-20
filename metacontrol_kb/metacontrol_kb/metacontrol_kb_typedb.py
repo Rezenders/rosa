@@ -41,8 +41,8 @@ from diagnostic_msgs.msg import DiagnosticArray
 
 
 class MetacontrolKB(ROSTypeDBInterface):
-    def __init__(self, node_name, schema_path='', data_path='', **kwargs):
-        super().__init__(node_name, schema_path, data_path, **kwargs)
+    def __init__(self, node_name, **kwargs):
+        super().__init__(node_name, **kwargs)
         self.typedb_interface_class = ModelInterface
 
     def on_configure(self, state: State) -> TransitionCallbackReturn:

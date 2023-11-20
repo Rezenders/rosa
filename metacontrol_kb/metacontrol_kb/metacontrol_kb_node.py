@@ -12,11 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# import os
 import rclpy
 import traceback
 
-# from ament_index_python.packages import get_package_share_directory
 from metacontrol_kb.metacontrol_kb_typedb import MetacontrolKB
 
 
@@ -24,10 +22,6 @@ def main():
     rclpy.init()
     traceback_logger = rclpy.logging.get_logger(
         'metacontrol_kb_traceback_logger')
-
-    # pkg_metacontrol_kb = get_package_share_directory('metacontrol_kb')
-    # schema_path = os.path.join(pkg_metacontrol_kb, 'config', 'schema.tql')
-    # data_path = os.path.join(pkg_metacontrol_kb, 'config', 'suave.tql')
 
     lc_node = MetacontrolKB('metacontrol_kb')
 
