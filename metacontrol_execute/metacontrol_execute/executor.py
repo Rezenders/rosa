@@ -145,10 +145,10 @@ class Executor(Node):
                 if _state.current_state.id == 1:
                     self.change_lc_node_state(component.name, 1)
                 _state = self.get_lc_node_state(component.name)
-                if _state._state.current_state.id == 2:
+                if _state.current_state.id == 2:
                     self.change_lc_node_state(component.name, 3)
                 _state = self.get_lc_node_state(component.name)
-                if _state._state.current_state.id != 3:
+                if _state.current_state.id != 3:
                     return_value = False
         # TODO: set attribute in the component to indicate if it is running
         # and in which state it is (in case of LC nodes)
