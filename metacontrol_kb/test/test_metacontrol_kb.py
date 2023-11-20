@@ -41,6 +41,7 @@ from metacontrol_kb_msgs.msg import SelectedFunctionDesign
 
 from metacontrol_kb_msgs.srv import AdaptableFunctions
 from metacontrol_kb_msgs.srv import AdaptableComponents
+from metacontrol_kb_msgs.srv import ComponentQuery
 from metacontrol_kb_msgs.srv import GetComponentConfigPerformance
 from metacontrol_kb_msgs.srv import GetReconfigurationPlan
 from metacontrol_kb_msgs.srv import GetFDPerformance
@@ -439,6 +440,42 @@ def test_metacontrol_kb_get_reconfiguration_plan():
         rclpy.shutdown()
 
 
+@pytest.mark.launch(fixture=generate_test_description)
+def test_set_get_component_activate():
+    rclpy.init()
+    try:
+        node = MakeTestNode()
+        node.start_node()
+        node.activate_metacontrol_kb()
+
+        component_1 = Component()
+        component_1.name = 'c_active'
+        component_1.is_active = False
+        cq_1 = ComponentQuery.Request()
+        cq_1.component = component_1
+
+        component_2 = Component()
+        component_2.name = 'c_inactive'
+        component_2.is_active = True
+        cq_2 = ComponentQuery.Request()
+        cq_2.component = component_2
+
+        srv_set = node.create_client(
+            ComponentQuery, '/metacontrol_kb/component/active/set')
+        srv_get = node.create_client(
+            ComponentQuery, '/metacontrol_kb/component/active/get')
+
+        res_set_1 = node.call_service(srv_set, cq_1)
+        res_set_2 = node.call_service(srv_set, cq_2)
+        res_get_1 = node.call_service(srv_get, cq_1)
+        res_get_2 = node.call_service(srv_get, cq_2)
+        assert res_set_1.success is True and res_set_2.success is True and \
+            res_get_1.component.is_active is False and \
+            res_get_2.component.is_active is True
+    finally:
+        rclpy.shutdown()
+
+
 class MakeTestNode(Node):
 
     def __init__(self, name='test_node'):
@@ -485,8 +522,8 @@ class MakeTestNode(Node):
                 'service not available {}'.format(cli.srv_name))
             return None
         future = cli.call_async(request)
-        if self.executor.spin_until_future_complete(
-                future, timeout_sec=5.0) is False:
+        self.executor.spin_until_future_complete(future, timeout_sec=5.0)
+        if future.done() is False:
             self.get_logger().error(
                 'Future not completed {}'.format(cli.srv_name))
             return None

@@ -67,6 +67,8 @@ $qa_t_constraint isa QualityAttribute, has attribute-name "qa_t_constraint", has
 (constraint:$qa_t_constraint, constrained:$t_constrained, constrained:$fd_constrained, constrained:$c_constrained, constrained:$cc_constrained) isa constrainment, has attribute-value 0.5;
 
 $c_required isa Component, has component-name "c_required", has is-required true;
+$c_active isa Component, has component-name "c_active", has is-active true;
+$c_inactive isa Component, has component-name "c_inactive", has is-active false;
 
 $f_unsolved isa Function, has function-name "f_unsolved", has function-status "unsolved";
 $c_unsolved isa Component, has component-name "c_unsolved", has component-status "unsolved";
@@ -106,3 +108,5 @@ $f_fd_feasible_unfeasible isa Function, has function-name "f_fd_feasible_unfeasi
 $c_cc_feasible_unfeasible isa Component, has component-name "c_cc_feasible_unfeasible";
 (component: $c_cc_feasible_unfeasible) isa component-configuration, has component-configuration-name "c_cc_feasible", has component-configuration-status "feasible", has performance 1.0;
 (component: $c_cc_feasible_unfeasible) isa component-configuration, has component-configuration-name "c_cc_unfeasible", has component-configuration-status "unfeasible", has performance 2.0;
+
+
