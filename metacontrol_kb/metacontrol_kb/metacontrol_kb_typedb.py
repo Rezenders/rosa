@@ -19,6 +19,7 @@ from metacontrol_kb_msgs.msg import FunctionDesign
 
 from metacontrol_kb_msgs.srv import AdaptableFunctions
 from metacontrol_kb_msgs.srv import AdaptableComponents
+from metacontrol_kb_msgs.srv import ComponentQuery
 from metacontrol_kb_msgs.srv import GetComponentConfigPerformance
 from metacontrol_kb_msgs.srv import GetReconfigurationPlan
 from metacontrol_kb_msgs.srv import GetFDPerformance
@@ -122,6 +123,20 @@ class MetacontrolKB(ROSTypeDBInterface):
             GetReconfigurationPlan,
             self.get_name() + '/reconfiguration_plan/get',
             self.get_reconfiguration_plan_cb,
+            callback_group=self.query_cb_group
+        )
+
+        self.set_component_active_service = self.create_service(
+            ComponentQuery,
+            self.get_name() + '/component/active/set',
+            self.set_component_active_cb,
+            callback_group=self.query_cb_group
+        )
+
+        self.get_component_active_service = self.create_service(
+            ComponentQuery,
+            self.get_name() + '/component/active/get',
+            self.get_component_active_cb,
             callback_group=self.query_cb_group
         )
 
@@ -266,4 +281,22 @@ class MetacontrolKB(ROSTypeDBInterface):
             res.success = True
         else:
             res.success = False
+        return res
+
+    def set_component_active_cb(self, req, res):
+        result = self.typedb_interface.activate_component(
+            req.component.name, req.component.is_active)
+        if result is not None:
+            res.success = True
+            res.component = req.component
+            res.component.is_active = req.component.is_active
+        return res
+
+    def get_component_active_cb(self, req, res):
+        result = self.typedb_interface.is_component_active(
+            req.component.name)
+        if result is not None:
+            res.success = True
+            res.component = req.component
+            res.component.is_active = result
         return res
