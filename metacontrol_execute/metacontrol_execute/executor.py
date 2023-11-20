@@ -49,6 +49,7 @@ class Executor(Node):
 
     def __init__(self, node_name, **kwargs):
         super().__init__(node_name, **kwargs)
+        self.component_pids_dict = dict()
 
     def on_configure(self, state: State) -> TransitionCallbackReturn:
         self.get_logger().info(self.get_name() + ': on_configure() is called.')
@@ -136,6 +137,8 @@ class Executor(Node):
                 result_start = self.start_ros_node(node_dict)
                 if result_start is False:
                     return_value = False
+                else:
+                    self.component_pids_dict[component.name] = result_start.pid
             if component.node_type == 'lifecycle' and \
                component.name in self.get_node_names():
                 _state = self.get_lc_node_state(component.name)
