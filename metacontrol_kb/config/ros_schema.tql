@@ -1,11 +1,11 @@
 define
 
-ros_package sub attribute,
+package sub attribute,
     value string;
 
-node_name sub attribute,
+executable sub attribute,
     value string;
 
-ROSLifeCycleNode sub Component,
-    owns ros_package,
-    owns node_name;
+ROSNode sub Component,
+    owns package,
+    owns executable;
