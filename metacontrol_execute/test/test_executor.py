@@ -75,7 +75,7 @@ def executor_node(tester_node):
 
 def test_start_ros_node(executor_node):
     try:
-        node_name = 'executor_mock'
+        node_name = 'executor_mock_start_ros_node'
         node_dict = {
             'package': 'metacontrol_execute',
             'executable': 'executor',
@@ -153,8 +153,8 @@ def test_activate_components(executor_node, tester_node):
 
         assert result is True \
             and component2_state.current_state.id == 3 \
-            and component_query.component.is_active is True \
-            and component_query_2.component.is_active is True
+            and result_get.component.is_active is True \
+            and result_get_2.component.is_active is True
     finally:
         os.killpg(
             os.getpgid(executor_node.component_pids_dict['executor_mock']),
