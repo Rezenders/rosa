@@ -1,0 +1,4 @@
+insert
+
+$ros_component isa ROSNode, has component-name "executor_mock", has package "metacontrol_execute", has executable "executor";
+$ros_component_2 isa ROSNode, has component-name "executor_mock_2", has package "metacontrol_execute", has executable "executor";
