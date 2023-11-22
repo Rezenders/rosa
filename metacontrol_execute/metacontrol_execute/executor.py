@@ -151,6 +151,12 @@ class Executor(Node):
             return None
         return future.result()
 
+    def kill_component(self, component):
+        pgid = os.getpgid(self.component_pids_dict[component.name])
+        os.killpg(pgid, signal.SIGTERM)
+        os.waitid(os.P_PGID, pgid, os.WEXITED)
+        self.component_pids_dict.pop(component.name, None)
+        return True
 
     @check_lc_active
     def deactivate_components(self, components):
@@ -164,18 +170,14 @@ class Executor(Node):
                     self.change_lc_node_state(component.name, 4)
                 _state = self.get_lc_node_state(component.name)
                 if _state.current_state.id != 2:
-                    return_value = False
+                    _return_value = False
             else:
-                pgid = os.getpgid(self.component_pids_dict[component.name])
-                os.killpg(pgid, signal.SIGTERM)
-                os.waitid(os.P_PGID, pgid, os.WEXITED)
+                _return_value = self.kill_component(component)
 
             if _return_value is True:
                 result_deactivate = self.set_component_active(component, False)
                 if result_deactivate.success is not True:
                     _return_value = False
-                else:
-                    self.component_pids_dict.pop(component.name, None)
             return_value = _return_value
         return return_value
 
