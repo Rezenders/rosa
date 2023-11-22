@@ -14,6 +14,7 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   "msg/Task.msg"
   "msg/Component.msg"
   "msg/ComponentConfig.msg"
+  "msg/ComponentParameter.msg"
   "msg/Function.msg"
   "msg/FunctionDesign.msg"
   "msg/ReconfigurationPlan.msg"
