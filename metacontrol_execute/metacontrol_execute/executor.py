@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import os
+import signal
 import subprocess
 import shlex
 
@@ -131,7 +132,30 @@ class Executor(Node):
         return future.result()
 
     def deactivate_components(self, components):
-        pass
+        return_value = True
+        for component in components:
+            _return_value = True
+            if component.node_type == 'lifecycle' and \
+               component.name in self.get_node_names():
+                _state = self.get_lc_node_state(component.name)
+                if _state.current_state.id == 3:
+                    self.change_lc_node_state(component.name, 4)
+                _state = self.get_lc_node_state(component.name)
+                if _state.current_state.id != 2:
+                    return_value = False
+            else:
+                pgid = os.getpgid(self.component_pids_dict[component.name])
+                os.killpg(pgid, signal.SIGTERM)
+                os.waitid(os.P_PGID, pgid, os.WEXITED)
+
+            if _return_value is True:
+                result_deactivate = self.set_component_active(component, False)
+                if result_deactivate.success is not True:
+                    _return_value = False
+                else:
+                    self.component_pids_dict.pop(component.name, None)
+            return_value = _return_value
+        return return_value
 
     def activate_components(self, components):
         return_value = True
