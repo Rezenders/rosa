@@ -276,7 +276,7 @@ class Executor(Node):
                 preexec_fn=os.setsid,
             )
             try:
-                outs, errs = process.communicate(timeout=.5)
+                outs, errs = process.communicate(timeout=1)
                 self.get_logger().error(f'''
                     {_func} failed!
                     input _dict: {_dict}
