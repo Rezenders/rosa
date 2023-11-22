@@ -71,6 +71,7 @@ def executor_node(tester_node):
     tester_node.start_node(executor_node)
     tester_node.activate_lc_node(executor_node_name)
     yield executor_node
+    executor_node.destroy_node()
 
 
 def test_start_ros_node(executor_node):
@@ -86,9 +87,9 @@ def test_start_ros_node(executor_node):
         assert process is not False and process.poll() is None and \
             node_name in executor_node.get_node_names()
     finally:
-        os.killpg(os.getpgid(process.pid), signal.SIGKILL)
-        process.kill()
-        process.wait()
+        pgid = os.getpgid(process.pid)
+        os.killpg(pgid, signal.SIGTERM)
+        os.waitid(os.P_PGID, pgid, os.WEXITED)
 
 
 def test_start_ros_launchfile(executor_node):
@@ -102,9 +103,9 @@ def test_start_ros_launchfile(executor_node):
         assert process is not False and process.poll() is None and \
             'executor' in executor_node.get_node_names()
     finally:
-        os.killpg(os.getpgid(process.pid), signal.SIGKILL)
-        process.kill()
-        process.wait()
+        pgid = os.getpgid(process.pid)
+        os.killpg(pgid, signal.SIGTERM)
+        os.waitid(os.P_PGID, pgid, os.WEXITED)
 
 
 @pytest.mark.launch(fixture=generate_test_description)
@@ -156,12 +157,12 @@ def test_activate_components(executor_node, tester_node):
             and result_get.component.is_active is True \
             and result_get_2.component.is_active is True
     finally:
-        os.killpg(
-            os.getpgid(executor_node.component_pids_dict['executor_mock']),
-            signal.SIGKILL)
-        os.killpg(
-            os.getpgid(executor_node.component_pids_dict['executor_mock_2']),
-            signal.SIGKILL)
+        pgid = os.getpgid(executor_node.component_pids_dict['executor_mock'])
+        os.killpg(pgid, signal.SIGTERM)
+        os.waitid(os.P_PGID, pgid, os.WEXITED)
+        pgid = os.getpgid(executor_node.component_pids_dict['executor_mock_2'])
+        os.killpg(pgid, signal.SIGTERM)
+        os.waitid(os.P_PGID, pgid, os.WEXITED)
 
 
 @pytest.mark.launch(fixture=generate_test_description)
@@ -189,3 +190,63 @@ def test_set_component_active(executor_node, tester_node):
     result_get = executor_node.call_service(srv_get, component_query)
 
     assert result.success is True and result_get.component.is_active is True
+
+
+@pytest.mark.launch(fixture=generate_test_description)
+@pytest.mark.usefixtures(fixture=tester_node)
+def test_deactivate_components(executor_node, tester_node):
+    try:
+        tester_node.activate_lc_node(metacontrol_kb_name)
+
+        component = Component()
+        component.name = 'executor_mock'
+        component.package = 'metacontrol_execute'
+        component.executable = 'executor'
+
+        param = Parameter()
+        param.name = 'teste'
+        param.value.type = 4
+        param.value.string_value = 'teste'
+
+        component.parameters.append(param)
+
+        component2 = Component()
+        component2.name = 'executor_mock_2'
+        component2.package = 'metacontrol_execute'
+        component2.executable = 'executor'
+        component2.node_type = 'lifecycle'
+
+        param2 = Parameter()
+        param2.name = 'teste'
+        param2.value.type = 4
+        param2.value.string_value = 'teste'
+
+        component2.parameters.append(param2)
+
+        result_activate = executor_node.activate_components(
+            [component, component2])
+        result_deactivate = executor_node.deactivate_components(
+            [component, component2])
+
+        component2_state = executor_node.get_lc_node_state(component2.name)
+
+        srv_get = executor_node.create_client(
+            ComponentQuery, '/metacontrol_kb/component/active/get')
+
+        component_query = ComponentQuery.Request()
+        component_query.component = component
+        result_get = executor_node.call_service(srv_get, component_query)
+
+        component_query_2 = ComponentQuery.Request()
+        component_query_2.component = component2
+        result_get_2 = executor_node.call_service(srv_get, component_query_2)
+
+        assert result_activate is True and result_deactivate is True \
+            and component2_state.current_state.id == 2 \
+            and result_get.component.is_active is False \
+            and result_get_2.component.is_active is False \
+            and 'executor_mock' not in executor_node.component_pids_dict
+    finally:
+        pgid = os.getpgid(executor_node.component_pids_dict['executor_mock_2'])
+        os.killpg(pgid, signal.SIGTERM)
+        os.waitid(os.P_PGID, pgid, os.WEXITED)
