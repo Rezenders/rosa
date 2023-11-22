@@ -49,12 +49,20 @@ def get_parameter_value(param_value):
     return value
 
 
+def check_lc_active(func):
+    def inner(*args, **kwargs):
+        if args[0].active is True:
+            return func(*args, **kwargs)
+    return inner
+
+
 class Executor(Node):
     """Executor."""
 
     def __init__(self, node_name, **kwargs):
         super().__init__(node_name, **kwargs)
         self.component_pids_dict = dict()
+        self.active = False
 
     def on_configure(self, state: State) -> TransitionCallbackReturn:
         self.get_logger().info(self.get_name() + ': on_configure() is called.')
@@ -83,14 +91,23 @@ class Executor(Node):
 
     def on_activate(self, state: State) -> TransitionCallbackReturn:
         self.get_logger().info(self.get_name() + ': on_activate() is called.')
+        self.active = True
+        self.get_logger().info(
+            self.get_name() + ': on_activate() is completed.')
         return super().on_activate(state)
+
+    def on_deactivate(self, state: State) -> TransitionCallbackReturn:
+        self.get_logger().info("on_deactivate() is called.")
+        self.active = False
+        return super().on_deactivate(state)
 
     def on_cleanup(self, state: State) -> TransitionCallbackReturn:
         self.destroy_subscription(self.event_sub)
-
+        self.active = False
         self.get_logger().info('on_cleanup() is called.')
         return TransitionCallbackReturn.SUCCESS
 
+    @check_lc_active
     def event_cb(self, msg):
         if msg.data == 'insert':
             reconfig_plan = self.call_service(
@@ -105,6 +122,7 @@ class Executor(Node):
                 and result_update
             # TODO: update reconfig plan result
 
+    @check_lc_active
     def change_lc_node_state(self, node_name, transition_id):
         srv = self.create_client(
             ChangeState, node_name + '/change_state')
@@ -112,12 +130,14 @@ class Executor(Node):
         change_state_req.transition.id = transition_id
         return self.call_service(srv, change_state_req)
 
+    @check_lc_active
     def get_lc_node_state(self, node_name):
         get_state_srv = self.create_client(
             GetState, node_name + '/get_state')
         get_state_req = GetState.Request()
         return self.call_service(get_state_srv, get_state_req)
 
+    @check_lc_active
     def call_service(self, cli, request):
         if cli.wait_for_service(timeout_sec=5.0) is False:
             self.get_logger().error(
@@ -131,6 +151,8 @@ class Executor(Node):
             return None
         return future.result()
 
+
+    @check_lc_active
     def deactivate_components(self, components):
         return_value = True
         for component in components:
@@ -157,6 +179,7 @@ class Executor(Node):
             return_value = _return_value
         return return_value
 
+    @check_lc_active
     def activate_components(self, components):
         return_value = True
         for component in components:
@@ -196,6 +219,7 @@ class Executor(Node):
         # in case of LC nodes
         return return_value
 
+    @check_lc_active
     def set_component_active(self, component, is_active):
         _ca = ComponentQuery.Request()
         _ca.component = component
