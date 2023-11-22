@@ -9,3 +9,10 @@ executable sub attribute,
 ROSNode sub Component,
     owns package,
     owns executable;
+   
+ros-parameter-type sub attribute,
+    value string,
+    regex "^(bool|bool_array|double|double_array|integer|integer_array|string|string_array)$";   
+
+ROSParam sub ComponentParameter,
+    owns ros-parameter-type;
