@@ -13,6 +13,7 @@
 # limitations under the License.
 import pytest
 from metacontrol_kb.typedb_model_interface import ModelInterface
+from metacontrol_kb.typedb_model_interface import convert_parameter_type_to_py_type
 from datetime import datetime
 
 
@@ -547,3 +548,42 @@ def test_get_selectable_c_configs(kb_interface):
     result = kb_interface.get_selectable_c_configs('c_cc_feasible_unfeasible')
     expected_result = ['c_cc_feasible']
     assert all(r in result for r in expected_result)
+
+
+@pytest.mark.parametrize("type, param, expected", [
+    ('boolean', 'True', True),
+    ('boolean_array', '[True, False]', [True, False]),
+    ('double', '3.0', 3.0),
+    ('double_array', '[3.0, 4.0 , 5.0 ]', [3.0, 4.0, 5.0]),
+    ('long', '10', 10),
+    ('long_array', '[10, 33, 44 ]', [10, 33, 44]),
+    ('string', 'teste', 'teste'),
+    ('string_array', '[ teste, t2 , t3 ]', ['teste', 't2', 't3']),
+])
+def test_convert_parameter_type_to_py_type(type, param, expected):
+    result = convert_parameter_type_to_py_type(param, type)
+    assert result == expected
+
+
+def test_get_component_parameters(kb_interface):
+    c_config = 'get_cp_cc'
+    expected = {
+        'Component': 'get_cp_c',
+        'ComponentParameters': [
+            {'key': 'get_cp_1', 'value': True, 'type': 'boolean'},
+            {'key': 'get_cp_2',
+             'value': [True, False], 'type': 'boolean_array'},
+            {'key': 'get_cp_3', 'value': 3.0, 'type': 'double'},
+            {'key': 'get_cp_4', 'value': [3.0, 5.0], 'type': 'double_array'},
+            {'key': 'get_cp_5', 'value': 10, 'type': 'long'},
+            {'key': 'get_cp_6', 'value': [10, 14], 'type': 'long_array'},
+            {'key': 'get_cp_7', 'value': 'teste', 'type': 'string'},
+            {'key': 'get_cp_8',
+             'value': ['teste', 'teste2'], 'type': 'string_array'},
+        ]
+    }
+    result = kb_interface.get_component_parameters(c_config)
+    print('result: ', result)
+    assert result['Component'] == expected['Component'] and \
+        all(r in result['ComponentParameters'] for
+            r in expected['ComponentParameters'])

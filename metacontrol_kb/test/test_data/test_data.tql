@@ -109,4 +109,15 @@ $c_cc_feasible_unfeasible isa Component, has component-name "c_cc_feasible_unfea
 (component: $c_cc_feasible_unfeasible) isa component-configuration, has component-configuration-name "c_cc_feasible", has component-configuration-status "feasible", has performance 1.0;
 (component: $c_cc_feasible_unfeasible) isa component-configuration, has component-configuration-name "c_cc_unfeasible", has component-configuration-status "unfeasible", has performance 2.0;
 
+$get_cp_c isa Component, has component-name "get_cp_c";
+$get_cp_1 isa ComponentParameter, has parameter-key "get_cp_1", has parameter-value "True", has parameter-type "boolean";
+$get_cp_2 isa ComponentParameter, has parameter-key "get_cp_2", has parameter-value "[True, False]", has parameter-type "boolean_array";
+$get_cp_3 isa ComponentParameter, has parameter-key "get_cp_3", has parameter-value "3.0", has parameter-type "double";
+$get_cp_4 isa ComponentParameter, has parameter-key "get_cp_4", has parameter-value "[3.0, 5.0]", has parameter-type "double_array";
+$get_cp_5 isa ComponentParameter, has parameter-key "get_cp_5", has parameter-value "10", has parameter-type "long";
+$get_cp_6 isa ComponentParameter, has parameter-key "get_cp_6", has parameter-value "[10, 14]", has parameter-type "long_array";
+$get_cp_7 isa ComponentParameter, has parameter-key "get_cp_7", has parameter-value "teste", has parameter-type "string";
+$get_cp_8 isa ComponentParameter, has parameter-key "get_cp_8", has parameter-value "[teste, teste2]", has parameter-type "string_array";
+(component: $get_cp_c, parameter:$get_cp_1, parameter:$get_cp_2, parameter:$get_cp_3, parameter:$get_cp_4, parameter:$get_cp_5, parameter:$get_cp_6, parameter:$get_cp_7, parameter:$get_cp_8) isa component-configuration, has component-configuration-name "get_cp_cc";
+
 
