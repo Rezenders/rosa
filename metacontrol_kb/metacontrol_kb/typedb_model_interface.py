@@ -15,6 +15,28 @@ from ros_typedb.typedb_interface import TypeDBInterface
 from datetime import datetime
 
 
+def convert_parameter_type_to_py_type(param, type):
+    def process_array(param, func):
+        return [func(p.strip()) for p in param.strip('[]').split(',')]
+
+    if type == 'boolean':
+        return param.lower() == 'true'
+    elif type == 'boolean_array':
+        return process_array(param, lambda p: p.lower() == 'true')
+    elif type == 'double':
+        return float(param)
+    elif type == 'double_array':
+        return process_array(param, float)
+    elif type == 'long':
+        return int(param)
+    elif type == 'long_array':
+        return process_array(param, int)
+    elif type == 'string':
+        return param
+    elif type == 'string_array':
+        return process_array(param, str)
+
+
 class ModelInterface(TypeDBInterface):
     def __init__(self, address, database_name, schema_path, data_path=None,
                  force_database=False, force_data=False):
@@ -686,3 +708,41 @@ class ModelInterface(TypeDBInterface):
             return self.covert_query_type_to_py_type(result[0].get('result'))
         else:
             return False
+
+    def get_component_parameters(self, c_config):
+        """
+        Get ComponentParameters in a component configuration relationship.
+
+        :param c_config: component-configuration-name.
+        :type c_config: str
+        :return: Tuple with component-name, parameter-key, parameter-value
+        :rtype: dict
+        """
+        query = f'''
+            match
+                (component:$c, parameter:$p) isa component-configuration,
+                has component-configuration-name '{c_config}';
+                $c has component-name $c_name;
+                $p has parameter-key $key,
+                    has parameter-value $value,
+                    has parameter-type $type;
+            get $c_name, $key, $value, $type;
+        '''
+        _result = self.match_database(query)
+        result = {}
+        params = []
+        if len(_result) > 0:
+            result['Component'] = self.covert_query_type_to_py_type(
+                _result[0].get('c_name'))
+            for r in _result:
+                value = convert_parameter_type_to_py_type(
+                    self.covert_query_type_to_py_type(r.get('value')),
+                    self.covert_query_type_to_py_type(r.get('type'))
+                )
+                params.append({
+                    'key': self.covert_query_type_to_py_type(r.get('key')),
+                    'value': value,
+                    'type': self.covert_query_type_to_py_type(r.get('type'))
+                })
+            result['ComponentParameters'] = params
+        return result
