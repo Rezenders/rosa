@@ -1,3 +1,2 @@
 string key
-string value
-string type
+rcl_interfaces/ParameterValue value

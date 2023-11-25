@@ -23,6 +23,7 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   "srv/AdaptableFunctions.srv"
   "srv/AdaptableComponents.srv"
   "srv/ComponentQuery.srv"
+  "srv/GetComponentParameters.srv"
   "srv/GetComponentConfigPerformance.srv"
   "srv/GetReconfigurationPlan.srv"
   "srv/GetFDPerformance.srv"

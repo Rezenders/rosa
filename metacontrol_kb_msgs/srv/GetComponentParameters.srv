@@ -1,0 +1,5 @@
+metacontrol_kb_msgs/ComponentConfig c_config
+---
+bool success
+metacontrol_kb_msgs/Component component
+metacontrol_kb_msgs/ComponentParameter[] parameters
