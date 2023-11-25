@@ -14,12 +14,14 @@
 from metacontrol_kb_msgs.msg import Task
 from metacontrol_kb_msgs.msg import Component
 from metacontrol_kb_msgs.msg import ComponentConfig
+from metacontrol_kb_msgs.msg import ComponentParameter
 from metacontrol_kb_msgs.msg import Function
 from metacontrol_kb_msgs.msg import FunctionDesign
 
 from metacontrol_kb_msgs.srv import AdaptableFunctions
 from metacontrol_kb_msgs.srv import AdaptableComponents
 from metacontrol_kb_msgs.srv import ComponentQuery
+from metacontrol_kb_msgs.srv import GetComponentParameters
 from metacontrol_kb_msgs.srv import GetComponentConfigPerformance
 from metacontrol_kb_msgs.srv import GetReconfigurationPlan
 from metacontrol_kb_msgs.srv import GetFDPerformance
@@ -36,6 +38,7 @@ from rclpy.lifecycle import State
 from rclpy.lifecycle import TransitionCallbackReturn
 
 from ros_typedb.ros_typedb_interface import ROSTypeDBInterface
+from ros_typedb.ros_typedb_interface import set_query_result_value
 
 from diagnostic_msgs.msg import DiagnosticArray
 
@@ -137,6 +140,13 @@ class MetacontrolKB(ROSTypeDBInterface):
             ComponentQuery,
             self.get_name() + '/component/active/get',
             self.get_component_active_cb,
+            callback_group=self.query_cb_group
+        )
+
+        self.get_component_parameters_service = self.create_service(
+            GetComponentParameters,
+            self.get_name() + '/component_parameters/get',
+            self.get_component_parameters_cb,
             callback_group=self.query_cb_group
         )
 
@@ -299,4 +309,18 @@ class MetacontrolKB(ROSTypeDBInterface):
             res.success = True
             res.component = req.component
             res.component.is_active = result
+        return res
+
+    def get_component_parameters_cb(self, req, res):
+        result = self.typedb_interface.get_component_parameters(
+            req.c_config.name)
+        if result is not None:
+            res.success = True
+            res.component.name = result['Component']
+            for param in result['ComponentParameters']:
+                _param = ComponentParameter()
+                _param.key = param['key']
+                _param.value = set_query_result_value(
+                    param['value'], param['type'])
+                res.parameters.append(_param)
         return res

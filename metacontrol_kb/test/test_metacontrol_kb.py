@@ -35,6 +35,7 @@ from lifecycle_msgs.srv import GetState
 
 from metacontrol_kb_msgs.msg import Component
 from metacontrol_kb_msgs.msg import ComponentConfig
+from metacontrol_kb_msgs.msg import ComponentParameter
 from metacontrol_kb_msgs.msg import Function
 from metacontrol_kb_msgs.msg import SelectedComponentConfig
 from metacontrol_kb_msgs.msg import SelectedFunctionDesign
@@ -42,6 +43,7 @@ from metacontrol_kb_msgs.msg import SelectedFunctionDesign
 from metacontrol_kb_msgs.srv import AdaptableFunctions
 from metacontrol_kb_msgs.srv import AdaptableComponents
 from metacontrol_kb_msgs.srv import ComponentQuery
+from metacontrol_kb_msgs.srv import GetComponentParameters
 from metacontrol_kb_msgs.srv import GetComponentConfigPerformance
 from metacontrol_kb_msgs.srv import GetReconfigurationPlan
 from metacontrol_kb_msgs.srv import GetFDPerformance
@@ -51,6 +53,7 @@ from metacontrol_kb_msgs.srv import SelectableFDs
 from metacontrol_kb_msgs.srv import TasksMatched
 from metacontrol_kb_msgs.srv import TaskRequest
 
+from rcl_interfaces.msg import ParameterValue
 from ros_typedb_msgs.srv import Query
 
 from rclpy.node import Node
@@ -203,7 +206,7 @@ def test_metacontrol_kb_task_selectable():
         expected_result = [
             'task_feasible', 'task_required_solved']
         assert ('task_unfeasible' not in res_task_names) \
-               and all(r in res_task_names for r in expected_result)
+            and all(r in res_task_names for r in expected_result)
     finally:
         rclpy.shutdown()
 
@@ -472,6 +475,57 @@ def test_set_get_component_activate():
         assert res_set_1.success is True and res_set_2.success is True and \
             res_get_1.component.is_active is False and \
             res_get_2.component.is_active is True
+    finally:
+        rclpy.shutdown()
+
+
+@pytest.mark.launch(fixture=generate_test_description)
+def test_get_component_parameters_cb():
+    rclpy.init()
+    try:
+        node = MakeTestNode()
+        node.start_node()
+        node.activate_metacontrol_kb()
+
+        c_config = ComponentConfig()
+        c_config.name = 'get_cp_cc'
+
+        srv_get = node.create_client(
+            GetComponentParameters, '/metacontrol_kb/component_parameters/get')
+
+        request = GetComponentParameters.Request()
+        request.c_config = c_config
+
+        result = node.call_service(srv_get, request)
+        expected_params = [
+            ComponentParameter(
+                key='get_cp_1', value=ParameterValue(type=1, bool_value=True)),
+            ComponentParameter(
+                key='get_cp_2',
+                value=ParameterValue(type=6, bool_array_value=[True, False])),
+            ComponentParameter(
+                key='get_cp_3',
+                value=ParameterValue(type=3, double_value=3.0)),
+            ComponentParameter(
+                key='get_cp_4',
+                value=ParameterValue(type=8, double_array_value=[3.0, 5.0])),
+            ComponentParameter(
+                key='get_cp_5',
+                value=ParameterValue(type=2, integer_value=10)),
+            ComponentParameter(
+                key='get_cp_6',
+                value=ParameterValue(type=7, integer_array_value=[10, 14])),
+            ComponentParameter(
+                key='get_cp_7',
+                value=ParameterValue(type=4, string_value='teste')),
+            ComponentParameter(
+                key='get_cp_8',
+                value=ParameterValue(
+                    type=9, string_array_value=['teste', 'teste2'])),
+        ]
+
+        assert result.success is True and result.component.name == 'get_cp_c' \
+            and all(p in result.parameters for p in expected_params)
     finally:
         rclpy.shutdown()
 
