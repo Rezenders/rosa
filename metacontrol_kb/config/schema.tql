@@ -40,6 +40,10 @@ parameter-key sub attribute,
 parameter-value sub attribute,
     value string;
 
+parameter-type sub attribute,
+    value string,
+    regex "^(boolean|boolean_array|double|double_array|long|long_array|string|string_array)$";   
+   
 attribute-value sub attribute,
     value double;
 
@@ -173,6 +177,7 @@ Component sub entity,
 ComponentParameter sub entity,
     owns parameter-key,
     owns parameter-value,
+    owns parameter-type,
     plays component-configuration:parameter;
 
     
