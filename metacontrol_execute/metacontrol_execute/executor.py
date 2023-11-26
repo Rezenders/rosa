@@ -17,6 +17,7 @@ import subprocess
 import shlex
 
 from rclpy.callback_groups import MutuallyExclusiveCallbackGroup
+from rclpy.callback_groups import ReentrantCallbackGroup
 
 from rclpy.lifecycle import Node
 from rclpy.lifecycle import State
@@ -29,6 +30,7 @@ from std_msgs.msg import String
 from metacontrol_kb_msgs.srv import ComponentQuery
 from metacontrol_kb_msgs.srv import GetComponentParameters
 from metacontrol_kb_msgs.srv import GetReconfigurationPlan
+from metacontrol_kb_msgs.srv import ReconfigurationPlanQuery
 
 from rcl_interfaces.srv import SetParametersAtomically
 
@@ -65,6 +67,7 @@ class Executor(Node):
         super().__init__(node_name, **kwargs)
         self.component_pids_dict = dict()
         self.active = False
+        self.cb_group = MutuallyExclusiveCallbackGroup()
 
     def on_configure(self, state: State) -> TransitionCallbackReturn:
         self.get_logger().info(self.get_name() + ': on_configure() is called.')
@@ -78,20 +81,26 @@ class Executor(Node):
 
         self.get_reconfig_plan_srv = self.create_client(
             GetReconfigurationPlan,
-            '/metacontrol_kb/reconfiguration_plan/get',
-            callback_group=MutuallyExclusiveCallbackGroup()
+            '/metacontrol_kb/reconfiguration_plan/get_latest',
+            callback_group=self.cb_group
+        )
+
+        self.set_reconfig_plan_result_srv = self.create_client(
+            ReconfigurationPlanQuery,
+            '/metacontrol_kb/reconfiguration_plan/result/set',
+            callback_group=self.cb_group
         )
 
         self.set_component_active_srv = self.create_client(
             ComponentQuery,
             '/metacontrol_kb/component/active/set',
-            callback_group=MutuallyExclusiveCallbackGroup(),
+            callback_group=self.cb_group,
         )
 
         self.get_component_parameters_srv = self.create_client(
             GetComponentParameters,
             '/metacontrol_kb/component_parameters/get',
-            callback_group=MutuallyExclusiveCallbackGroup(),
+            callback_group=self.cb_group,
         )
 
         self.get_logger().info(self.get_name() + ': on_configure() completed.')
@@ -118,7 +127,9 @@ class Executor(Node):
     @check_lc_active
     def change_lc_node_state(self, node_name, transition_id):
         srv = self.create_client(
-            ChangeState, node_name + '/change_state')
+            ChangeState,
+            node_name + '/change_state',
+            callback_group=self.cb_group)
         change_state_req = ChangeState.Request()
         change_state_req.transition.id = transition_id
         return self.call_service(srv, change_state_req)
@@ -126,7 +137,9 @@ class Executor(Node):
     @check_lc_active
     def get_lc_node_state(self, node_name):
         get_state_srv = self.create_client(
-            GetState, node_name + '/get_state')
+            GetState,
+            node_name + '/get_state',
+            callback_group=self.cb_group)
         get_state_req = GetState.Request()
         return self.call_service(get_state_srv, get_state_req)
 
@@ -147,15 +160,23 @@ class Executor(Node):
     @check_lc_active
     def event_cb(self, msg):
         if msg.data == 'insert':
+            # self.execute()
             pass
-            # reconfig_plan = self.call_service(
-            #     self.get_reconfig_plan_srv, GetReconfigurationPlan.Request())
-            # reconfig_result = self.perform_reconfiguration_plan(reconfig_plan)
-            # result_update = self.update_component_params(
-            #     reconfig_plan.component_configurations)
-            # result = result_deactivation and result_activation \
-            #     and result_update
-            # TODO: update reconfig plan result
+
+    @check_lc_active
+    def execute(self):
+        reconfig_plan = self.call_service(
+            self.get_reconfig_plan_srv, GetReconfigurationPlan.Request())
+        reconfig_result = self.perform_reconfiguration_plan(
+            reconfig_plan.reconfig_plan)
+        rp_query = ReconfigurationPlanQuery.Request()
+        rp_query.reconfig_plan.start_time = \
+            reconfig_plan.reconfig_plan.start_time
+        if reconfig_result is True:
+            rp_query.reconfig_plan.result = 'completed'
+        else:
+            rp_query.reconfig_plan.result = 'failed'
+        self.call_service(self.set_reconfig_plan_result_srv, rp_query)
 
     @check_lc_active
     def perform_reconfiguration_plan(self, reconfig_plan):
@@ -261,7 +282,7 @@ class Executor(Node):
             set_parameters_atomically_srv = self.create_client(
                 SetParametersAtomically,
                 res_get_param.component.name + '/set_parameters_atomically',
-                callback_group=MutuallyExclusiveCallbackGroup(),
+                callback_group=ReentrantCallbackGroup(),
             )
 
             req_set_param = SetParametersAtomically.Request(
