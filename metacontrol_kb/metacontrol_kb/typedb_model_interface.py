@@ -610,6 +610,7 @@ class ModelInterface(TypeDBInterface):
         result = self.match_database(query)
         c_config = [r.get('c_config').get('value') for r in result]
         reconfig_plan_dict = {
+            'start-time': start_time,
             'c_activate': c_activate,
             'c_deactivate': c_deactivate,
             'c_config': c_config,
@@ -647,6 +648,8 @@ class ModelInterface(TypeDBInterface):
             return False
 
     def update_reconfiguration_plan_result(self, start_time, result_value):
+        if type(start_time) is str:
+            start_time = datetime.fromisoformat(start_time)
         match_dict = {
             'reconfiguration-plan': [
                 {
@@ -707,7 +710,7 @@ class ModelInterface(TypeDBInterface):
         if len(result) > 0:
             return self.covert_query_type_to_py_type(result[0].get('result'))
         else:
-            return False
+            return ''
 
     def get_component_parameters(self, c_config):
         """

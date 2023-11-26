@@ -11,11 +11,14 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+from datetime import datetime
+
 from metacontrol_kb_msgs.msg import Task
 from metacontrol_kb_msgs.msg import Component
 from metacontrol_kb_msgs.msg import ComponentConfig
 from metacontrol_kb_msgs.msg import Function
 from metacontrol_kb_msgs.msg import FunctionDesign
+from metacontrol_kb_msgs.msg import ReconfigurationPlan
 
 from metacontrol_kb_msgs.srv import AdaptableFunctions
 from metacontrol_kb_msgs.srv import AdaptableComponents
@@ -24,6 +27,7 @@ from metacontrol_kb_msgs.srv import GetComponentParameters
 from metacontrol_kb_msgs.srv import GetComponentConfigPerformance
 from metacontrol_kb_msgs.srv import GetReconfigurationPlan
 from metacontrol_kb_msgs.srv import GetFDPerformance
+from metacontrol_kb_msgs.srv import ReconfigurationPlanQuery
 from metacontrol_kb_msgs.srv import SelectedConfig
 from metacontrol_kb_msgs.srv import SelectableComponentConfigs
 from metacontrol_kb_msgs.srv import SelectableFDs
@@ -127,6 +131,20 @@ class MetacontrolKB(ROSTypeDBInterface):
             GetReconfigurationPlan,
             self.get_name() + '/reconfiguration_plan/get',
             self.get_reconfiguration_plan_cb,
+            callback_group=self.query_cb_group
+        )
+
+        self.get_latest_reconfiguration_plan_service = self.create_service(
+            GetReconfigurationPlan,
+            self.get_name() + '/reconfiguration_plan/get_latest',
+            self.get_latest_reconfiguration_plan_cb,
+            callback_group=self.query_cb_group
+        )
+
+        self.set_reconfiguration_plan_result_service = self.create_service(
+            ReconfigurationPlanQuery,
+            self.get_name() + '/reconfiguration_plan/result/set',
+            self.set_reconfiguration_plan_result_service_cb,
             callback_group=self.query_cb_group
         )
 
@@ -282,22 +300,43 @@ class MetacontrolKB(ROSTypeDBInterface):
         _component.is_active = c_dict.pop('is_active', False)
         return _component
 
-    def get_reconfiguration_plan_cb(self, req, res):
-        reconfig_plan_dict = \
-            self.typedb_interface.get_latest_pending_reconfiguration_plan()
+    def reconfig_plan_dict_to_ros_msg(self, reconfig_plan_dict):
+        reconfig_plan = ReconfigurationPlan()
         if reconfig_plan_dict is not False:
             for c_activate in reconfig_plan_dict['c_activate']:
                 _component = self.get_component_all_attributes(c_activate)
-                res.reconfig_plan.components_activate.append(_component)
+                reconfig_plan.components_activate.append(_component)
             for c_deactivate in reconfig_plan_dict['c_deactivate']:
                 _component = self.get_component_all_attributes(c_deactivate)
-                res.reconfig_plan.components_deactivate.append(_component)
+                reconfig_plan.components_deactivate.append(_component)
             for c_config in reconfig_plan_dict['c_config']:
                 _c_config = ComponentConfig()
                 _c_config.name = c_config
-                res.reconfig_plan.component_configurations.append(_c_config)
-            res.reconfig_plan.start_time = reconfig_plan_dict['start-time']\
+                reconfig_plan.component_configurations.append(_c_config)
+            reconfig_plan.start_time = reconfig_plan_dict['start-time']\
                 .isoformat(timespec='milliseconds')
+            reconfig_plan.result = \
+                self.typedb_interface.get_reconfiguration_plan_result(
+                    reconfig_plan_dict['start-time'])
+        return reconfig_plan
+
+    def get_latest_reconfiguration_plan_cb(self, req, res):
+        reconfig_plan_dict = \
+            self.typedb_interface.get_latest_pending_reconfiguration_plan()
+        if reconfig_plan_dict is not False:
+            res.reconfig_plan = self.reconfig_plan_dict_to_ros_msg(
+                reconfig_plan_dict)
+            res.success = True
+        else:
+            res.success = False
+        return res
+
+    def get_reconfiguration_plan_cb(self, req, res):
+        reconfig_plan_dict = self.typedb_interface.get_reconfiguration_plan(
+            datetime.fromisoformat(req.start_time))
+        if reconfig_plan_dict is not False:
+            res.reconfig_plan = self.reconfig_plan_dict_to_ros_msg(
+                reconfig_plan_dict)
             res.success = True
         else:
             res.success = False
@@ -333,4 +372,11 @@ class MetacontrolKB(ROSTypeDBInterface):
                 _param.value = set_query_result_value(
                     param['value'], param['type'])
                 res.parameters.append(_param)
+        return res
+
+    def set_reconfiguration_plan_result_service_cb(self, req, res):
+        res_update = self.typedb_interface.update_reconfiguration_plan_result(
+            req.reconfig_plan.start_time, req.reconfig_plan.result)
+        if res_update is not None:
+            res.success = True
         return res
