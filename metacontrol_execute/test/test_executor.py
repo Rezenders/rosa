@@ -57,6 +57,7 @@ def generate_test_description():
             ],
             'data_path': [
                 str(path_test_data / 'test_data.tql'),
+                str(path_test_data / 'ros_test_data.tql'),
                 str(path_execute_test_data / 'test_data.tql')
             ],
             'database_name': 'test_' + executor_node_name
