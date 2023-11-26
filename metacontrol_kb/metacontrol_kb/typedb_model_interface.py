@@ -715,7 +715,7 @@ class ModelInterface(TypeDBInterface):
 
         :param c_config: component-configuration-name.
         :type c_config: str
-        :return: Tuple with component-name, parameter-key, parameter-value
+        :return: Dict with component-name, parameter-key, parameter-value
         :rtype: dict
         """
         query = f'''
@@ -746,3 +746,30 @@ class ModelInterface(TypeDBInterface):
                 })
             result['ComponentParameters'] = params
         return result
+
+    def get_component_all_attributes(self, component):
+        """
+        Get all attributes owned by a Component, and the Component type.
+
+        :param component: component-name.
+        :type component: str
+        :return: Dict with component type and all its attributes
+        :rtype: dict
+        """
+        query = f'''
+            match
+                $c isa! $component-type,
+                    has component-name '{component}',
+                    has $attribute;
+                get $component-type, $attribute;
+        '''
+        result = self.match_database(query)
+        result_dict = {}
+        if len(result) > 0:
+            result_dict['type'] = result[0].get('component-type').get('label')
+            for r in result:
+                attr_name = r.get('attribute').get('type')
+                attr_value = self.covert_query_type_to_py_type(
+                    r.get('attribute'))
+                result_dict[attr_name] = attr_value
+        return result_dict
