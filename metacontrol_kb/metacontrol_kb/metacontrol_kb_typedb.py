@@ -271,17 +271,26 @@ class MetacontrolKB(ROSTypeDBInterface):
             res.success = True
         return res
 
+    def get_component_all_attributes(self, component):
+        c_dict = self.typedb_interface.get_component_all_attributes(component)
+        _component = Component()
+        _component.name = component
+        _component.status = c_dict.pop('component-status', '')
+        _component.package = c_dict.pop('package', '')
+        _component.executable = c_dict.pop('executable', '')
+        _component.node_type = c_dict.pop('type', '')
+        _component.is_active = c_dict.pop('is_active', False)
+        return _component
+
     def get_reconfiguration_plan_cb(self, req, res):
         reconfig_plan_dict = \
             self.typedb_interface.get_latest_pending_reconfiguration_plan()
         if reconfig_plan_dict is not False:
             for c_activate in reconfig_plan_dict['c_activate']:
-                _component = Component()
-                _component.name = c_activate
+                _component = self.get_component_all_attributes(c_activate)
                 res.reconfig_plan.components_activate.append(_component)
             for c_deactivate in reconfig_plan_dict['c_deactivate']:
-                _component = Component()
-                _component.name = c_deactivate
+                _component = self.get_component_all_attributes(c_deactivate)
                 res.reconfig_plan.components_deactivate.append(_component)
             for c_config in reconfig_plan_dict['c_config']:
                 _c_config = ComponentConfig()

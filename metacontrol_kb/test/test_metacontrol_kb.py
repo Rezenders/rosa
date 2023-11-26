@@ -433,6 +433,8 @@ def test_metacontrol_kb_get_reconfiguration_plan():
 
         _c = Component()
         _c.name = 'component_reconfig_2'
+        _c.status = 'unsolved'
+        _c.node_type = 'Component'
 
         _cc = ComponentConfig()
         _cc.name = 'cp_reconfig_2'
