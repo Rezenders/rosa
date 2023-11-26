@@ -14,7 +14,6 @@
 from metacontrol_kb_msgs.msg import Task
 from metacontrol_kb_msgs.msg import Component
 from metacontrol_kb_msgs.msg import ComponentConfig
-from metacontrol_kb_msgs.msg import ComponentParameter
 from metacontrol_kb_msgs.msg import Function
 from metacontrol_kb_msgs.msg import FunctionDesign
 
@@ -30,6 +29,8 @@ from metacontrol_kb_msgs.srv import SelectableComponentConfigs
 from metacontrol_kb_msgs.srv import SelectableFDs
 from metacontrol_kb_msgs.srv import TaskRequest
 from metacontrol_kb_msgs.srv import TasksMatched
+
+from rcl_interfaces.msg import Parameter
 
 from metacontrol_kb.typedb_model_interface import ModelInterface
 
@@ -318,8 +319,8 @@ class MetacontrolKB(ROSTypeDBInterface):
             res.success = True
             res.component.name = result['Component']
             for param in result['ComponentParameters']:
-                _param = ComponentParameter()
-                _param.key = param['key']
+                _param = Parameter()
+                _param.name = param['key']
                 _param.value = set_query_result_value(
                     param['value'], param['type'])
                 res.parameters.append(_param)

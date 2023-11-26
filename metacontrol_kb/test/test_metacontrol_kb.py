@@ -35,7 +35,6 @@ from lifecycle_msgs.srv import GetState
 
 from metacontrol_kb_msgs.msg import Component
 from metacontrol_kb_msgs.msg import ComponentConfig
-from metacontrol_kb_msgs.msg import ComponentParameter
 from metacontrol_kb_msgs.msg import Function
 from metacontrol_kb_msgs.msg import SelectedComponentConfig
 from metacontrol_kb_msgs.msg import SelectedFunctionDesign
@@ -53,6 +52,7 @@ from metacontrol_kb_msgs.srv import SelectableFDs
 from metacontrol_kb_msgs.srv import TasksMatched
 from metacontrol_kb_msgs.srv import TaskRequest
 
+from rcl_interfaces.msg import Parameter
 from rcl_interfaces.msg import ParameterValue
 from ros_typedb_msgs.srv import Query
 
@@ -65,6 +65,7 @@ def generate_test_description():
     path_config = path_to_pkg / 'config'
     path_test_data = path_to_pkg / 'test' / 'test_data'
 
+    database_name = 'test_metacontrol_kb'
     metacontrol_kb_node = launch_ros.actions.Node(
         executable=sys.executable,
         arguments=[
@@ -75,7 +76,7 @@ def generate_test_description():
         parameters=[{
             'schema_path': [str(path_config / 'schema.tql')],
             'data_path': [str(path_test_data / 'test_data.tql')],
-            'database_name': 'test_metacontrol_kb'
+            'database_name': database_name
         }]
     )
 
@@ -498,28 +499,29 @@ def test_get_component_parameters_cb():
 
         result = node.call_service(srv_get, request)
         expected_params = [
-            ComponentParameter(
-                key='get_cp_1', value=ParameterValue(type=1, bool_value=True)),
-            ComponentParameter(
-                key='get_cp_2',
+            Parameter(
+                name='get_cp_1',
+                value=ParameterValue(type=1, bool_value=True)),
+            Parameter(
+                name='get_cp_2',
                 value=ParameterValue(type=6, bool_array_value=[True, False])),
-            ComponentParameter(
-                key='get_cp_3',
+            Parameter(
+                name='get_cp_3',
                 value=ParameterValue(type=3, double_value=3.0)),
-            ComponentParameter(
-                key='get_cp_4',
+            Parameter(
+                name='get_cp_4',
                 value=ParameterValue(type=8, double_array_value=[3.0, 5.0])),
-            ComponentParameter(
-                key='get_cp_5',
+            Parameter(
+                name='get_cp_5',
                 value=ParameterValue(type=2, integer_value=10)),
-            ComponentParameter(
-                key='get_cp_6',
+            Parameter(
+                name='get_cp_6',
                 value=ParameterValue(type=7, integer_array_value=[10, 14])),
-            ComponentParameter(
-                key='get_cp_7',
+            Parameter(
+                name='get_cp_7',
                 value=ParameterValue(type=4, string_value='teste')),
-            ComponentParameter(
-                key='get_cp_8',
+            Parameter(
+                name='get_cp_8',
                 value=ParameterValue(
                     type=9, string_array_value=['teste', 'teste2'])),
         ]
