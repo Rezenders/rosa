@@ -116,21 +116,6 @@ class Executor(Node):
         return TransitionCallbackReturn.SUCCESS
 
     @check_lc_active
-    def event_cb(self, msg):
-        if msg.data == 'insert':
-            reconfig_plan = self.call_service(
-                self.get_reconfig_plan_srv, GetReconfigurationPlan.Request())
-            result_deactivation = self.deactivate_components(
-                reconfig_plan.components_deactivate)
-            result_activation = self.activate_components(
-                reconfig_plan.components_activate)
-            result_update = self.update_component_params(
-                reconfig_plan.component_configurations)
-            result = result_deactivation and result_activation \
-                and result_update
-            # TODO: update reconfig plan result
-
-    @check_lc_active
     def change_lc_node_state(self, node_name, transition_id):
         srv = self.create_client(
             ChangeState, node_name + '/change_state')
@@ -158,6 +143,29 @@ class Executor(Node):
                 'Future not completed {}'.format(cli.srv_name))
             return None
         return future.result()
+
+    @check_lc_active
+    def event_cb(self, msg):
+        if msg.data == 'insert':
+            pass
+            # reconfig_plan = self.call_service(
+            #     self.get_reconfig_plan_srv, GetReconfigurationPlan.Request())
+            # reconfig_result = self.perform_reconfiguration_plan(reconfig_plan)
+            # result_update = self.update_component_params(
+            #     reconfig_plan.component_configurations)
+            # result = result_deactivation and result_activation \
+            #     and result_update
+            # TODO: update reconfig plan result
+
+    @check_lc_active
+    def perform_reconfiguration_plan(self, reconfig_plan):
+        result_deactivation = self.deactivate_components(
+            reconfig_plan.components_deactivate)
+        result_activation = self.activate_components(
+            reconfig_plan.components_activate)
+        result_update = self.perform_parameter_adaptation(
+            reconfig_plan.component_configurations)
+        return result_deactivation and result_activation and result_update
 
     def kill_component(self, component):
         pgid = os.getpgid(self.component_pids_dict[component.name])

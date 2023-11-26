@@ -27,6 +27,7 @@ from metacontrol_execute.executor import Executor
 
 from metacontrol_kb_msgs.msg import Component
 from metacontrol_kb_msgs.msg import ComponentConfig
+from metacontrol_kb_msgs.msg import ReconfigurationPlan
 from metacontrol_kb_msgs.srv import ComponentQuery
 from rcl_interfaces.msg import Parameter
 from rcl_interfaces.msg import ParameterValue
@@ -310,6 +311,66 @@ def test_perform_parameter_adaptation(executor_node, tester_node):
             all(p in params.values for p in expected_params) and \
             all(p in params_2.values for p in expected_params_2)
     finally:
+        pgid = os.getpgid(executor_node.component_pids_dict['ros_typedb_test'])
+        os.killpg(pgid, signal.SIGTERM)
+        os.waitid(os.P_PGID, pgid, os.WEXITED)
+        pgid = os.getpgid(
+            executor_node.component_pids_dict['ros_typedb_test_2'])
+        os.killpg(pgid, signal.SIGTERM)
+        os.waitid(os.P_PGID, pgid, os.WEXITED)
+
+
+@pytest.mark.launch(fixture=generate_test_description)
+@pytest.mark.usefixtures(fixture=tester_node)
+def test_perform_reconfiguration_plan(executor_node, tester_node):
+    try:
+        tester_node.activate_lc_node(metacontrol_kb_name)
+
+        component = Component()
+        component.name = 'executor_mock'
+        component.package = 'metacontrol_execute'
+        component.executable = 'executor'
+        component.node_type = 'LifeCycleNode'
+
+        component2 = Component()
+        component2.name = 'executor_mock_2'
+        component2.package = 'metacontrol_execute'
+        component2.executable = 'executor'
+        component2.node_type = 'LifeCycleNode'
+
+        executor_node.activate_components([component, component2])
+
+        component3 = Component()
+        component3.name = 'ros_typedb_test'
+        component3.package = 'ros_typedb'
+        component3.executable = 'ros_typedb'
+        component3.node_type = 'LifeCycleNode'
+
+        component4 = Component()
+        component4.name = 'ros_typedb_test_2'
+        component4.package = 'ros_typedb'
+        component4.executable = 'ros_typedb'
+        component4.node_type = 'LifeCycleNode'
+
+        config = ComponentConfig(name='ros_typedb_config')
+        config_2 = ComponentConfig(name='ros_typedb_config_2')
+
+        reconfig_plan = ReconfigurationPlan()
+        reconfig_plan.components_deactivate = [component, component2]
+        reconfig_plan.components_activate = [component3, component4]
+        reconfig_plan.component_configurations = [config, config_2]
+
+        result = executor_node.perform_reconfiguration_plan(reconfig_plan)
+
+        assert result is True
+    finally:
+        pgid = os.getpgid(executor_node.component_pids_dict['executor_mock'])
+        os.killpg(pgid, signal.SIGTERM)
+        os.waitid(os.P_PGID, pgid, os.WEXITED)
+        pgid = os.getpgid(
+            executor_node.component_pids_dict['executor_mock_2'])
+        os.killpg(pgid, signal.SIGTERM)
+        os.waitid(os.P_PGID, pgid, os.WEXITED)
         pgid = os.getpgid(executor_node.component_pids_dict['ros_typedb_test'])
         os.killpg(pgid, signal.SIGTERM)
         os.waitid(os.P_PGID, pgid, os.WEXITED)
