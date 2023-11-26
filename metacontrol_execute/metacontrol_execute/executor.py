@@ -171,7 +171,7 @@ class Executor(Node):
         return_value = True
         for component in components:
             _return_value = True
-            if component.node_type == 'lifecycle' and \
+            if component.node_type == 'LifeCycleNode' and \
                component.name in self.get_node_names():
                 _state = self.get_lc_node_state(component.name)
                 if _state.current_state.id == 3:
@@ -210,7 +210,7 @@ class Executor(Node):
                     return_value = False
                 else:
                     self.component_pids_dict[component.name] = result_start.pid
-            if component.node_type == 'lifecycle' and \
+            if component.node_type == 'LifeCycleNode' and \
                component.name in self.get_node_names():
                 _state = self.get_lc_node_state(component.name)
                 if _state.current_state.id == 1:

@@ -133,7 +133,7 @@ def test_activate_components(executor_node, tester_node):
         component2.name = 'executor_mock_2'
         component2.package = 'metacontrol_execute'
         component2.executable = 'executor'
-        component2.node_type = 'lifecycle'
+        component2.node_type = 'LifeCycleNode'
 
         param2 = Parameter()
         param2.name = 'teste'
@@ -217,7 +217,7 @@ def test_deactivate_components(executor_node, tester_node):
         component2.name = 'executor_mock_2'
         component2.package = 'metacontrol_execute'
         component2.executable = 'executor'
-        component2.node_type = 'lifecycle'
+        component2.node_type = 'LifeCycleNode'
 
         param2 = Parameter()
         param2.name = 'teste'
@@ -265,13 +265,13 @@ def test_perform_parameter_adaptation(executor_node, tester_node):
         component.name = 'ros_typedb_test'
         component.package = 'ros_typedb'
         component.executable = 'ros_typedb'
-        component.node_type = 'lifecycle'
+        component.node_type = 'LifeCycleNode'
 
         component2 = Component()
         component2.name = 'ros_typedb_test_2'
         component2.package = 'ros_typedb'
         component2.executable = 'ros_typedb'
-        component2.node_type = 'lifecycle'
+        component2.node_type = 'LifeCycleNode'
 
         result = executor_node.activate_components([component, component2])
 
