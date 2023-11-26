@@ -46,6 +46,7 @@ from metacontrol_kb_msgs.srv import GetComponentParameters
 from metacontrol_kb_msgs.srv import GetComponentConfigPerformance
 from metacontrol_kb_msgs.srv import GetReconfigurationPlan
 from metacontrol_kb_msgs.srv import GetFDPerformance
+from metacontrol_kb_msgs.srv import ReconfigurationPlanQuery
 from metacontrol_kb_msgs.srv import SelectedConfig
 from metacontrol_kb_msgs.srv import SelectableComponentConfigs
 from metacontrol_kb_msgs.srv import SelectableFDs
@@ -426,10 +427,20 @@ def test_metacontrol_kb_get_reconfiguration_plan():
 
         node.call_service(node.selected_config_srv, selected_config)
 
-        node.get_reconfig_plan_srv = node.create_client(
-            GetReconfigurationPlan, '/metacontrol_kb/reconfiguration_plan/get')
+        node.get_latest_reconfig_plan_srv = node.create_client(
+            GetReconfigurationPlan,
+            '/metacontrol_kb/reconfiguration_plan/get_latest')
         reconfig_plan = node.call_service(
-            node.get_reconfig_plan_srv, GetReconfigurationPlan.Request())
+            node.get_latest_reconfig_plan_srv,
+            GetReconfigurationPlan.Request())
+
+        node.get_reconfig_plan_srv = node.create_client(
+            GetReconfigurationPlan,
+            '/metacontrol_kb/reconfiguration_plan/get')
+        reconfig_plan_2 = node.call_service(
+            node.get_reconfig_plan_srv,
+            GetReconfigurationPlan.Request(
+                start_time=reconfig_plan.reconfig_plan.start_time))
 
         _c = Component()
         _c.name = 'component_reconfig_2'
@@ -441,7 +452,10 @@ def test_metacontrol_kb_get_reconfiguration_plan():
         assert reconfig_plan.success is True \
             and _c in reconfig_plan.reconfig_plan.components_activate \
             and _cc in reconfig_plan.reconfig_plan.component_configurations \
-            and reconfig_plan.reconfig_plan.start_time != ''
+            and reconfig_plan.reconfig_plan.start_time != '' \
+            and reconfig_plan_2.success is True \
+            and reconfig_plan.reconfig_plan.start_time == \
+            reconfig_plan_2.reconfig_plan.start_time
     finally:
         rclpy.shutdown()
 
@@ -530,6 +544,64 @@ def test_get_component_parameters_cb():
 
         assert result.success is True and result.component.name == 'get_cp_c' \
             and all(p in result.parameters for p in expected_params)
+    finally:
+        rclpy.shutdown()
+
+
+@pytest.mark.launch(fixture=generate_test_description)
+def test_set_reconfiguration_plan_result_service_cb():
+    rclpy.init()
+    try:
+        node = MakeTestNode()
+        node.start_node()
+        node.activate_metacontrol_kb()
+
+        node.selected_config_srv = node.create_client(
+            SelectedConfig, '/metacontrol_kb/select_configuration')
+
+        selected_config = SelectedConfig.Request()
+
+        selected_fd = SelectedFunctionDesign()
+        selected_fd.function_name = 'f_reconfigure_fd'
+        selected_fd.function_design_name = 'fd_reconfig_2'
+
+        selected_cc = SelectedComponentConfig()
+        selected_cc.component_name = 'component_reconfig_3'
+        selected_cc.component_configuration_name = 'cp_reconfig_2'
+
+        selected_config.selected_fds.append(selected_fd)
+        selected_config.selected_component_configs.append(selected_cc)
+
+        node.call_service(node.selected_config_srv, selected_config)
+
+        node.get_latest_reconfig_plan = node.create_client(
+            GetReconfigurationPlan,
+            '/metacontrol_kb/reconfiguration_plan/get_latest')
+        reconfig_plan = node.call_service(
+            node.get_latest_reconfig_plan, GetReconfigurationPlan.Request())
+
+        node.set_reconfig_plan_result_srv = node.create_client(
+            ReconfigurationPlanQuery,
+            '/metacontrol_kb/reconfiguration_plan/result/set')
+        rp_query = ReconfigurationPlanQuery.Request()
+        rp_query.reconfig_plan.start_time = \
+            reconfig_plan.reconfig_plan.start_time
+        rp_query.reconfig_plan.result = 'completed'
+        set_result = node.call_service(
+            node.set_reconfig_plan_result_srv, rp_query)
+
+        node.get_reconfig_plan_srv = node.create_client(
+            GetReconfigurationPlan,
+            '/metacontrol_kb/reconfiguration_plan/get')
+
+        rp_req = GetReconfigurationPlan.Request()
+        rp_req.start_time = \
+            reconfig_plan.reconfig_plan.start_time
+        reconfig_plan_2 = node.call_service(
+            node.get_reconfig_plan_srv, rp_req)
+
+        assert set_result.success is True and reconfig_plan_2.success is True \
+            and reconfig_plan_2.reconfig_plan.result == 'completed'
     finally:
         rclpy.shutdown()
 
