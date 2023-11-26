@@ -26,8 +26,11 @@ from ros_pytest.fixture import tester_node
 from metacontrol_execute.executor import Executor
 
 from metacontrol_kb_msgs.msg import Component
+from metacontrol_kb_msgs.msg import ComponentConfig
 from metacontrol_kb_msgs.srv import ComponentQuery
 from rcl_interfaces.msg import Parameter
+from rcl_interfaces.msg import ParameterValue
+from rcl_interfaces.srv import GetParameters
 
 executor_node_name = 'executor_tested'
 metacontrol_kb_name = 'metacontrol_kb'
@@ -248,5 +251,68 @@ def test_deactivate_components(executor_node, tester_node):
             and 'executor_mock' not in executor_node.component_pids_dict
     finally:
         pgid = os.getpgid(executor_node.component_pids_dict['executor_mock_2'])
+        os.killpg(pgid, signal.SIGTERM)
+        os.waitid(os.P_PGID, pgid, os.WEXITED)
+
+
+@pytest.mark.launch(fixture=generate_test_description)
+@pytest.mark.usefixtures(fixture=tester_node)
+def test_perform_parameter_adaptation(executor_node, tester_node):
+    try:
+        tester_node.activate_lc_node(metacontrol_kb_name)
+
+        component = Component()
+        component.name = 'ros_typedb_test'
+        component.package = 'ros_typedb'
+        component.executable = 'ros_typedb'
+        component.node_type = 'lifecycle'
+
+        component2 = Component()
+        component2.name = 'ros_typedb_test_2'
+        component2.package = 'ros_typedb'
+        component2.executable = 'ros_typedb'
+        component2.node_type = 'lifecycle'
+
+        result = executor_node.activate_components([component, component2])
+
+        config = ComponentConfig(name='ros_typedb_config')
+        config_2 = ComponentConfig(name='ros_typedb_config_2')
+        result = executor_node.perform_parameter_adaptation([config, config_2])
+
+        get_param_srv = executor_node.create_client(
+            GetParameters, '/ros_typedb_test/get_parameters')
+        get_param_srv_2 = executor_node.create_client(
+            GetParameters, '/ros_typedb_test_2/get_parameters')
+
+        param_req = GetParameters.Request(
+            names=[
+                'database_name', 'force_database', 'force_data', 'data_path'])
+        params = executor_node.call_service(get_param_srv, param_req)
+        params_2 = executor_node.call_service(get_param_srv_2, param_req)
+
+        expected_params = [
+            ParameterValue(type=4, string_value='ros_typedb_executor'),
+            ParameterValue(type=1, bool_value=True),
+            ParameterValue(type=1, bool_value=False),
+            ParameterValue(
+                type=9, string_array_value=['test_data/test_data.tql']),
+        ]
+        expected_params_2 = [
+            ParameterValue(type=4, string_value='ros_typedb_executor_2'),
+            ParameterValue(type=1, bool_value=False),
+            ParameterValue(type=1, bool_value=True),
+            ParameterValue(
+                type=9, string_array_value=['test_data/test_data.tql']),
+        ]
+
+        assert result is True and \
+            all(p in params.values for p in expected_params) and \
+            all(p in params_2.values for p in expected_params_2)
+    finally:
+        pgid = os.getpgid(executor_node.component_pids_dict['ros_typedb_test'])
+        os.killpg(pgid, signal.SIGTERM)
+        os.waitid(os.P_PGID, pgid, os.WEXITED)
+        pgid = os.getpgid(
+            executor_node.component_pids_dict['ros_typedb_test_2'])
         os.killpg(pgid, signal.SIGTERM)
         os.waitid(os.P_PGID, pgid, os.WEXITED)

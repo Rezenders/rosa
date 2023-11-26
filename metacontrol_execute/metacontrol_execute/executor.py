@@ -17,7 +17,6 @@ import subprocess
 import shlex
 
 from rclpy.callback_groups import MutuallyExclusiveCallbackGroup
-from rclpy.callback_groups import ReentrantCallbackGroup
 
 from rclpy.lifecycle import Node
 from rclpy.lifecycle import State
@@ -28,7 +27,10 @@ from lifecycle_msgs.srv import GetState
 
 from std_msgs.msg import String
 from metacontrol_kb_msgs.srv import ComponentQuery
+from metacontrol_kb_msgs.srv import GetComponentParameters
 from metacontrol_kb_msgs.srv import GetReconfigurationPlan
+
+from rcl_interfaces.srv import SetParametersAtomically
 
 
 def get_parameter_value(param_value):
@@ -44,7 +46,7 @@ def get_parameter_value(param_value):
         9: 'string_array_value',
     }
     value = None
-    if param_value.type != 0:
+    if param_value.type in _param_type:
         value = getattr(param_value, _param_type[param_value.type])
     return value
 
@@ -83,6 +85,12 @@ class Executor(Node):
         self.set_component_active_srv = self.create_client(
             ComponentQuery,
             '/metacontrol_kb/component/active/set',
+            callback_group=MutuallyExclusiveCallbackGroup(),
+        )
+
+        self.get_component_parameters_srv = self.create_client(
+            GetComponentParameters,
+            '/metacontrol_kb/component_parameters/get',
             callback_group=MutuallyExclusiveCallbackGroup(),
         )
 
@@ -233,8 +241,35 @@ class Executor(Node):
                     component.name, is_active))
         return result
 
-    def update_component_params(self, configurations):
-        pass
+    @check_lc_active
+    def perform_parameter_adaptation(self, configurations):
+        return_value = True
+        for config in configurations:
+            request = GetComponentParameters.Request()
+            request.c_config = config
+            res_get_param = self.call_service(
+                self.get_component_parameters_srv, request)
+
+            set_parameters_atomically_srv = self.create_client(
+                SetParametersAtomically,
+                res_get_param.component.name + '/set_parameters_atomically',
+                callback_group=MutuallyExclusiveCallbackGroup(),
+            )
+
+            req_set_param = SetParametersAtomically.Request(
+                parameters=res_get_param.parameters)
+            res_set_param = self.call_service(
+                set_parameters_atomically_srv, req_set_param)
+            if res_set_param.result.successful is False:
+                return_value = False
+                self.get_logger().error(
+                    f'''Error in parameter adaptation with:
+                    component: {res_get_param.component.name}
+                    component config: {res_get_param.component.name}
+                    reason: {res_set_param.result.reason}
+                    '''
+                )
+        return return_value
 
     def start_ros_node(self, node_dict):
         cmd = 'ros2 run '
