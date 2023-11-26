@@ -13,7 +13,8 @@
 # limitations under the License.
 import pytest
 from metacontrol_kb.typedb_model_interface import ModelInterface
-from metacontrol_kb.typedb_model_interface import convert_parameter_type_to_py_type
+from metacontrol_kb.typedb_model_interface \
+    import convert_parameter_type_to_py_type
 from datetime import datetime
 
 
@@ -22,8 +23,8 @@ def kb_interface():
     kb_interface = ModelInterface(
         "localhost:1729",
         "test_model_interface",
-        "config/schema.tql",
-        "test/test_data/test_data.tql",
+        ["config/schema.tql", "config/ros_schema.tql"],
+        ["test/test_data/test_data.tql", "test/test_data/ros_test_data.tql"],
         force_database=True,
         force_data=True)
     return kb_interface
@@ -583,7 +584,29 @@ def test_get_component_parameters(kb_interface):
         ]
     }
     result = kb_interface.get_component_parameters(c_config)
-    print('result: ', result)
     assert result['Component'] == expected['Component'] and \
         all(r in result['ComponentParameters'] for
             r in expected['ComponentParameters'])
+
+
+def test_get_component_all_attributes(kb_interface):
+    result = kb_interface.get_component_all_attributes('c_attributes')
+    result2 = kb_interface.get_component_all_attributes('ros_typedb_test')
+
+    expected_result = {
+        'type': 'Component',
+        'component-name': 'c_attributes',
+        'is-active': True,
+        'is-required': True,
+        'component-status': 'solved',
+    }
+
+    expected_result2 = {
+        'type': 'LifeCycleNode',
+        'component-name': 'ros_typedb_test',
+        'package': 'ros_typedb',
+        'executable': 'ros_typedb',
+        'component-status': 'unfeasible',
+    }
+
+    assert result == expected_result and result2 == expected_result2

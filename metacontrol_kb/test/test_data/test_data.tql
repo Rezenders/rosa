@@ -120,4 +120,4 @@ $get_cp_7 isa ComponentParameter, has parameter-key "get_cp_7", has parameter-va
 $get_cp_8 isa ComponentParameter, has parameter-key "get_cp_8", has parameter-value "[teste, teste2]", has parameter-type "string_array";
 (component: $get_cp_c, parameter:$get_cp_1, parameter:$get_cp_2, parameter:$get_cp_3, parameter:$get_cp_4, parameter:$get_cp_5, parameter:$get_cp_6, parameter:$get_cp_7, parameter:$get_cp_8) isa component-configuration, has component-configuration-name "get_cp_cc";
 
-
+$c_attributes isa Component, has component-name "c_attributes", has is-active true, has is-required true;
