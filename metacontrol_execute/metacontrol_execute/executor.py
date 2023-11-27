@@ -241,6 +241,8 @@ class Executor(Node):
             if component.node_type == 'LifeCycleNode' and \
                component.name in self.get_node_names():
                 _state = self.get_lc_node_state(component.name)
+                if _state.current_state.id == 0:
+                    _state = self.get_lc_node_state(component.name)
                 if _state.current_state.id == 1:
                     self.change_lc_node_state(component.name, 1)
                 _state = self.get_lc_node_state(component.name)

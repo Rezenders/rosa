@@ -14,6 +14,8 @@
 import os
 import signal
 import sys
+import rclpy
+from threading import Thread
 from pathlib import Path
 
 import launch
@@ -69,14 +71,28 @@ def generate_test_description():
     ])
 
 
+def spin_srv(executor):
+    try:
+        executor.spin()
+    except rclpy.executors.ExternalShutdownException:
+        pass
+
+
 @pytest.mark.usefixtures(fixture=tester_node)
 @pytest.fixture(scope='module')
 def executor_node(tester_node):
     executor_node = Executor(executor_node_name)
-    tester_node.start_node(executor_node)
+
+    executor = rclpy.executors.MultiThreadedExecutor()
+    executor.add_node(executor_node)
+    new_thread = Thread(target=spin_srv, args=(executor, ), daemon=True)
+    new_thread.start()
+
     tester_node.activate_lc_node(executor_node_name)
     yield executor_node
     executor_node.destroy_node()
+    executor.shutdown()
+    new_thread.join()
 
 
 def test_start_ros_node(executor_node):
