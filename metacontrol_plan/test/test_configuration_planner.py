@@ -158,7 +158,7 @@ def test_manual_event_cb():
         node.activate_lc_node(metacontrol_kb_name)
 
         event = String()
-        event.data = 'insert'
+        event.data = 'insert_monitoring_data'
         result = configuration_planner.event_cb(event)
 
         node.query_srv = node.create_client(
