@@ -1,27 +1,75 @@
 cmake_minimum_required(VERSION 3.8)
 project(metacontrol_plan)
 
+# set(CMAKE_BUILD_TYPE Debug)
+
 if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   add_compile_options(-Wall -Wextra -Wpedantic)
 endif()
 
+set(CMAKE_CONFIG_PATH ${CMAKE_MODULE_PATH}  "${CMAKE_CURRENT_LIST_DIR}/cmake")
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CONFIG_PATH}")
+
 # find dependencies
 find_package(ament_cmake REQUIRED)
 find_package(ament_cmake_python REQUIRED)
-find_package(rclcpp REQUIRED)
 find_package(rclpy REQUIRED)
+find_package(rclcpp REQUIRED)
+find_package(rclcpp_lifecycle REQUIRED)
+find_package(behaviortree_cpp REQUIRED)
+find_package(metacontrol_kb_msgs REQUIRED)
 
-include_directories(include)
+find_package(ZMQ)
+if(ZMQ_FOUND)
+    message(STATUS "ZeroMQ found.")
+    add_definitions(-DZMQ_FOUND)
+else()
+  message(WARNING "ZeroMQ NOT found. Not including PublisherZMQ.")
+endif()
 
-# Create Cpp executable
-# add_executable(cpp_executable src/cpp_node.cpp)
-# ament_target_dependencies(cpp_executable rclcpp)
+set(dependencies
+  ament_index_cpp
+  rclcpp
+  rclcpp_lifecycle
+  std_msgs
+  behaviortree_cpp
+  metacontrol_kb_msgs
+)
 
-# Install Cpp executables
-# install(TARGETS
-#   cpp_executable
-#   DESTINATION lib/${PROJECT_NAME}
-# )
+include_directories(
+  include
+  ${ZMQ_INCLUDE_DIRS}
+)
+
+add_library(metacontroled_action
+  SHARED
+  src/metacontrol_plan/metacontroled_action.cpp
+)
+
+add_library(is_task_feasible_bt_node
+  SHARED
+  src/metacontrol_plan/is_task_feasible.cpp
+)
+
+list(APPEND plugin_libs
+  metacontroled_action
+  is_task_feasible_bt_node
+)
+
+foreach(bt_plugin ${plugin_libs})
+  ament_target_dependencies(${bt_plugin} ${dependencies})
+  target_compile_definitions(${bt_plugin} PRIVATE BT_PLUGIN_EXPORT)
+endforeach()
+
+install(TARGETS ${plugin_libs}
+  ARCHIVE DESTINATION lib
+  LIBRARY DESTINATION lib
+  RUNTIME DESTINATION bin
+)
+
+install(DIRECTORY include/
+  DESTINATION include/
+)
 
 ament_python_install_package(${PROJECT_NAME})
 
@@ -29,6 +77,11 @@ ament_python_install_package(${PROJECT_NAME})
 install(PROGRAMS
   metacontrol_plan/configuration_planner_node.py
   DESTINATION lib/${PROJECT_NAME}
+)
+
+install(DIRECTORY
+  launch
+  DESTINATION share/${PROJECT_NAME}/
 )
 
 if(BUILD_TESTING)
@@ -61,5 +114,10 @@ if(BUILD_TESTING)
   ament_lint_auto_find_test_dependencies()
 endif()
 
-
+ament_export_libraries(
+  metacontroled_action
+  is_task_feasible_bt_node
+)
+ament_export_include_directories(include)
+ament_export_dependencies(${dependencies})
 ament_package()
