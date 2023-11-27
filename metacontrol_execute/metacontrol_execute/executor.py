@@ -159,9 +159,8 @@ class Executor(Node):
 
     @check_lc_active
     def event_cb(self, msg):
-        if msg.data == 'insert':
-            # self.execute()
-            pass
+        if msg.data == 'insert_reconfiguration_plan':
+            self.execute()
 
     @check_lc_active
     def execute(self):

@@ -153,7 +153,7 @@ class ConfigurationPlanner(Node):
         return selected_config
 
     def event_cb(self, msg):
-        if msg.data == 'insert':
+        if msg.data == 'insert_monitoring_data':
             selected_config = self.plan_adaptation()
             # update kb with selected fds and component configs
             self.call_service(self.select_configuration_srv, selected_config)

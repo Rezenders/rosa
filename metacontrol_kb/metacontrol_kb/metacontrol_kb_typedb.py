@@ -48,6 +48,16 @@ from ros_typedb.ros_typedb_interface import set_query_result_value
 from diagnostic_msgs.msg import DiagnosticArray
 
 
+def publish_event(event_type):
+    def _publish_event(func):
+        def inner(*args, **kwargs):
+            args[0].publish_data_event(event_type)
+            print('pub: ', event_type)
+            return func(*args, **kwargs)
+        return inner
+    return _publish_event
+
+
 class MetacontrolKB(ROSTypeDBInterface):
     def __init__(self, node_name, **kwargs):
         super().__init__(node_name, **kwargs)
@@ -174,6 +184,7 @@ class MetacontrolKB(ROSTypeDBInterface):
     def on_cleanup(self, state: State) -> TransitionCallbackReturn:
         return super().on_cleanup(state)
 
+    @publish_event(event_type='insert_monitoring_data')
     def diagnostics_callback(self, msg):
         measurement_messages = [
             'QA status',
@@ -273,6 +284,7 @@ class MetacontrolKB(ROSTypeDBInterface):
         res.success = True
         return res
 
+    @publish_event(event_type='insert_reconfiguration_plan')
     def select_configuration_cb(self, req, res):
         _selected_fds = [
             (selected_fd.function_name, selected_fd.function_design_name)
