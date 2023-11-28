@@ -74,10 +74,10 @@ $f_unsolved isa Function, has function-name "f_unsolved", has function-status "u
 $c_unsolved isa Component, has component-name "c_unsolved", has component-status "unsolved";
 $fd_unsolved (function:$f_unsolved, required-component:$c_unsolved) isa function-design, has function-design-name "fd_unsolved", has function-design-status "unsolved";
 
-$f_always_improve isa Function, has function-name "f_always_improve", has always-improve true;
+$f_always_improve isa Function, has function-name "f_always_improve", has always-improve true, has function-status 'solved';
 (function: $f_always_improve, required-component: $c2, required-component: $c3) isa function-design, has function-design-name "f_improve_fd1", has performance 1.0;
 (function: $f_always_improve, required-component: $c4, required-component: $c5) isa function-design, has function-design-name "f_improve_fd2", has performance 3.0;
-$c_always_improve isa Component, has component-name "c_always_improve", has always-improve true;
+$c_always_improve isa Component, has component-name "c_always_improve", has always-improve true, has component-status 'solved';
 (component:$c_always_improve, parameter:$cp_reconfig_1) isa component-configuration, has component-configuration-name "c_improve_fd1", has performance 2.0;
 (component:$c_always_improve, parameter:$cp_reconfig_2) isa component-configuration, has component-configuration-name "c_improve_fd2";
 

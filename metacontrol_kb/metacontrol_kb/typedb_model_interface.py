@@ -162,6 +162,8 @@ class ModelInterface(TypeDBInterface):
                         $status like 'unsolved|configuration error';
                 }} or {{
                     $t has always-improve true;
+                    $t has {thing.lower()}-status $status;
+                        $status like 'solved';
                 }};
                 get $name;
         '''
