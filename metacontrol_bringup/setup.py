@@ -24,6 +24,7 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
+            'lifecycle_manager = metacontrol_bringup.lifecycle_manager:main'
         ],
     },
 )

@@ -11,6 +11,7 @@
   <depend>metacontrol_kb_msgs</depend>
   <depend>metacontrol_plan</depend>
   <depend>metacontrol_execute</depend>
+  <depend>lifecycle_msgs</depend>
 
   <test_depend>ament_copyright</test_depend>
   <test_depend>ament_flake8</test_depend>
