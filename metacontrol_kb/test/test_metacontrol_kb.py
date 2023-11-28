@@ -107,8 +107,8 @@ def test_metacontrol_kb_lc_states():
         rclpy.shutdown()
 
 
-@pytest.mark.skip(
-    reason='Bugs when publishing')
+# @pytest.mark.skip(
+#     reason='Bugs when publishing')
 @pytest.mark.launch(fixture=generate_test_description)
 def test_metacontrol_kb_diagnostics():
     rclpy.init()
@@ -143,7 +143,7 @@ def test_metacontrol_kb_diagnostics():
         """
         query_res = node.call_service(node.query_srv, query_req)
         correct_measurement = False
-        for r in query_res.result:
+        for r in query_res.attributes:
             if r.name == 'measurement' \
                and r.value.double_value == 1.72:
                 correct_measurement = True

@@ -222,7 +222,7 @@ class ModelInterface(TypeDBInterface):
             'attribute-name',
             attribute_name,
             'attribute-measurement',
-            value)
+            float(value))
 
     def get_measured_attribute(self, attribute_name):
         measurement = self.get_attribute_from_thing(
