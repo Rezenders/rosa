@@ -31,9 +31,9 @@ def generate_launch_description():
 
     pkg_metacontrol_kb = get_package_share_directory('metacontrol_kb')
 
-    default_schema_path = [
+    default_schema_path = "[{0},{1}]".format(
         os.path.join(pkg_metacontrol_kb, 'config', 'schema.tql'),
-        os.path.join(pkg_metacontrol_kb, 'config', 'ros_schema.tql')]
+        os.path.join(pkg_metacontrol_kb, 'config', 'ros_schema.tql'))
 
     schema_path_arg = DeclareLaunchArgument(
         'schema_path',
@@ -43,7 +43,7 @@ def generate_launch_description():
 
     data_path_arg = DeclareLaunchArgument(
         'data_path',
-        default_value='',
+        default_value="['']",
         description='path for KB data'
     )
 
