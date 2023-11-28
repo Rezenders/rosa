@@ -20,6 +20,8 @@ from launch.actions import DeclareLaunchArgument
 from launch.actions import IncludeLaunchDescription
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration
+from launch_ros.actions import Node
+
 
 def generate_launch_description():
     schema_path = LaunchConfiguration('schema_path')
@@ -28,6 +30,7 @@ def generate_launch_description():
     address = LaunchConfiguration('address')
     force_data = LaunchConfiguration('force_data')
     force_database = LaunchConfiguration('force_database')
+    managed_nodes = LaunchConfiguration('managed_nodes')
 
     pkg_metacontrol_kb = get_package_share_directory(
         'metacontrol_kb')
@@ -51,9 +54,9 @@ def generate_launch_description():
         'launch',
         'metacontrol_execute.launch.py')
 
-    default_schema_path = [
+    default_schema_path = "[{0},{1}]".format(
         os.path.join(pkg_metacontrol_kb, 'config', 'schema.tql'),
-        os.path.join(pkg_metacontrol_kb, 'config', 'ros_schema.tql')]
+        os.path.join(pkg_metacontrol_kb, 'config', 'ros_schema.tql'))
 
     schema_path_arg = DeclareLaunchArgument(
         'schema_path',
@@ -63,7 +66,7 @@ def generate_launch_description():
 
     data_path_arg = DeclareLaunchArgument(
         'data_path',
-        default_value='',
+        default_value="['']",
         description='path for KB data'
     )
 
@@ -91,6 +94,15 @@ def generate_launch_description():
         description='force database'
     )
 
+    default_managed_nodes = "[{0},{1},{2}]".format(
+        'metacontrol_kb', 'configuration_planner', 'executor')
+
+    managed_nodes_arg = DeclareLaunchArgument(
+        'managed_nodes',
+        default_value=default_managed_nodes,
+        description='path for KB schema'
+    )
+
     metacontrol_kb = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(metacontrol_kb_launch_path),
         launch_arguments={
@@ -111,6 +123,14 @@ def generate_launch_description():
         PythonLaunchDescriptionSource(metacontrol_execute_launch_path),
     )
 
+    lc_manager_node = Node(
+        package='metacontrol_bringup',
+        executable='lifecycle_manager',
+        parameters=[{
+            'managed_nodes': managed_nodes
+        }]
+    )
+
     return LaunchDescription([
         schema_path_arg,
         data_path_arg,
@@ -118,7 +138,9 @@ def generate_launch_description():
         address_arg,
         force_data_arg,
         force_database_arg,
+        managed_nodes_arg,
         metacontrol_kb,
         metacontrol_plan,
         metacontrol_execute,
+        lc_manager_node,
     ])

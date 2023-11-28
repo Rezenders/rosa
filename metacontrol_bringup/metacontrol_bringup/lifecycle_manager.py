@@ -23,11 +23,10 @@ class LifeCycleManager(Node):
     def __init__(self, node_name, **kwargs):
         super().__init__(node_name, **kwargs)
 
-        self.managed_nodes = [
-            'metacontrol_kb',
-            'configuration_planner',
-            'executor'
-        ]
+        self.declare_parameter(
+            'managed_nodes',
+            ['metacontrol_kb', 'configuration_planner', 'executor'])
+        self.managed_nodes = self.get_parameter('managed_nodes').value
         self.change_state_dict = dict()
         self.get_state_dict = dict()
         self.cb_group = rclpy.callback_groups.MutuallyExclusiveCallbackGroup()
@@ -79,6 +78,7 @@ class LifeCycleManager(Node):
         return True
 
     def activate_managed_nodes(self):
+
         for node in self.managed_nodes:
             if self.activate_lc_node(node) is False:
                 return False
