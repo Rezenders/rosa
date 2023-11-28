@@ -166,16 +166,17 @@ class Executor(Node):
     def execute(self):
         reconfig_plan = self.call_service(
             self.get_reconfig_plan_srv, GetReconfigurationPlan.Request())
-        reconfig_result = self.perform_reconfiguration_plan(
-            reconfig_plan.reconfig_plan)
-        rp_query = ReconfigurationPlanQuery.Request()
-        rp_query.reconfig_plan.start_time = \
-            reconfig_plan.reconfig_plan.start_time
-        if reconfig_result is True:
-            rp_query.reconfig_plan.result = 'completed'
-        else:
-            rp_query.reconfig_plan.result = 'failed'
-        self.call_service(self.set_reconfig_plan_result_srv, rp_query)
+        if reconfig_plan.success is True:
+            reconfig_result = self.perform_reconfiguration_plan(
+                reconfig_plan.reconfig_plan)
+            rp_query = ReconfigurationPlanQuery.Request()
+            rp_query.reconfig_plan.start_time = \
+                reconfig_plan.reconfig_plan.start_time
+            if reconfig_result is True:
+                rp_query.reconfig_plan.result = 'completed'
+            else:
+                rp_query.reconfig_plan.result = 'failed'
+            self.call_service(self.set_reconfig_plan_result_srv, rp_query)
 
     @check_lc_active
     def perform_reconfiguration_plan(self, reconfig_plan):
