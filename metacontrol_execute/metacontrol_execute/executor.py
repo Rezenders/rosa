@@ -222,7 +222,9 @@ class Executor(Node):
     def activate_components(self, components):
         return_value = True
         for component in components:
-            if component.name not in self.get_node_names():
+            c_types = ['ROSNode', 'LifeCycleNode']
+            if component.node_type in c_types and \
+               component.name not in self.get_node_names():
                 parameters = []
                 for parameter in component.parameters:
                     _param_value = get_parameter_value(parameter.value)
@@ -268,7 +270,7 @@ class Executor(Node):
         result = self.call_service(self.set_component_active_srv, _ca)
         if result.success is not True:
             self.get_logger().error(
-                'error seting component {0} to active {1} in the KB'.format(
+                'error setting component {0} to active {1} in the KB'.format(
                     component.name, is_active))
         return result
 
