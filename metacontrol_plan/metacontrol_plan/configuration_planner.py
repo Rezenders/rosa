@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from rclpy.callback_groups import MutuallyExclusiveCallbackGroup
 from rclpy.lifecycle import Node
 from rclpy.lifecycle import State
 from rclpy.lifecycle import TransitionCallbackReturn
@@ -43,7 +44,8 @@ class ConfigurationPlanner(Node):
             String,
             '/metacontrol_kb/events',
             self.event_cb,
-            10)
+            10,
+            callback_group=MutuallyExclusiveCallbackGroup())
 
         self.component_adaptable_srv = self.create_client(
             AdaptableComponents, '/metacontrol_kb/component/adaptable')
@@ -156,7 +158,10 @@ class ConfigurationPlanner(Node):
         if msg.data == 'insert_monitoring_data':
             selected_config = self.plan_adaptation()
             # update kb with selected fds and component configs
-            self.call_service(self.select_configuration_srv, selected_config)
+            if len(selected_config.selected_fds) > 0 \
+               or len(selected_config.selected_component_configs) > 0:
+                self.call_service(
+                    self.select_configuration_srv, selected_config)
 
     def call_service(self, cli, request):
         if cli.wait_for_service(timeout_sec=5.0) is False:
