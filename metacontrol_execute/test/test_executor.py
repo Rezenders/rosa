@@ -117,7 +117,7 @@ def test_start_ros_launchfile(executor_node):
     try:
         node_dict = {
             'package': 'metacontrol_execute',
-            'launch_file': 'executor.launch.py',
+            'launch_file': 'metacontrol_execute.launch.py',
             'parameters': [{'test': 'test'}],
         }
         process = executor_node.start_ros_launchfile(node_dict)
