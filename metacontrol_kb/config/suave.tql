@@ -9,13 +9,13 @@ $f_recover_motion isa Function, has function-name "recover motion";
 (task:$t_search_pipeline, required-function:$f0, required-function:$f_recover_motion) isa task-requirement;
 
 ## Component Generate spiral search path node and configurations
-$c0 isa Component, has component-name "generate spiral search path node", has always-improve true;
+$c0 isa LifeCycleNode, has component-name "f_generate_search_path", has package "suave", has executable "spiral_search", has always-improve true;
 
 (function: $f0, required-component: $c0) isa function-design, has function-design-name "generate spiral search path function design", has performance 1.0;
 
-$cp0 isa ComponentParameter, has parameter-key "altitude", has parameter-value "1.0";
-$cp1 isa ComponentParameter, has parameter-key "altitude", has parameter-value "2.0";
-$cp2 isa ComponentParameter, has parameter-key "altitude", has parameter-value "3.0";
+$cp0 isa ComponentParameter, has parameter-key "spiral_altitude", has parameter-value "1.0", has parameter-type 'double';
+$cp1 isa ComponentParameter, has parameter-key "spiral_altitude", has parameter-value "2.0", has parameter-type 'double';
+$cp2 isa ComponentParameter, has parameter-key "spiral_altitude", has parameter-value "3.0", has parameter-type 'double';
 
 $cc0 (component: $c0, parameter: $cp0) isa component-configuration, has component-configuration-name "low altitude", has performance 1.0;
 $cc1 (component: $c0, parameter: $cp1) isa component-configuration, has component-configuration-name "medium altitude", has performance 2.0;
@@ -28,7 +28,7 @@ $water_visibility isa EnvironmentalAttribute, has attribute-name "water_visibili
 (constraint: $water_visibility, constrained: $cc2) isa constrainment, has attribute-value 3.25, has constrainment-operator ">=";
 
 ## Component recover motion node and configurations
-$c1 isa Component, has component-name "recover motion node";
+$c1 isa Component, has component-name "f_maintain_motion";
 
 $thruster1 isa Component, has component-name "thruster1";
 $thruster2 isa Component, has component-name "thruster2";
@@ -47,7 +47,7 @@ $t_inspect_pipeline isa Task, has task-name "inspect_pipeline";
 $f_follow_pipeline isa Function, has function-name "follow pipeline";
 (task:$t_inspect_pipeline, required-function:$f_recover_motion, required-function:$f_follow_pipeline) isa task-requirement;
 
-$c2 isa Component, has component-name "follow pipeline node";
+$c2 isa LifeCycleNode, has component-name "f_follow_pipeline_node", has package "suave", has executable "follow_pipeline";
 (function: $f_follow_pipeline, required-component: $c2) isa function-design, has function-design-name "follow pipeline function design";
 
 # Extending SUAVE
