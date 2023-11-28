@@ -4,7 +4,7 @@ $ros_typedb isa LifeCycleNode, has component-name "ros_typedb_test", has package
 $database_name isa ComponentParameter, has parameter-key 'database_name', has parameter-value 'ros_typedb_executor', has parameter-type 'string';
 $force_database isa ComponentParameter, has parameter-key 'force_database', has parameter-value 'true', has parameter-type 'boolean';
 $force_data isa ComponentParameter, has parameter-key 'force_data', has parameter-value 'false', has parameter-type 'boolean';
-$data_path isa ComponentParameter, has parameter-key 'data_path', has parameter-value '[test_data/test_data.tql]', has parameter-type 'string_array';
+$data_path isa ComponentParameter, has parameter-key 'data_path', has parameter-value '[test_data/test_data.tql]', has parameter-type 'string';
 (component:$ros_typedb, parameter:$database_name, parameter:$force_database, parameter:$force_data, parameter:$data_path) isa component-configuration,
     has component-configuration-name 'ros_typedb_config';
 
@@ -12,6 +12,6 @@ $ros_typedb_2 isa LifeCycleNode, has component-name "ros_typedb_test_2", has pac
 $database_name_2 isa ComponentParameter, has parameter-key 'database_name', has parameter-value 'ros_typedb_executor_2', has parameter-type 'string';
 $force_database_2 isa ComponentParameter, has parameter-key 'force_database', has parameter-value 'false', has parameter-type 'boolean';
 $force_data_2 isa ComponentParameter, has parameter-key 'force_data', has parameter-value 'true', has parameter-type 'boolean';
-$data_path_2 isa ComponentParameter, has parameter-key 'data_path', has parameter-value '[test_data/test_data.tql]', has parameter-type 'string_array';
+$data_path_2 isa ComponentParameter, has parameter-key 'data_path', has parameter-value '[test_data/test_data.tql]', has parameter-type 'string';
 (component:$ros_typedb_2, parameter:$database_name_2, parameter:$force_database_2, parameter:$force_data_2, parameter:$data_path_2) isa component-configuration,
     has component-configuration-name 'ros_typedb_config_2';

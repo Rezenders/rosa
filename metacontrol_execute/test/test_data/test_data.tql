@@ -8,7 +8,7 @@ $ros_typedb isa LifeCycleNode, has component-name "ros_typedb_test_execute", has
 $database_name isa ComponentParameter, has parameter-key 'database_name', has parameter-value 'ros_typedb_executor', has parameter-type 'string';
 $force_database isa ComponentParameter, has parameter-key 'force_database', has parameter-value 'true', has parameter-type 'boolean';
 $force_data isa ComponentParameter, has parameter-key 'force_data', has parameter-value 'false', has parameter-type 'boolean';
-$data_path isa ComponentParameter, has parameter-key 'data_path', has parameter-value '[test_data/test_data.tql]', has parameter-type 'string_array';
+$data_path isa ComponentParameter, has parameter-key 'data_path', has parameter-value '[test_data/test_data.tql]', has parameter-type 'string';
 $cc_ros_typedb (component:$ros_typedb, parameter:$database_name, parameter:$force_database, parameter:$force_data, parameter:$data_path) isa component-configuration,
     has component-configuration-name 'ros_typedb_config_execute';
 

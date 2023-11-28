@@ -54,15 +54,15 @@ def generate_test_description():
         name=metacontrol_kb_name,
         output='screen',
         parameters=[{
-            'schema_path': [
+            'schema_path': str([
                 str(path_config / 'schema.tql'),
                 str(path_config / 'ros_schema.tql')
-            ],
-            'data_path': [
+            ]),
+            'data_path': str([
                 str(path_test_data / 'test_data.tql'),
                 str(path_test_data / 'ros_test_data.tql'),
                 str(path_execute_test_data / 'test_data.tql')
-            ],
+            ]),
             'database_name': 'test_' + executor_node_name
         }]
     )
@@ -313,14 +313,14 @@ def test_perform_parameter_adaptation(executor_node, tester_node):
             ParameterValue(type=1, bool_value=True),
             ParameterValue(type=1, bool_value=False),
             ParameterValue(
-                type=9, string_array_value=['test_data/test_data.tql']),
+                type=4, string_value="[test_data/test_data.tql]"),
         ]
         expected_params_2 = [
             ParameterValue(type=4, string_value='ros_typedb_executor_2'),
             ParameterValue(type=1, bool_value=False),
             ParameterValue(type=1, bool_value=True),
             ParameterValue(
-                type=9, string_array_value=['test_data/test_data.tql']),
+                type=4, string_value="[test_data/test_data.tql]"),
         ]
 
         assert result is True and \
@@ -426,7 +426,7 @@ def test_execute(executor_node, tester_node):
             ParameterValue(type=1, bool_value=True),
             ParameterValue(type=1, bool_value=False),
             ParameterValue(
-                type=9, string_array_value=['test_data/test_data.tql']),
+                type=4, string_value="[test_data/test_data.tql]"),
         ]
         assert component_state.current_state.id == 2 and \
             'executor_mock' in active_nodes and \
