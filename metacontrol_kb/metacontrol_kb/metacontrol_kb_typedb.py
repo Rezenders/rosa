@@ -52,7 +52,6 @@ def publish_event(event_type):
     def _publish_event(func):
         def inner(*args, **kwargs):
             args[0].publish_data_event(event_type)
-            print('pub: ', event_type)
             return func(*args, **kwargs)
         return inner
     return _publish_event
@@ -375,7 +374,7 @@ class MetacontrolKB(ROSTypeDBInterface):
     def get_component_parameters_cb(self, req, res):
         result = self.typedb_interface.get_component_parameters(
             req.c_config.name)
-        if result is not None:
+        if 'Component' in result and 'ComponentParameters' in result:
             res.success = True
             res.component.name = result['Component']
             for param in result['ComponentParameters']:
