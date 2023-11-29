@@ -308,6 +308,9 @@ class Executor(Node):
             res_get_param = self.call_service(
                 self.get_component_parameters_srv, request)
 
+            if res_get_param == GetComponentParameters.Response():
+                continue
+
             set_parameters_atomically_srv = self.create_client(
                 SetParametersAtomically,
                 res_get_param.component.name + '/set_parameters_atomically',
