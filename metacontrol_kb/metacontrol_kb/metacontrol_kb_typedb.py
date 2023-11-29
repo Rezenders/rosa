@@ -232,15 +232,18 @@ class MetacontrolKB(ROSTypeDBInterface):
         return res
 
     def component_adaptable_cb(self, req, res):
-        result = self.typedb_interface.get_adaptable_components()
-        if result is not None:
-            res.success = True
-            for r in result:
-                _c = Component()
-                _c.name = r
-                res.components.append(_c)
-        else:
+        adaptable_c = self.typedb_interface.get_adaptable_components()
+        for fd in req.selected_fds:
+            _fd_c = self.typedb_interface.get_components_in_function_design(
+                fd)
+            adaptable_c.extend(c for c in _fd_c if c not in adaptable_c)
+
+        if len(adaptable_c) == 0:
             res.success = False
+            return res
+
+        res.success = True
+        res.components = [Component(name=c) for c in adaptable_c]
         return res
 
     def selectable_fd_cb(self, req, res):
