@@ -110,11 +110,14 @@ class ConfigurationPlanner(Node):
                     selected_functions_fds.append(selected_fd)
         return selected_functions_fds
 
-    def plan_component_adaptation(self):
+    def plan_component_adaptation(self, selected_functions_fds=[]):
         # get adaptable components
         selected_component_configs = []
+        _selected_fds = [
+            fd.function_design_name for fd in selected_functions_fds]
         components = self.call_service(
-            self.component_adaptable_srv, AdaptableComponents.Request())
+            self.component_adaptable_srv,
+            AdaptableComponents.Request(selected_fds=_selected_fds))
         # get feasible component configs
         if components is not None:
             for component in components.components:
@@ -146,7 +149,8 @@ class ConfigurationPlanner(Node):
 
     def plan_adaptation(self):
         selected_functions_fds = self.plan_function_adaptation()
-        selected_component_configs = self.plan_component_adaptation()
+        selected_component_configs = self.plan_component_adaptation(
+            selected_functions_fds)
 
         selected_config = SelectedConfig.Request()
         selected_config.selected_fds = selected_functions_fds
