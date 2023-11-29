@@ -249,80 +249,85 @@ def test_select_configuration(
      ):
     result, start_time = kb_interface.select_configuration(
         selected_fd, selected_config)
+    if exp_c_activate == [] and exp_c_deactivate == [] and exp_c_config == []:
+        assert result is True and start_time is None
+    else:
+        query = "match $rp "
+        end_query = ""
+        if len(exp_c_activate) > 0:
+            if query == "match $rp ":
+                query += '('
+            query += "architectural-adaptation:$ca"
+            _match_query, _prefix_list = kb_interface.create_match_query(
+                [('Component', 'component-name', c) for c in exp_c_activate],
+                'ca')
+            end_query += kb_interface.create_relationship_insert_query(
+                'component-activation',
+                {'component': _prefix_list},
+                prefix='ca'
+            )
+            end_query += _match_query
+        if len(exp_c_deactivate) > 0:
+            if query == "match $rp ":
+                query += '('
+            elif len(query) > len("match $rp ("):
+                query += ','
+            query += "architectural-adaptation:$cd"
+            _match_query, _prefix_list = kb_interface.create_match_query(
+                [('Component', 'component-name', c) for c in exp_c_deactivate],
+                'cd')
+            end_query += kb_interface.create_relationship_insert_query(
+                'component-deactivation',
+                {'component': _prefix_list},
+                prefix='cd'
+            )
+            end_query += _match_query
+        if len(exp_c_config) > 0:
+            if query == "match $rp ":
+                query += '('
+            elif len(query) > len("match $rp ("):
+                query += ','
+            query += "parameter-adaptation:$pa"
+            _match_query, _prefix_list = kb_interface.create_match_query(
+                [('component-configuration', 'component-configuration-name', c)
+                 for c in exp_c_config], 'cc_')
+            end_query += kb_interface.create_relationship_insert_query(
+                'parameter-adaptation',
+                {'component-configuration': _prefix_list},
+                prefix='cc'
+            )
+            end_query += _match_query
 
-    query = "match $rp "
-    end_query = ""
-    if len(exp_c_activate) > 0:
-        if query == "match $rp ":
-            query += '('
-        query += "architectural-adaptation:$ca"
-        _match_query, _prefix_list = kb_interface.create_match_query(
-            [('Component', 'component-name', c) for c in exp_c_activate], 'ca')
-        end_query += kb_interface.create_relationship_insert_query(
-            'component-activation',
-            {'component': _prefix_list},
-            prefix='ca'
-        )
-        end_query += _match_query
-    if len(exp_c_deactivate) > 0:
-        if query == "match $rp ":
-            query += '('
-        elif len(query) > len("match $rp ("):
-            query += ','
-        query += "architectural-adaptation:$cd"
-        _match_query, _prefix_list = kb_interface.create_match_query(
-            [('Component', 'component-name', c) for c in exp_c_deactivate], 'cd')
-        end_query += kb_interface.create_relationship_insert_query(
-            'component-deactivation',
-            {'component': _prefix_list},
-            prefix='cd'
-        )
-        end_query += _match_query
-    if len(exp_c_config) > 0:
-        if query == "match $rp ":
-            query += '('
-        elif len(query) > len("match $rp ("):
-            query += ','
-        query += "parameter-adaptation:$pa"
-        _match_query, _prefix_list = kb_interface.create_match_query(
-            [('component-configuration', 'component-configuration-name', c)
-             for c in exp_c_config], 'cc_')
-        end_query += kb_interface.create_relationship_insert_query(
-            'parameter-adaptation',
-            {'component-configuration': _prefix_list},
-            prefix='cc'
-        )
-        end_query += _match_query
+        if query != "match $rp ":
+            query += ')'
 
-    if query != "match $rp ":
-        query += ')'
+        query += " isa reconfiguration-plan, has start-time {};".format(
+            start_time.isoformat(timespec='milliseconds'))
+        query += end_query
+        query_result = kb_interface.match_database(query)
 
-    query += " isa reconfiguration-plan, has start-time {};".format(
-        start_time.isoformat(timespec='milliseconds'))
-    query += end_query
-    query_result = kb_interface.match_database(query)
-
-    right_fd_selected = True
-    for fd in selected_fd:
-        _fd = kb_interface.get_relationship_with_attribute(
-            'Function',
-            fd[0],
-            'function-design',
-            'is-selected',
-            True
-        )
-        right_fd_selected = (fd[1] == _fd[0])
-    right_conf_selected = True
-    for config in selected_config:
-        _config = kb_interface.get_relationship_with_attribute(
-            'Component',
-            config[0],
-            'component-configuration',
-            'is-selected',
-            True
-        )
-        right_conf_selected = (config[1] == _config[0])
-    assert len(query_result) > 0 and right_fd_selected and right_conf_selected
+        right_fd_selected = True
+        for fd in selected_fd:
+            _fd = kb_interface.get_relationship_with_attribute(
+                'Function',
+                fd[0],
+                'function-design',
+                'is-selected',
+                True
+            )
+            right_fd_selected = (fd[1] == _fd[0])
+        right_conf_selected = True
+        for config in selected_config:
+            _config = kb_interface.get_relationship_with_attribute(
+                'Component',
+                config[0],
+                'component-configuration',
+                'is-selected',
+                True
+            )
+            right_conf_selected = (config[1] == _config[0])
+        assert len(query_result) > 0 and right_fd_selected \
+            and right_conf_selected
 
 
 @pytest.mark.parametrize("thing, status, exp", [
