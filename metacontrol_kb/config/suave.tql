@@ -9,7 +9,7 @@ $f_recover_motion isa Function, has function-name "recover motion";
 (task:$t_search_pipeline, required-function:$f0, required-function:$f_recover_motion) isa task-requirement;
 
 ## Component Generate spiral search path node and configurations
-$c0 isa LifeCycleNode, has component-name "f_generate_search_path", has package "suave", has executable "spiral_search", has always-improve true;
+$c0 isa LifeCycleNode, has component-name "f_generate_search_path_node", has package "suave", has executable "spiral_search", has always-improve true;
 
 (function: $f0, required-component: $c0) isa function-design, has function-design-name "generate spiral search path function design", has performance 1.0;
 
@@ -28,7 +28,7 @@ $water_visibility isa EnvironmentalAttribute, has attribute-name "water_visibili
 (constraint: $water_visibility, constrained: $cc2) isa constrainment, has attribute-value 3.25, has constrainment-operator ">=";
 
 ## Component recover motion node and configurations
-$c1 isa Component, has component-name "f_maintain_motion";
+$c1 isa Component, has component-name "f_maintain_motion_node";
 
 $thruster1 isa Component, has component-name "thruster1";
 $thruster2 isa Component, has component-name "thruster2";
