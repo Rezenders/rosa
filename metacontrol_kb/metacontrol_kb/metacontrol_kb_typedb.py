@@ -186,16 +186,27 @@ class MetacontrolKB(ROSTypeDBInterface):
     @publish_event(event_type='insert_monitoring_data')
     def diagnostics_callback(self, msg):
         measurement_messages = [
-            'QA status',
-            'QA measurement',
-            'EA status',
-            'EA measurement',
-            'Attribute measurement']
+            'qa status',
+            'qa measurement',
+            'ea status',
+            'ea measurement',
+            'attribute measurement']
+        component_messages = [
+            'component status', 'component']
         for diagnostic_status in msg.status:
             # Update measurement
-            if diagnostic_status.message in measurement_messages:
+            if diagnostic_status.message.lower() in measurement_messages:
                 for value in diagnostic_status.values:
                     self.typedb_interface.update_measured_attribute(
+                        value.key, value.value)
+                continue
+            if diagnostic_status.message.lower() in component_messages:
+                for value in diagnostic_status.values:
+                    if value.value.lower() == 'recovered':
+                        self.typedb_interface.delete_component_status(
+                            value.key)
+                        continue
+                    self.typedb_interface.update_component_status(
                         value.key, value.value)
 
     def task_request_cb(self, req, res):

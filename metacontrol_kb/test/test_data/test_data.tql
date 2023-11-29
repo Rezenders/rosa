@@ -10,6 +10,7 @@ $f2 isa Function, has function-name "function2";
 (task:$t1, required-function:$f1, required-function:$f2) isa task-requirement;
 
 $c1 isa Component, has component-name "component1";
+$c_failure isa Component, has component-name "component_failure", has component-status 'failure';
 
 (function: $f1, required-component: $c1) isa function-design, has function-design-name "f1_fd1";
 

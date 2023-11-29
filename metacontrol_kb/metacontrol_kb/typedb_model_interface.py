@@ -70,6 +70,22 @@ class ModelInterface(TypeDBInterface):
             task_status
         )
 
+    def delete_component_status(self, component):
+        return self.delete_attribute_from_thing(
+            'Component',
+            'component-name',
+            component,
+            'component-status')
+
+    def update_component_status(self, component, component_status):
+        return self.update_attribute_in_thing(
+            'Component',
+            'component-name',
+            component,
+            'component-status',
+            component_status
+        )
+
     # Check if a Task is required
     def is_task_required(self, task_name):
         is_required = self.get_attribute_from_thing(

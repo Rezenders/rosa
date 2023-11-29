@@ -33,6 +33,8 @@ from diagnostic_msgs.msg import KeyValue
 from lifecycle_msgs.srv import ChangeState
 from lifecycle_msgs.srv import GetState
 
+from ros_typedb_msgs.msg import Attribute
+
 from metacontrol_kb_msgs.msg import Component
 from metacontrol_kb_msgs.msg import ComponentConfig
 from metacontrol_kb_msgs.msg import Function
@@ -127,9 +129,29 @@ def test_metacontrol_kb_diagnostics():
         status_msg.values.append(key_value)
         status_msg.message = 'QA status'
 
+        status_msg2 = DiagnosticStatus()
+        status_msg2.level = DiagnosticStatus.OK
+        status_msg2.name = ''
+        key_value2 = KeyValue()
+        key_value2.key = 'component1'
+        key_value2.value = 'failure'
+        status_msg2.values.append(key_value2)
+        status_msg2.message = 'component status'
+
+        status_msg3 = DiagnosticStatus()
+        status_msg3.level = DiagnosticStatus.OK
+        status_msg3.name = ''
+        key_value3 = KeyValue()
+        key_value3.key = 'component_failure'
+        key_value3.value = 'RECOVERED'
+        status_msg3.values.append(key_value3)
+        status_msg3.message = 'component status'
+
         diag_msg = DiagnosticArray()
         diag_msg.header.stamp = node.get_clock().now().to_msg()
         diag_msg.status.append(status_msg)
+        diag_msg.status.append(status_msg2)
+        diag_msg.status.append(status_msg3)
 
         node.diagnostics_pub.publish(diag_msg)
 
@@ -142,13 +164,43 @@ def test_metacontrol_kb_diagnostics():
             get $measurement;
         """
         query_res = node.call_service(node.query_srv, query_req)
-        correct_measurement = False
-        for r in query_res.attributes:
-            if r.name == 'measurement' \
-               and r.value.double_value == 1.72:
-                correct_measurement = True
 
-        assert correct_measurement
+        measurement = Attribute(
+            name='measurement',
+            type='attribute-measurement',
+            value=ParameterValue(type=3, double_value=1.72))
+
+        query_req = Query.Request()
+        query_req.query_type = 'match'
+        query_req.query = """
+            match $c isa Component,
+                has component-name "component1",
+                has component-status $c_status;
+            get $c_status;
+        """
+        query_res2 = node.call_service(node.query_srv, query_req)
+        c_status = Attribute(
+            name='c_status',
+            type='component-status',
+            value=ParameterValue(type=4, string_value='failure'))
+
+        query_req = Query.Request()
+        query_req.query_type = 'match'
+        query_req.query = """
+            match $c isa Component,
+                has component-name "component_failure",
+                has component-status $c_status;
+            get $c_status;
+        """
+        query_res3 = node.call_service(node.query_srv, query_req)
+        c_status2 = Attribute(
+            name='c_status',
+            type='component-status',
+            value=ParameterValue(type=4, string_value='feasible'))
+
+        assert measurement in query_res.attributes \
+            and c_status in query_res2.attributes \
+            and c_status2 in query_res3.attributes
     except Exception as exception:
         traceback_logger.error(traceback.format_exc())
         raise exception
