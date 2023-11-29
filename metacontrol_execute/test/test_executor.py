@@ -139,6 +139,7 @@ def test_activate_components(executor_node, tester_node):
         component.name = 'executor_mock'
         component.package = 'metacontrol_execute'
         component.executable = 'executor'
+        component.node_type = 'ROSNode'
 
         param = Parameter()
         param.name = 'teste'
@@ -195,6 +196,7 @@ def test_set_component_active(executor_node, tester_node):
     component.name = 'executor_mock'
     component.package = 'metacontrol_execute'
     component.executable = 'executor'
+    component.node_type = 'ROSNode'
 
     param = Parameter()
     param.name = 'teste'
@@ -223,6 +225,7 @@ def test_deactivate_components(executor_node, tester_node):
         component.name = 'executor_mock'
         component.package = 'metacontrol_execute'
         component.executable = 'executor'
+        component.node_type = 'ROSNode'
 
         param = Parameter()
         param.name = 'teste'

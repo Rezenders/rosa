@@ -189,10 +189,22 @@ class Executor(Node):
         return result_deactivation and result_activation and result_update
 
     def kill_component(self, component):
-        pgid = os.getpgid(self.component_pids_dict[component.name])
-        os.killpg(pgid, signal.SIGTERM)
-        os.waitid(os.P_PGID, pgid, os.WEXITED)
-        self.component_pids_dict.pop(component.name, None)
+        if component.name in self.component_pids_dict:
+            pgid = os.getpgid(self.component_pids_dict[component.name])
+            os.killpg(pgid, signal.SIGTERM)
+            os.waitid(os.P_PGID, pgid, os.WEXITED)
+            self.component_pids_dict.pop(component.name, None)
+        return True
+
+    def deactivate_lc_component(self, component):
+        if component.node_type == 'LifeCycleNode' and \
+           component.name in self.get_node_names():
+            _state = self.get_lc_node_state(component.name)
+            if _state.current_state.id == 3:
+                self.change_lc_node_state(component.name, 4)
+            _state = self.get_lc_node_state(component.name)
+            if _state.current_state.id != 2:
+                return False
         return True
 
     @check_lc_active
@@ -200,15 +212,10 @@ class Executor(Node):
         return_value = True
         for component in components:
             _return_value = True
-            if component.node_type == 'LifeCycleNode' and \
-               component.name in self.get_node_names():
-                _state = self.get_lc_node_state(component.name)
-                if _state.current_state.id == 3:
-                    self.change_lc_node_state(component.name, 4)
-                _state = self.get_lc_node_state(component.name)
-                if _state.current_state.id != 2:
-                    _return_value = False
-            else:
+            if component.node_type == 'LifeCycleNode':
+                _return_value = self.deactivate_lc_component(component)
+
+            if component.node_type == 'ROSNode':
                 _return_value = self.kill_component(component)
 
             if _return_value is True:
@@ -218,46 +225,64 @@ class Executor(Node):
             return_value = _return_value
         return return_value
 
+    def start_component(self, component):
+        c_types = ['ROSNode', 'LifeCycleNode']
+        if component.node_type in c_types and \
+           component.name not in self.get_node_names():
+            parameters = []
+            for parameter in component.parameters:
+                _param_value = get_parameter_value(parameter.value)
+                if _param_value is not None:
+                    parameters.append({parameter.name: _param_value})
+            node_dict = {
+                'package': component.package,
+                'executable': component.executable,
+                'name': component.name,
+                'parameters': parameters,
+            }
+            result_start = self.start_ros_node(node_dict)
+            if result_start is False:
+                return False
+
+            self.component_pids_dict[component.name] = result_start.pid
+        return True
+
+    def activate_lc_component(self, component):
+        if component.node_type == 'LifeCycleNode' and \
+           component.name in self.get_node_names():
+            _state = self.get_lc_node_state(component.name)
+            if _state.current_state.id == 0:
+                _state = self.get_lc_node_state(component.name)
+            if _state.current_state.id == 1:
+                self.change_lc_node_state(component.name, 1)
+            _state = self.get_lc_node_state(component.name)
+            if _state.current_state.id == 2:
+                self.change_lc_node_state(component.name, 3)
+            _state = self.get_lc_node_state(component.name)
+            if _state.current_state.id != 3:
+                return False
+        return True
+
+    def update_component_activation_attribute(self, component):
+        if component.name != '':
+            result_activate = self.set_component_active(component, True)
+            if result_activate.success is not True:
+                return False
+        return True
+
     @check_lc_active
     def activate_components(self, components):
         return_value = True
         for component in components:
-            c_types = ['ROSNode', 'LifeCycleNode']
-            if component.node_type in c_types and \
-               component.name not in self.get_node_names():
-                parameters = []
-                for parameter in component.parameters:
-                    _param_value = get_parameter_value(parameter.value)
-                    if _param_value is not None:
-                        parameters.append({parameter.name: _param_value})
-                node_dict = {
-                    'package': component.package,
-                    'executable': component.executable,
-                    'name': component.name,
-                    'parameters': parameters,
-                }
-                result_start = self.start_ros_node(node_dict)
-                if result_start is False:
-                    return_value = False
-                else:
-                    self.component_pids_dict[component.name] = result_start.pid
-            if component.node_type == 'LifeCycleNode' and \
-               component.name in self.get_node_names():
-                _state = self.get_lc_node_state(component.name)
-                if _state.current_state.id == 0:
-                    _state = self.get_lc_node_state(component.name)
-                if _state.current_state.id == 1:
-                    self.change_lc_node_state(component.name, 1)
-                _state = self.get_lc_node_state(component.name)
-                if _state.current_state.id == 2:
-                    self.change_lc_node_state(component.name, 3)
-                _state = self.get_lc_node_state(component.name)
-                if _state.current_state.id != 3:
-                    return_value = False
-            if return_value is True:
-                result_activate = self.set_component_active(component, True)
-                if result_activate.success is not True:
-                    return_value = False
+            start_component = self.start_component(component)
+            if start_component is False:
+                continue
+            activate_lc_component = self.activate_lc_component(component)
+            if activate_lc_component is False:
+                continue
+            if start_component is True and activate_lc_component is True:
+                return_value = return_value and \
+                    self.update_component_activation_attribute(component)
         # TODO: set attribute in the component to indicate which state it is
         # in case of LC nodes
         return return_value
