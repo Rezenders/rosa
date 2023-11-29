@@ -124,6 +124,11 @@ class Executor(Node):
         self.get_logger().info('on_cleanup() is called.')
         return TransitionCallbackReturn.SUCCESS
 
+    def on_shutdown(self, state: State) -> TransitionCallbackReturn:
+        self.get_logger().info('on_shutdown() is called.')
+        self.kill_all_components()
+        return super().on_shutdown(state)
+
     @check_lc_active
     def change_lc_node_state(self, node_name, transition_id):
         srv = self.create_client(
@@ -187,6 +192,13 @@ class Executor(Node):
         result_update = self.perform_parameter_adaptation(
             reconfig_plan.component_configurations)
         return result_deactivation and result_activation and result_update
+
+    def kill_all_components(self):
+        for pid in self.component_pids_dict.values():
+            pgid = os.getpgid(pid)
+            os.killpg(pgid, signal.SIGTERM)
+            os.waitid(os.P_PGID, pgid, os.WEXITED)
+        return True
 
     def kill_component(self, component):
         if component.name in self.component_pids_dict:
@@ -326,7 +338,8 @@ class Executor(Node):
                 self.get_logger().error(
                     f'''Error in parameter adaptation with:
                     component: {res_get_param.component.name}
-                    component config: {res_get_param.component.name}
+                    component config: {config}
+                    parameters: {res_get_param.parameters}
                     reason: {res_set_param.result.reason}
                     '''
                 )

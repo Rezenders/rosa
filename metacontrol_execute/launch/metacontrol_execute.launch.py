@@ -14,6 +14,15 @@
 from launch import LaunchDescription
 from launch_ros.actions import Node
 
+from launch.actions import EmitEvent
+from launch.actions import LogInfo
+from launch.actions import RegisterEventHandler
+from launch.event_handlers.on_shutdown import OnShutdown
+from launch_ros.events.lifecycle import ChangeState
+from launch_ros.events import matches_node_name
+
+import lifecycle_msgs.msg
+
 
 def generate_launch_description():
     executor_node = Node(
@@ -21,6 +30,20 @@ def generate_launch_description():
         executable='executor',
     )
 
+    shutdown_event = RegisterEventHandler(
+        OnShutdown(
+            on_shutdown=[
+                EmitEvent(event=ChangeState(
+                  lifecycle_node_matcher=matches_node_name(node_name='executor'),
+                  transition_id=lifecycle_msgs.msg.Transition.TRANSITION_ACTIVE_SHUTDOWN,
+                )),
+                LogInfo(
+                    msg="[LifecycleLaunch] Executor node is exiting."),
+            ],
+        )
+    )
+
     return LaunchDescription([
         executor_node,
+        shutdown_event,
     ])
