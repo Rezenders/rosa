@@ -55,8 +55,8 @@ namespace metacontrol_plan
     }
   }
 
-  void MetacontroledAction::onHalted(){
-    std::cout<< "Async action halted: "<< this->name() <<std::endl;
+  void MetacontroledAction::cancel_task(){
+    RCLCPP_INFO(node_->get_logger(), "Task cancelation requested: %s", this->name().c_str());
 
     while (!task_req_client->wait_for_service(1s)) {
       if (!rclcpp::ok()) {
@@ -74,6 +74,13 @@ namespace metacontrol_plan
       rclcpp::FutureReturnCode::SUCCESS && response.get()->success == true))
     {
       RCLCPP_ERROR(node_->get_logger(), "Failed to stop action %s", this->name().c_str());
+    } else{
+      RCLCPP_INFO(node_->get_logger(), "Task cancelation completed: %s", this->name().c_str());
     }
+  }
+
+  void MetacontroledAction::onHalted(){
+    RCLCPP_INFO(node_->get_logger(), "Async action halted: %s", this->name().c_str());
+    cancel_task();
   }
 } //namespace metacontrol_plan

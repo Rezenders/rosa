@@ -46,6 +46,7 @@ public:
 protected:
   rclcpp::Node::SharedPtr node_;
   rclcpp::Client<metacontrol_kb_msgs::srv::TaskRequest>::SharedPtr task_req_client;
+  void cancel_task();
 };
 
 }  // namespace metacontrol_plan
