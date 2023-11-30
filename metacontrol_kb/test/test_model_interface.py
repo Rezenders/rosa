@@ -234,10 +234,10 @@ def test_create_reconfiguration_plan(
 
 
 @pytest.mark.parametrize("selected_fd, selected_config, exp_c_activate, exp_c_deactivate, exp_c_config ", [
-    ([('f_reconfigure_fd', 'fd_reconfig_1')], [('component_reconfig_3', 'cp_reconfig_1')], [], [], []),
-    ([('f_reconfigure_fd', 'fd_reconfig_2')], [('component_reconfig_3', 'cp_reconfig_1')], ['component_reconfig_2'], ['component_reconfig_1'], []),
-    ([('f_reconfigure_fd', 'fd_reconfig_1')], [('component_reconfig_3', 'cp_reconfig_2')], [], [], ['cp_reconfig_2']),
-    ([('f_reconfigure_fd', 'fd_reconfig_2')], [('component_reconfig_3', 'cp_reconfig_2')], ['component_reconfig_2'], ['component_reconfig_1'], ['cp_reconfig_2']),
+    ([('f_reconfigure_fd', 'fd_reconfig_1')], [('component_reconfig_3', 'cp_reconfig_1')], [], ['c_not_required'], []),
+    ([('f_reconfigure_fd', 'fd_reconfig_2')], [('component_reconfig_3', 'cp_reconfig_1')], ['component_reconfig_2'], ['component_reconfig_1', 'c_not_required'], []),
+    ([('f_reconfigure_fd', 'fd_reconfig_1')], [('component_reconfig_3', 'cp_reconfig_2')], [], ['c_not_required'], ['cp_reconfig_2']),
+    ([('f_reconfigure_fd', 'fd_reconfig_2')], [('component_reconfig_3', 'cp_reconfig_2')], ['component_reconfig_2'], ['component_reconfig_1', 'c_not_required'], ['cp_reconfig_2']),
 ])
 def test_select_configuration(
         kb_interface,
@@ -359,9 +359,11 @@ def test_get_adaptable_functions(kb_interface):
 
 def test_get_adaptable_component(kb_interface):
     expected_result = ['c_unsolved', 'c_always_improve']
+    kb_interface.unselect_obsolete_fds_cc()
     result = kb_interface.get_adaptable_components()
     print(result)
-    assert all(r in result for r in expected_result)
+    assert all(r in result for r in expected_result) and \
+        'c_not_required' in result
 
 
 def test_get_components_in_function_design(kb_interface):
@@ -615,3 +617,21 @@ def test_get_component_all_attributes(kb_interface):
     }
 
     assert result == expected_result and result2 == expected_result2
+
+
+def test_get_obsolete_components(kb_interface):
+    query_result = kb_interface.get_obsolete_components()
+    expected_result = ['c_not_required', 'c_active', 'c_attributes']
+    assert all(r in query_result for r in expected_result)
+
+
+def test_get_obsolete_fds(kb_interface):
+    query_result = kb_interface.get_obsolete_fds()
+    expected_result = ['fd_selected_not_required']
+    assert all(r in query_result for r in expected_result)
+
+
+def test_get_obsolete_component_configurations(kb_interface):
+    query_result = kb_interface.get_obsolete_component_configurations()
+    expected_result = ['cc_not_required']
+    assert all(r in query_result for r in expected_result)

@@ -457,7 +457,7 @@ class ModelInterface(TypeDBInterface):
             start_time.isoformat(timespec='milliseconds'))
         return self.insert_database(query), start_time
 
-    def select_fd_configuration(self, functions_selected_fd):
+    def select_fd_and_get_components(self, functions_selected_fd):
         _c_activate = []
         _c_deactivate = []
         for function, fd in functions_selected_fd:
@@ -467,7 +467,6 @@ class ModelInterface(TypeDBInterface):
                     'Component', 'component-name', c, 'is-active')
                 if True not in c_active:
                     _c_activate.append(c)
-
             # select components that need to be deactivated
             fd_selected = self.get_attribute_from_thing(
                 'function-design', 'function-design-name', fd, 'is-selected')
@@ -505,6 +504,73 @@ class ModelInterface(TypeDBInterface):
             self.select_component_configuration(component, config)
         return _configs
 
+    def get_obsolete_components(self):
+        """
+        Get active components that are not required anymore.
+
+        :return: List with active components that are not required anymore
+        :rtype: list[str]
+        """
+        query = '''
+            match
+            $c isa Component, has component-name $name, has is-active true;
+            not {
+                $fd (function:$func, required-component:$c)
+                    isa function-design;
+                $func has is-required true;
+            };
+            get $name;
+        '''
+        query_result = self.match_database(query)
+        return [r.get('name').get('value') for r in query_result]
+
+    def get_obsolete_fds(self):
+        """
+        Get selected fds that are not required anymore.
+
+        :return: List with selected fds that are not required anymore
+        :rtype: list[str]
+        """
+        query = '''
+            match
+                $fd (function:$f) isa function-design,
+                    has function-design-name $name, has is-selected true;
+                not {$f has is-required true;};
+            get $name;
+        '''
+        query_result = self.match_database(query)
+        return [r.get('name').get('value') for r in query_result]
+
+    def get_obsolete_component_configurations(self):
+        """
+        Get selected component configurations that are not required anymore.
+
+        :return: List with selected configs that are not required anymore
+        :rtype: list[str]
+        """
+        query = '''
+            match
+                $cc (component:$c) isa component-configuration,
+                    has component-configuration-name $name,
+                    has is-selected true;
+                not {
+                    $fd (function:$func, required-component:$c)
+                        isa function-design;
+                    $func has is-required true;
+                };
+        '''
+        query_result = self.match_database(query)
+        return [r.get('name').get('value') for r in query_result]
+
+    def unselect_obsolete_fds_cc(self):
+        _fds = self.get_obsolete_fds()
+        for _fd in _fds:
+            self.toogle_thing_selection('function-design', _fd, False)
+
+        _ccs = self.get_obsolete_component_configurations()
+        for _cc in _ccs:
+            self.toogle_thing_selection('component-configuration', _cc, False)
+
     def select_configuration(
        self, functions_selected_fd, components_selected_config):
         """
@@ -515,10 +581,17 @@ class ModelInterface(TypeDBInterface):
         :return: Reconfig plan insert result and plan start-time.
         :rtype: bool, datetime
         """
-        _c_activate, _c_deactivate = self.select_fd_configuration(
+        _c_activate, _c_deactivate = self.select_fd_and_get_components(
             functions_selected_fd)
         _configs = self.select_components_selected_config(
             components_selected_config)
+
+        self.unselect_obsolete_fds_cc()
+        _c_obsolete = self.get_obsolete_components()
+        _c_deactivate.extend(
+            c for c in _c_obsolete if
+            (c not in _c_activate and c not in _c_deactivate))
+
         return self.create_reconfiguration_plan(
             _c_activate, _c_deactivate, _configs)
 
