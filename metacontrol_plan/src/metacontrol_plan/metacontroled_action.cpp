@@ -30,13 +30,14 @@ namespace metacontrol_plan
 
   BT::NodeStatus MetacontroledAction::onStart(){
     std::cout << "Async action starting: " << this->name() << std::endl;
+    RCLCPP_INFO(node_->get_logger(), "Task requested: %s", this->name().c_str());
 
     while (!task_req_client->wait_for_service(1s)) {
       if (!rclcpp::ok()) {
         RCLCPP_ERROR(node_->get_logger(), "Interrupted while waiting for the service. Exiting.");
         return BT::NodeStatus::FAILURE;
       }
-      RCLCPP_INFO(node_->get_logger(), "service not available, waiting again...");
+      RCLCPP_INFO(node_->get_logger(), "service /metacontrol_kb/task/request not available, waiting again...");
     }
 
     auto request = std::make_shared<metacontrol_kb_msgs::srv::TaskRequest::Request>();
@@ -47,6 +48,7 @@ namespace metacontrol_plan
     if (rclcpp::spin_until_future_complete(node_, response) ==
       rclcpp::FutureReturnCode::SUCCESS && response.get()->success == true)
     {
+      RCLCPP_INFO(node_->get_logger(), "Task request completed: %s", this->name().c_str());
       return BT::NodeStatus::RUNNING;
     } else{
       std::cout << "action failed: " << this->name() << std::endl;
@@ -62,7 +64,7 @@ namespace metacontrol_plan
       if (!rclcpp::ok()) {
         RCLCPP_ERROR(node_->get_logger(), "Interrupted while waiting for the service. Exiting.");
       }
-      RCLCPP_INFO(node_->get_logger(), "service not available, waiting again...");
+      RCLCPP_INFO(node_->get_logger(), "service /metacontrol_kb/task/request not available, waiting again...");
     }
 
     auto request = std::make_shared<metacontrol_kb_msgs::srv::TaskRequest::Request>();
