@@ -184,6 +184,24 @@ class MetacontrolKB(ROSTypeDBInterface):
         return super().on_cleanup(state)
 
     @publish_event(event_type='insert_monitoring_data')
+    def update_measurement(self, diagnostic_status):
+        for value in diagnostic_status.values:
+            self.typedb_interface.update_measured_attribute(
+                value.key, value.value)
+
+    @publish_event(event_type='insert_monitoring_data')
+    def update_component_status(self, diagnostic_status):
+        recover_values = ['recovered', 'ok']
+        failure_values = ['false', 'failure', 'error']
+        for value in diagnostic_status.values:
+            if value.value.lower() in recover_values:
+                self.typedb_interface.delete_component_status(
+                    value.key)
+                return None
+            if value.value.lower() in failure_values:
+                self.typedb_interface.update_component_status(
+                    value.key, 'failure')
+
     def diagnostics_callback(self, msg):
         measurement_messages = [
             'qa status',
@@ -196,18 +214,10 @@ class MetacontrolKB(ROSTypeDBInterface):
         for diagnostic_status in msg.status:
             # Update measurement
             if diagnostic_status.message.lower() in measurement_messages:
-                for value in diagnostic_status.values:
-                    self.typedb_interface.update_measured_attribute(
-                        value.key, value.value)
+                self.update_measurement(diagnostic_status)
                 continue
             if diagnostic_status.message.lower() in component_messages:
-                for value in diagnostic_status.values:
-                    if value.value.lower() == 'recovered':
-                        self.typedb_interface.delete_component_status(
-                            value.key)
-                        continue
-                    self.typedb_interface.update_component_status(
-                        value.key, value.value)
+                self.update_component_status(diagnostic_status)
 
     def task_request_cb(self, req, res):
         if req.required is True and \
