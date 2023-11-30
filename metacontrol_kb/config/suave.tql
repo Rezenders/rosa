@@ -28,18 +28,18 @@ $water_visibility isa EnvironmentalAttribute, has attribute-name "water_visibili
 (constraint: $water_visibility, constrained: $cc2) isa constrainment, has attribute-value 3.25, has constrainment-operator ">=";
 
 ## Component recover motion node and configurations
-$c1 isa Component, has component-name "f_maintain_motion_node";
+$c1 isa LifeCycleNode, has component-name "f_maintain_motion_node", has package "suave", has executable "recover_thrusters";
 
-$thruster1 isa Component, has component-name "thruster1";
-$thruster2 isa Component, has component-name "thruster2";
-$thruster3 isa Component, has component-name "thruster3";
-$thruster4 isa Component, has component-name "thruster4";
-$thruster5 isa Component, has component-name "thruster5";
-$thruster6 isa Component, has component-name "thruster6";
+$thruster1 isa Component, has component-name "c_thruster_1";
+$thruster2 isa Component, has component-name "c_thruster_2";
+$thruster3 isa Component, has component-name "c_thruster_3";
+$thruster4 isa Component, has component-name "c_thruster_4";
+$thruster5 isa Component, has component-name "c_thruster_5";
+$thruster6 isa Component, has component-name "c_thruster_6";
 
 (function: $f_recover_motion, required-component: $thruster1, required-component: $thruster2, required-component: $thruster3, required-component: $thruster4, required-component: $thruster5, required-component: $thruster6) isa function-design,
-    has function-design-name "recover motion inactive", has performance 2.0;
-(function: $f_recover_motion, required-component: $c1) isa function-design, has function-design-name "recover motion active", has performance 1.0;
+    has function-design-name "fd_recover_motion_inactive", has performance 2.0;
+(function: $f_recover_motion, required-component: $c1) isa function-design, has function-design-name "fd_recover_motion", has performance 1.0;
 
 
 # Task inspect pipeline
