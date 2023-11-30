@@ -95,7 +95,7 @@ task-requirement sub relation,
 function-design sub relation,
     owns function-design-name @key,
     owns performance,
-    owns is-selected, 
+    owns is-selected,
     owns function-design-status,
     relates function,
     relates required-component,
@@ -288,9 +288,7 @@ rule component-configuration-status-feasible:
         $component-config isa component-configuration;
         not {
             $component-config has component-configuration-status 'unfeasible';
-        };
-        (constrained: $component-config) isa constrainment, has constrainment-status $constrainment-status;
-        $constrainment-status like 'satisfied|not evaluated';        
+        }; 
     } then {
         $component-config has component-configuration-status 'feasible';
     };
