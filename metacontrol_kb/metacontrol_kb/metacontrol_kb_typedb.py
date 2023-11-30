@@ -293,7 +293,7 @@ class MetacontrolKB(ROSTypeDBInterface):
             p = self.typedb_interface.get_function_design_performance(fd.name)
             if p is not None and len(p) > 0:
                 fd.performance = p[0]
-                res.fds.append(fd)
+            res.fds.append(fd)
         res.success = True
         return res
 
@@ -303,7 +303,7 @@ class MetacontrolKB(ROSTypeDBInterface):
                 c_config.name)
             if p is not None and len(p) > 0:
                 c_config.performance = p[0]
-                res.c_configs.append(c_config)
+            res.c_configs.append(c_config)
         res.success = True
         return res
 
