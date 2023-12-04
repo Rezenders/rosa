@@ -414,4 +414,8 @@ class MetacontrolKB(ROSTypeDBInterface):
             req.reconfig_plan.start_time, req.reconfig_plan.result)
         if res_update is not None:
             res.success = True
+            res.reconfig_plan.result = req.reconfig_plan.result
         return res
+
+    def update_outdated_reconfiguration_plans_result_cb(self, req, res):
+        pass
