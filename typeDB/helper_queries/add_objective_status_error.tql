@@ -1,4 +1,0 @@
-match $o isa Objective, has objective-name "navigation";
-insert $o has objective-status "error";
-
-

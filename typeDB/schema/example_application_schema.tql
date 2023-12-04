@@ -1,8 +1,0 @@
-define 
-
-QASafety sub QualityAttribute;
-QAEnergy sub QualityAttribute;
-
-ComponentLidar sub Component;
-ComponentCamera sub Component;
-

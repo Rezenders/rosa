@@ -1,3 +1,0 @@
-#match $fg isa FunctionGrounding, has function-grounding-status "error"; (solver:$fg, solved:$o) isa solvesO;/
-match $fg isa FunctionGrounding; not {$fg isa FunctionGrounding, has function-grounding-status $fg-status; $fg-status = "error";};
-#match $fg isa FunctionGrounding, has function-grounding-status $fg-status; /

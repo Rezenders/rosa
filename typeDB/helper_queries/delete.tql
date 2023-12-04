@@ -1,5 +1,0 @@
-match $f isa Function; delete $f isa Function;
-match $fd isa FunctionDesign; delete $fd isa FunctionDesign;
-match $c isa Component; delete $c isa Component;
-match $o isa Objective; delete $o isa Objective;
-match $fg isa FunctionGrounding; delete $fg isa FunctionGrounding;

@@ -1,3 +1,0 @@
-match $e isa entity; delete $e isa entity;
-match $r isa relation; delete $r isa relation;
-match $a isa attribute; delete $a isa attribute;
