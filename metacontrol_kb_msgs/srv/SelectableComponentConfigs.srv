@@ -1,4 +1,0 @@
-metacontrol_kb_msgs/Component component
----
-bool success
-metacontrol_kb_msgs/ComponentConfig[] c_configs

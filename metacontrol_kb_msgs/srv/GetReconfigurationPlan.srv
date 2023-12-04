@@ -1,4 +1,0 @@
-string start_time
----
-bool success
-metacontrol_kb_msgs/ReconfigurationPlan reconfig_plan

@@ -1,0 +1,24 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>rosa_kb</name>
+  <version>0.0.0</version>
+  <description>ROSA Knowledge Base</description>
+  <maintainer email="g.rezendesilva@tudelft.nl">Gustavo Rezende</maintainer>
+  <license>Apache-2.0</license>
+
+  <test_depend>ros_pytest</test_depend>
+  <test_depend>ament_copyright</test_depend>
+  <test_depend>ament_flake8</test_depend>
+  <test_depend>ament_pep257</test_depend>
+  <test_depend>python3-pytest</test_depend>
+  <test_depend>launch_pytest</test_depend>
+
+  <exec_depend>ros_typedb</exec_depend>
+  <exec_depend>ros_typedb_msgs</exec_depend>
+  <exec_depend>rosa_msgs</exec_depend>
+
+  <export>
+    <build_type>ament_python</build_type>
+  </export>
+</package>

@@ -1,0 +1,18 @@
+insert
+
+$ros_component isa LifeCycleNode, has component-name "executor_mock", has package "rosa_execute", has executable "executor";
+$ros_component_2 isa LifeCycleNode, has component-name "executor_mock_2", has package "rosa_execute", has executable "executor";
+
+
+$ros_typedb isa LifeCycleNode, has component-name "ros_typedb_test_execute", has package "ros_typedb", has executable "ros_typedb";
+$database_name isa ComponentParameter, has parameter-key 'database_name', has parameter-value 'ros_typedb_executor', has parameter-type 'string';
+$force_database isa ComponentParameter, has parameter-key 'force_database', has parameter-value 'true', has parameter-type 'boolean';
+$force_data isa ComponentParameter, has parameter-key 'force_data', has parameter-value 'false', has parameter-type 'boolean';
+$data_path isa ComponentParameter, has parameter-key 'data_path', has parameter-value '[test_data/test_data.tql]', has parameter-type 'string_array';
+$cc_ros_typedb (component:$ros_typedb, parameter:$database_name, parameter:$force_database, parameter:$force_data, parameter:$data_path) isa component-configuration,
+    has component-configuration-name 'ros_typedb_config_execute';
+
+$ca (component:$ros_typedb, component:$ros_component) isa component-activation;
+$cd (component:$ros_component_2) isa component-deactivation;
+$pa (component-configuration:$cc_ros_typedb) isa parameter-adaptation;
+(architectural-adaptation:$ca, architectural-adaptation:$cd, parameter-adaptation:$pa) isa reconfiguration-plan, has start-time 2023-11-26T22:03:17.269;

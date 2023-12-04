@@ -1,4 +1,0 @@
-metacontrol_kb_msgs/SelectedFunctionDesign[] selected_fds
-metacontrol_kb_msgs/SelectedComponentConfig[] selected_component_configs
----
-bool success

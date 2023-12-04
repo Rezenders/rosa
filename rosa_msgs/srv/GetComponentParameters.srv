@@ -1,0 +1,5 @@
+rosa_msgs/ComponentConfig c_config
+---
+bool success
+rosa_msgs/Component component
+rcl_interfaces/Parameter[] parameters
