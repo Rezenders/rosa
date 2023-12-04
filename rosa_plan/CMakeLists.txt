@@ -18,6 +18,7 @@ find_package(rclcpp REQUIRED)
 find_package(rclcpp_lifecycle REQUIRED)
 find_package(behaviortree_cpp REQUIRED)
 find_package(rosa_msgs REQUIRED)
+find_package(ros_typedb_msgs REQUIRED)
 
 find_package(ZMQ)
 if(ZMQ_FOUND)
@@ -34,6 +35,7 @@ set(dependencies
   std_msgs
   behaviortree_cpp
   rosa_msgs
+  ros_typedb_msgs
 )
 
 include_directories(

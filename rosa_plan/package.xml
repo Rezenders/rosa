@@ -13,6 +13,8 @@
   <depend>rclcpp</depend>
   <depend>rclpy</depend>
 
+  <depend>ros_typedb</depend>
+  <depend>ros_typedb_msgs</depend>
   <exec_depend>rosa_msgs</exec_depend>
   <exec_depend>lifecycle_msgs</exec_depend>
   <depend>behaviortree_cpp</depend>
