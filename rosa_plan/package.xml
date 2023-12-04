@@ -15,7 +15,7 @@
 
   <exec_depend>rosa_msgs</exec_depend>
   <exec_depend>lifecycle_msgs</exec_depend>
-  <depend>behaviortree_cpp_v3</depend>
+  <depend>behaviortree_cpp</depend>
 
   <test_depend>ros_pytest</test_depend>
 
