@@ -1,0 +1,26 @@
+name: test
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+
+jobs:
+  test:
+    name: build and test rosa
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3.3.0
+      - name: install typedb
+        run: .github/workflows/install_typedb.sh
+      - name: run typedb
+        run: typedb server&
+      - uses: ros-tooling/setup-ros@v0.7.1
+        with:
+          required-ros-distributions: humble
+      - uses: ros-tooling/action-ros-ci@v0.3.5
+        with:
+          package-name: rosa_kb rosa_plan rosa_execute rosa_bringup
+          target-ros2-distro: humble
+          vcs-repo-file-url: https://raw.githubusercontent.com/kas-lab/rosa/main/rosa.rosinstall
