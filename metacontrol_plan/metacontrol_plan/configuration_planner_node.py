@@ -14,19 +14,26 @@
 # limitations under the License.
 import rclpy
 
+from rclpy.executors import MultiThreadedExecutor
 from metacontrol_plan.configuration_planner import ConfigurationPlanner
 
 
-def main():
-    rclpy.init()
-
-    executor = rclpy.executors.MultiThreadedExecutor()
-    lc_node = ConfigurationPlanner('configuration_planner')
-    executor.add_node(lc_node)
+def main(args=None):
+    rclpy.init(args=args)
     try:
-        executor.spin()
-    except (KeyboardInterrupt, rclpy.executors.ExternalShutdownException):
-        lc_node.destroy_node()
+        executor = MultiThreadedExecutor()
+        lc_node = ConfigurationPlanner('configuration_planner')
+        executor.add_node(lc_node)
+        try:
+            executor.spin()
+        except (KeyboardInterrupt, rclpy.executors.ExternalShutdownException):
+            executor.shutdown()
+            lc_node.destroy_node()
+        finally:
+            executor.shutdown()
+            lc_node.destroy_node()
+    finally:
+        rclpy.shutdown()
 
 
 if __name__ == '__main__':
