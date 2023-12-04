@@ -1,0 +1,5 @@
+repositories:
+  ros_pytest:
+    type: git
+    url: https://github.com/kas-lab/ros_pytest.git
+    version: main
