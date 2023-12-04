@@ -1,7 +1,7 @@
 ConfigurationPlanner
 ====================
 
-.. currentmodule:: metacontrol_plan.configuration_planner
+.. currentmodule:: rosa_plan.configuration_planner
 
 .. autoclass:: ConfigurationPlanner
 

@@ -1,9 +1,9 @@
-MetacontrolKB
-=============
+RosaKB
+======
 
-.. currentmodule:: metacontrol_kb.metacontrol_kb_typedb
+.. currentmodule:: rosa_kb.rosa_kb_typedb
 
-.. autoclass:: MetacontrolKB
+.. autoclass:: RosaKB
 
    
 
@@ -38,30 +38,30 @@ MetacontrolKB
 
    .. autosummary::
    
-      ~MetacontrolKB.__init__
-      ~MetacontrolKB.component_adaptable_cb
-      ~MetacontrolKB.component_configuration_performance_cb
-      ~MetacontrolKB.diagnostics_callback
-      ~MetacontrolKB.function_adaptable_cb
-      ~MetacontrolKB.function_design_performance_cb
-      ~MetacontrolKB.get_component_active_cb
-      ~MetacontrolKB.get_component_all_attributes
-      ~MetacontrolKB.get_component_parameters_cb
-      ~MetacontrolKB.get_latest_reconfiguration_plan_cb
-      ~MetacontrolKB.get_reconfiguration_plan_cb
-      ~MetacontrolKB.on_cleanup
-      ~MetacontrolKB.on_configure
-      ~MetacontrolKB.reconfig_plan_dict_to_ros_msg
-      ~MetacontrolKB.select_configuration_cb
-      ~MetacontrolKB.selectable_c_config_cb
-      ~MetacontrolKB.selectable_fd_cb
-      ~MetacontrolKB.set_component_active_cb
-      ~MetacontrolKB.set_reconfiguration_plan_result_service_cb
-      ~MetacontrolKB.task_request_cb
-      ~MetacontrolKB.task_selectable_cb
-      ~MetacontrolKB.update_component_status
-      ~MetacontrolKB.update_measurement
-      ~MetacontrolKB.update_outdated_reconfiguration_plans_result_cb
+      ~RosaKB.__init__
+      ~RosaKB.component_adaptable_cb
+      ~RosaKB.component_configuration_performance_cb
+      ~RosaKB.diagnostics_callback
+      ~RosaKB.function_adaptable_cb
+      ~RosaKB.function_design_performance_cb
+      ~RosaKB.get_component_active_cb
+      ~RosaKB.get_component_all_attributes
+      ~RosaKB.get_component_parameters_cb
+      ~RosaKB.get_latest_reconfiguration_plan_cb
+      ~RosaKB.get_reconfiguration_plan_cb
+      ~RosaKB.on_cleanup
+      ~RosaKB.on_configure
+      ~RosaKB.reconfig_plan_dict_to_ros_msg
+      ~RosaKB.select_configuration_cb
+      ~RosaKB.selectable_c_config_cb
+      ~RosaKB.selectable_fd_cb
+      ~RosaKB.set_component_active_cb
+      ~RosaKB.set_reconfiguration_plan_result_service_cb
+      ~RosaKB.task_request_cb
+      ~RosaKB.task_selectable_cb
+      ~RosaKB.update_component_status
+      ~RosaKB.update_measurement
+      ~RosaKB.update_outdated_reconfiguration_plans_result_cb
    
    
 

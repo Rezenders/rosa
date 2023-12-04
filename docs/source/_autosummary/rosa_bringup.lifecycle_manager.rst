@@ -1,7 +1,7 @@
-﻿metacontrol\_kb.metacontrol\_kb\_typedb
-=======================================
+﻿rosa\_bringup.lifecycle\_manager
+================================
 
-.. automodule:: metacontrol_kb.metacontrol_kb_typedb
+.. automodule:: rosa_bringup.lifecycle_manager
 
    
    
@@ -14,7 +14,7 @@
    .. autosummary::
       :toctree:
    
-      publish_event
+      main
    
    
 
@@ -25,7 +25,7 @@
    .. autosummary::
       :toctree:
    
-      MetacontrolKB
+      LifeCycleManager
    
    
 

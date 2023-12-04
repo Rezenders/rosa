@@ -1,7 +1,7 @@
 LifeCycleManager
 ================
 
-.. currentmodule:: metacontrol_bringup.lifecycle_manager
+.. currentmodule:: rosa_bringup.lifecycle_manager
 
 .. autoclass:: LifeCycleManager
 

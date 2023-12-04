@@ -11,11 +11,11 @@ Welcome to ROSA's documentation!
  api
  :maxdepth: 1
 
-.. Contribute
-.. ----------
-..
-.. - Issue Tracker: https://github.com/kas-lab/suave/issues
-.. - Source Code: https://github.com/kas-lab/suave/
+Contribute
+----------
+
+- Issue Tracker: https://github.com/kas-lab/rosa/issues
+- Source Code: https://github.com/kas-lab/rosa/
 
 Support
 -------

@@ -1,7 +1,7 @@
 ModelInterface
 ==============
 
-.. currentmodule:: metacontrol_kb.typedb_model_interface
+.. currentmodule:: rosa_kb.typedb_model_interface
 
 .. autoclass:: ModelInterface
 

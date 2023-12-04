@@ -2,8 +2,8 @@ API
 =====
 
 .. toctree::
- metacontrol_kb
- metacontrol_plan
- metacontrol_execute
- metacontrol_bringup
+ rosa_kb
+ rosa_plan
+ rosa_execute
+ rosa_bringup
  :maxdepth: 1

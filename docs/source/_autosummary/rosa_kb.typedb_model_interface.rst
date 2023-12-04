@@ -1,7 +1,7 @@
-﻿metacontrol\_execute.executor
-=============================
+﻿rosa\_kb.typedb\_model\_interface
+=================================
 
-.. automodule:: metacontrol_execute.executor
+.. automodule:: rosa_kb.typedb_model_interface
 
    
    
@@ -14,8 +14,7 @@
    .. autosummary::
       :toctree:
    
-      check_lc_active
-      get_parameter_value
+      convert_parameter_type_to_py_type
    
    
 
@@ -26,7 +25,7 @@
    .. autosummary::
       :toctree:
    
-      Executor
+      ModelInterface
    
    
 

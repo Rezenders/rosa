@@ -1,7 +1,7 @@
-﻿metacontrol\_plan.configuration\_planner
-========================================
+﻿rosa\_plan.configuration\_planner
+=================================
 
-.. automodule:: metacontrol_plan.configuration_planner
+.. automodule:: rosa_plan.configuration_planner
 
    
    

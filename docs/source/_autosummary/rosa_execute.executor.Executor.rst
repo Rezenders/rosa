@@ -1,7 +1,7 @@
 Executor
 ========
 
-.. currentmodule:: metacontrol_execute.executor
+.. currentmodule:: rosa_execute.executor
 
 .. autoclass:: Executor
 
