@@ -17,10 +17,10 @@ jobs:
       - uses: ros-tooling/setup-ros@v0.6
         with:
           required-ros-distributions: humble
-      - uses: ros-tooling/action-ros-ci@v0.3
+      - uses: ros-tooling/action-ros-ci@v0.3.4
         id: action_ros_ci_step
         with:
-          package-name: rosa_kb rosa_plan rosa_execute rosa_bringup
+          package-name: ros_msgs rosa_kb rosa_plan rosa_execute rosa_bringup
           target-ros2-distro: humble
           skip-tests: true
       - name: Install dependencies
