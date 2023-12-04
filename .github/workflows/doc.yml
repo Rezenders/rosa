@@ -20,7 +20,7 @@ jobs:
       - uses: ros-tooling/action-ros-ci@0.3.5
         id: action_ros_ci_step
         with:
-          package-name: ros_msgs rosa_kb rosa_plan rosa_execute rosa_bringup
+          package-name: rosa_msgs rosa_kb rosa_plan rosa_execute rosa_bringup
           target-ros2-distro: humble
           skip-tests: true
       - name: Install dependencies
