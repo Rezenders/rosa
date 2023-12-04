@@ -1,33 +1,80 @@
-# TypeDB implementation of Metacontrol's new Knowledge Base
+# ROSA
 
-This repository contains a proposal for a new Knowledge Base for Metacontrol.
-The KB is implemented as a ROS 2 package, and the Knowledge Model is implemented with TypeDB.
+This repository contains ROSA, a knowledge-based framework for robotics self-adaptation.
+ROSA is implemented as a ROS 2-based system, with its knowledge base implemented with TypeDB.
 
-This is still work in progress, not all required features are implemented yet, and the repository is unstable.
+This is still work in progress, therefore the repository is unstable.
+
+This package was tested with ROS 2 Humble and TypeDB 2.24.17
+
+## Installing
+
+[Install ROS 2 Humble](https://docs.ros.org/en/humble/Installation.html)
+
+Install TypeDB:
+
+```Bash
+sudo apt install software-properties-common apt-transport-https gpg
+gpg --keyserver hkp://keyserver.ubuntu.com:80 --recv-key 8F3DA4B5E9AEF44C
+gpg --export 8F3DA4B5E9AEF44C | sudo tee /etc/apt/trusted.gpg.d/vaticle.gpg > /dev/null
+echo "deb https://repo.vaticle.com/repository/apt/ trusty main" | sudo tee /etc/apt/sources.list.d/vaticle.list > /dev/null
+
+sudo apt update
+sudo apt install openjdk-11-jre
+sudo apt install typedb-server=2.24.17 typedb-console=2.24.15 typedb-bin=2.24.16
+pip3 install typedb-driver==2.24.15
+```
+
+Download ROSA:
+```Bash
+mkdir -p ~/rosa_ws/src
+cd ~/rosa_ws/src
+git clone git@github.com:kas-lab/rosa.git
+```
+
+If you want to be able to run tests, get ros_pytest:
+```Bash
+cd ~/rosa_ws/src
+git clone git@github.com:kas-lab/ros_pytest.git
+```
+
+Install dependencies:
+```Bash
+cd ~/rosa_ws/
+source /opt/ros/humble/setup.bash
+rosdep install --from-paths src --ignore-src -r -y
+```
+
+Build ROSA:
+```Bash
+cd ~/rosa_ws/
+source /opt/ros/humble/setup.bash
+colcon build --symlink-install
+```
 
 ## Running
 
-For now:
+Start typedb:
 
 ```Bash
 typedb server
 ```
 
+Run ROSA:
 ```Bash
-cd src/
-./metacontrol_uio.py
+ros2 launch rosa_bringup rosa_bringup.launch.py
 ```
 
 ## Tests
 
-run tests:
+Start typedb:
 
 ```Bash
 typedb server
 ```
 
 ```Bash
-colcon test --event-handlers console_cohesion+ --packages-select metacontrol_kb
+colcon test --event-handlers console_cohesion+ --packages-select rosa_kb rosa_plan rosa_execute
 ```
 
 ## Acknowledgments
