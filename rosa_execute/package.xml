@@ -7,6 +7,7 @@
   <maintainer email="g.rezendesilva@tudelft.nl">Gustavo Rezende</maintainer>
   <license>Apache-2.0</license>
 
+  <depend>rosa_kb</depend>
   <depend>rosa_msgs</depend>
   <depend>ros_typedb</depend>
   <depend>ros_typedb_msgs</depend>
