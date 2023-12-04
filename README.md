@@ -30,12 +30,7 @@ Download ROSA:
 mkdir -p ~/rosa_ws/src
 cd ~/rosa_ws/src
 git clone git@github.com:kas-lab/rosa.git
-```
-
-If you want to be able to run tests, get ros_pytest:
-```Bash
-cd ~/rosa_ws/src
-git clone git@github.com:kas-lab/ros_pytest.git
+vcs import . < rosa/rosa.rosinstall
 ```
 
 Install dependencies:
