@@ -1,6 +1,4 @@
-[![documentation](https://github.com/kas-lab/rosa/actions/workflows/doc.yml/badge.svg)](https://github.com/kas-lab/rosa/actions/workflows/doc.yml)
-
-[![test](https://github.com/kas-lab/rosa/actions/workflows/test.yml/badge.svg)](https://github.com/kas-lab/rosa/actions/workflows/test.yml)
+[![documentation](https://github.com/kas-lab/rosa/actions/workflows/doc.yml/badge.svg)](https://github.com/kas-lab/rosa/actions/workflows/doc.yml) [![test](https://github.com/kas-lab/rosa/actions/workflows/test.yml/badge.svg)](https://github.com/kas-lab/rosa/actions/workflows/test.yml)
 
 # ROSA
 
