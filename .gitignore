@@ -1,3 +1,4 @@
+docs/source/_autosummary/*
 docs/build/
 .typedb-studio/
 
