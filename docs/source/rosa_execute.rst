@@ -5,4 +5,4 @@ rosa_execute
    :toctree: _autosummary
    :recursive:
 
-   rosa_execute.executor
+   rosa_execute.configuration_executor
