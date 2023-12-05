@@ -43,7 +43,7 @@ BT::NodeStatus IsTaskFeasible::tick()
       RCLCPP_ERROR(node_->get_logger(), "Interrupted while waiting for the service. Exiting.");
       return BT::NodeStatus::FAILURE;
     }
-    RCLCPP_INFO(node_->get_logger(), "service not available, waiting again...");
+    RCLCPP_INFO(node_->get_logger(), "/rosa_kb/task/selectable service not available, waiting again...");
   }
 
   auto response = selectable_tasks_client->async_send_request(request);
