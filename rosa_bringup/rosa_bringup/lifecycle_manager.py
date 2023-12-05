@@ -25,7 +25,7 @@ class LifeCycleManager(Node):
 
         self.declare_parameter(
             'managed_nodes',
-            ['rosa_kb', 'configuration_planner', 'executor'])
+            ['rosa_kb', 'configuration_planner', 'configuration_executor'])
         self.managed_nodes = self.get_parameter('managed_nodes').value
         self.change_state_dict = dict()
         self.get_state_dict = dict()

@@ -95,7 +95,7 @@ def generate_launch_description():
     )
 
     default_managed_nodes = "[{0},{1},{2}]".format(
-        'rosa_kb', 'configuration_planner', 'executor')
+        'rosa_kb', 'configuration_planner', 'configuration_executor')
 
     managed_nodes_arg = DeclareLaunchArgument(
         'managed_nodes',
