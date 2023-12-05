@@ -18,7 +18,7 @@
   <depend>rosa_kb</depend>
   <depend>rosa_msgs</depend>
   <depend>lifecycle_msgs</depend>
-  <depend>behaviortree_cpp_v3</depend>
+  <depend>behaviortree_cpp</depend>
 
   <test_depend>ros_pytest</test_depend>
 

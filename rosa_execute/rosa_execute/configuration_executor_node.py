@@ -13,14 +13,14 @@
 # limitations under the License.
 import rclpy
 
-from rosa_execute.executor import Executor
+from rosa_execute.configuration_executor import ConfigurationExecutor
 
 
 def main():
     rclpy.init()
 
     executor = rclpy.executors.MultiThreadedExecutor()
-    lc_node = Executor('executor')
+    lc_node = ConfigurationExecutor('configuration_executor')
     executor.add_node(lc_node)
     try:
         executor.spin()

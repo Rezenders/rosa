@@ -15,6 +15,7 @@ import os
 import signal
 import sys
 import rclpy
+import subprocess
 from threading import Thread
 from pathlib import Path
 
@@ -25,7 +26,7 @@ import launch_ros
 import pytest
 from ros_pytest.fixture import tester_node
 
-from rosa_execute.executor import Executor
+from rosa_execute.configuration_executor import ConfigurationExecutor
 
 from rosa_msgs.msg import Component
 from rosa_msgs.msg import ComponentConfig
@@ -35,7 +36,7 @@ from rcl_interfaces.msg import Parameter
 from rcl_interfaces.msg import ParameterValue
 from rcl_interfaces.srv import GetParameters
 
-executor_node_name = 'executor_tested'
+configuration_executor_node_name = 'executor_tested'
 rosa_kb_name = 'rosa_kb'
 
 
@@ -63,7 +64,7 @@ def generate_test_description():
                 str(path_test_data / 'ros_test_data.tql'),
                 str(path_execute_test_data / 'test_data.tql')
             ],
-            'database_name': 'test_' + executor_node_name
+            'database_name': 'test_' + configuration_executor_node_name
         }]
     )
     return launch.LaunchDescription([
@@ -80,65 +81,69 @@ def spin_srv(executor):
 
 @pytest.mark.usefixtures(fixture=tester_node)
 @pytest.fixture(scope='module')
-def executor_node(tester_node):
-    executor_node = Executor(executor_node_name)
+def configuration_executor_node(tester_node):
+    configuration_executor_node = ConfigurationExecutor(
+        configuration_executor_node_name)
 
     executor = rclpy.executors.MultiThreadedExecutor()
-    executor.add_node(executor_node)
+    executor.add_node(configuration_executor_node)
     new_thread = Thread(target=spin_srv, args=(executor, ), daemon=True)
     new_thread.start()
 
-    tester_node.activate_lc_node(executor_node_name)
-    yield executor_node
-    executor_node.destroy_node()
+    tester_node.activate_lc_node(configuration_executor_node_name)
+    yield configuration_executor_node
+    configuration_executor_node.destroy_node()
     executor.shutdown()
     new_thread.join()
 
 
-def test_start_ros_node(executor_node):
+def test_start_ros_node(configuration_executor_node):
     try:
         node_name = 'executor_mock_start_ros_node'
         node_dict = {
             'package': 'rosa_execute',
-            'executable': 'executor',
+            'executable': 'configuration_executor',
             'name': node_name,
             'parameters': [{'test': 'test'}],
         }
-        process = executor_node.start_ros_node(node_dict)
+        process = configuration_executor_node.start_ros_node(node_dict)
         assert process is not False and process.poll() is None and \
-            node_name in executor_node.get_node_names()
+            node_name in configuration_executor_node.get_node_names()
     finally:
-        pgid = os.getpgid(process.pid)
-        os.killpg(pgid, signal.SIGTERM)
-        os.waitid(os.P_PGID, pgid, os.WEXITED)
+        if type(process) is subprocess.Popen:
+            pgid = os.getpgid(process.pid)
+            os.killpg(pgid, signal.SIGTERM)
+            os.waitid(os.P_PGID, pgid, os.WEXITED)
 
 
-def test_start_ros_launchfile(executor_node):
+def test_start_ros_launchfile(configuration_executor_node):
     try:
         node_dict = {
             'package': 'rosa_execute',
             'launch_file': 'rosa_execute.launch.py',
             'parameters': [{'test': 'test'}],
         }
-        process = executor_node.start_ros_launchfile(node_dict)
+        process = configuration_executor_node.start_ros_launchfile(node_dict)
         assert process is not False and process.poll() is None and \
-            'executor' in executor_node.get_node_names()
+            'configuration_executor' in \
+            configuration_executor_node.get_node_names()
     finally:
-        pgid = os.getpgid(process.pid)
-        os.killpg(pgid, signal.SIGTERM)
-        os.waitid(os.P_PGID, pgid, os.WEXITED)
+        if type(process) is subprocess.Popen:
+            pgid = os.getpgid(process.pid)
+            os.killpg(pgid, signal.SIGTERM)
+            os.waitid(os.P_PGID, pgid, os.WEXITED)
 
 
 @pytest.mark.launch(fixture=generate_test_description)
 @pytest.mark.usefixtures(fixture=tester_node)
-def test_activate_components(executor_node, tester_node):
+def test_activate_components(configuration_executor_node, tester_node):
     try:
         tester_node.activate_lc_node(rosa_kb_name)
 
         component = Component()
         component.name = 'executor_mock'
         component.package = 'rosa_execute'
-        component.executable = 'executor'
+        component.executable = 'configuration_executor'
         component.node_type = 'ROSNode'
 
         param = Parameter()
@@ -151,7 +156,7 @@ def test_activate_components(executor_node, tester_node):
         component2 = Component()
         component2.name = 'executor_mock_2'
         component2.package = 'rosa_execute'
-        component2.executable = 'executor'
+        component2.executable = 'configuration_executor'
         component2.node_type = 'LifeCycleNode'
 
         param2 = Parameter()
@@ -161,36 +166,40 @@ def test_activate_components(executor_node, tester_node):
 
         component2.parameters.append(param2)
 
-        result = executor_node.activate_components([component, component2])
-        component2_state = executor_node.get_lc_node_state(component2.name)
+        result = configuration_executor_node.activate_components(
+            [component, component2])
+        component2_state = configuration_executor_node.get_lc_node_state(
+            component2.name)
 
-        srv_get = executor_node.create_client(
+        srv_get = configuration_executor_node.create_client(
             ComponentQuery, '/rosa_kb/component/active/get')
         component_query = ComponentQuery.Request()
         component_query.component = component
-        result_get = executor_node.call_service(srv_get, component_query)
+        result_get = configuration_executor_node.call_service(
+            srv_get, component_query)
 
         component_query_2 = ComponentQuery.Request()
         component_query_2.component = component2
-        result_get_2 = executor_node.call_service(srv_get, component_query_2)
+        result_get_2 = configuration_executor_node.call_service(
+            srv_get, component_query_2)
 
         assert result is True \
             and component2_state.current_state.id == 3 \
             and result_get.component.is_active is True \
             and result_get_2.component.is_active is True
     finally:
-        executor_node.kill_all_components()
+        configuration_executor_node.kill_all_components()
 
 
 @pytest.mark.launch(fixture=generate_test_description)
 @pytest.mark.usefixtures(fixture=tester_node)
-def test_set_component_active(executor_node, tester_node):
+def test_set_component_active(configuration_executor_node, tester_node):
     tester_node.activate_lc_node(rosa_kb_name)
 
     component = Component()
     component.name = 'executor_mock'
     component.package = 'rosa_execute'
-    component.executable = 'executor'
+    component.executable = 'configuration_executor'
     component.node_type = 'ROSNode'
 
     param = Parameter()
@@ -199,27 +208,28 @@ def test_set_component_active(executor_node, tester_node):
     param.value.string_value = 'teste'
 
     component.parameters.append(param)
-    result = executor_node.set_component_active(component, True)
+    result = configuration_executor_node.set_component_active(component, True)
 
-    srv_get = executor_node.create_client(
+    srv_get = configuration_executor_node.create_client(
         ComponentQuery, '/rosa_kb/component/active/get')
     component_query = ComponentQuery.Request()
     component_query.component = component
-    result_get = executor_node.call_service(srv_get, component_query)
+    result_get = configuration_executor_node.call_service(
+        srv_get, component_query)
 
     assert result.success is True and result_get.component.is_active is True
 
 
 @pytest.mark.launch(fixture=generate_test_description)
 @pytest.mark.usefixtures(fixture=tester_node)
-def test_deactivate_components(executor_node, tester_node):
+def test_deactivate_components(configuration_executor_node, tester_node):
     try:
         tester_node.activate_lc_node(rosa_kb_name)
 
         component = Component()
         component.name = 'executor_mock'
         component.package = 'rosa_execute'
-        component.executable = 'executor'
+        component.executable = 'configuration_executor'
         component.node_type = 'ROSNode'
 
         param = Parameter()
@@ -232,7 +242,7 @@ def test_deactivate_components(executor_node, tester_node):
         component2 = Component()
         component2.name = 'executor_mock_2'
         component2.package = 'rosa_execute'
-        component2.executable = 'executor'
+        component2.executable = 'configuration_executor'
         component2.node_type = 'LifeCycleNode'
 
         param2 = Parameter()
@@ -242,36 +252,41 @@ def test_deactivate_components(executor_node, tester_node):
 
         component2.parameters.append(param2)
 
-        result_activate = executor_node.activate_components(
+        result_activate = configuration_executor_node.activate_components(
             [component, component2])
-        result_deactivate = executor_node.deactivate_components(
+        result_deactivate = configuration_executor_node.deactivate_components(
             [component, component2])
 
-        component2_state = executor_node.get_lc_node_state(component2.name)
+        component2_state = configuration_executor_node.get_lc_node_state(
+            component2.name)
 
-        srv_get = executor_node.create_client(
+        srv_get = configuration_executor_node.create_client(
             ComponentQuery, '/rosa_kb/component/active/get')
 
         component_query = ComponentQuery.Request()
         component_query.component = component
-        result_get = executor_node.call_service(srv_get, component_query)
+        result_get = configuration_executor_node.call_service(
+            srv_get, component_query)
 
         component_query_2 = ComponentQuery.Request()
         component_query_2.component = component2
-        result_get_2 = executor_node.call_service(srv_get, component_query_2)
+        result_get_2 = configuration_executor_node.call_service(
+            srv_get, component_query_2)
 
         assert result_activate is True and result_deactivate is True \
             and component2_state.current_state.id == 2 \
             and result_get.component.is_active is False \
             and result_get_2.component.is_active is False \
-            and 'executor_mock' not in executor_node.component_pids_dict
+            and 'executor_mock' not in \
+                configuration_executor_node.component_pids_dict
     finally:
-        executor_node.kill_all_components()
+        configuration_executor_node.kill_all_components()
 
 
 @pytest.mark.launch(fixture=generate_test_description)
 @pytest.mark.usefixtures(fixture=tester_node)
-def test_perform_parameter_adaptation(executor_node, tester_node):
+def test_perform_parameter_adaptation(
+   configuration_executor_node, tester_node):
     try:
         tester_node.activate_lc_node(rosa_kb_name)
 
@@ -287,22 +302,26 @@ def test_perform_parameter_adaptation(executor_node, tester_node):
         component2.executable = 'ros_typedb'
         component2.node_type = 'LifeCycleNode'
 
-        result = executor_node.activate_components([component, component2])
+        result = configuration_executor_node.activate_components(
+            [component, component2])
 
         config = ComponentConfig(name='ros_typedb_config')
         config_2 = ComponentConfig(name='ros_typedb_config_2')
-        result = executor_node.perform_parameter_adaptation([config, config_2])
+        result = configuration_executor_node.perform_parameter_adaptation(
+            [config, config_2])
 
-        get_param_srv = executor_node.create_client(
+        get_param_srv = configuration_executor_node.create_client(
             GetParameters, '/ros_typedb_test/get_parameters')
-        get_param_srv_2 = executor_node.create_client(
+        get_param_srv_2 = configuration_executor_node.create_client(
             GetParameters, '/ros_typedb_test_2/get_parameters')
 
         param_req = GetParameters.Request(
             names=[
                 'database_name', 'force_database', 'force_data', 'data_path'])
-        params = executor_node.call_service(get_param_srv, param_req)
-        params_2 = executor_node.call_service(get_param_srv_2, param_req)
+        params = configuration_executor_node.call_service(
+            get_param_srv, param_req)
+        params_2 = configuration_executor_node.call_service(
+            get_param_srv_2, param_req)
 
         expected_params = [
             ParameterValue(type=4, string_value='ros_typedb_executor'),
@@ -323,28 +342,30 @@ def test_perform_parameter_adaptation(executor_node, tester_node):
             all(p in params.values for p in expected_params) and \
             all(p in params_2.values for p in expected_params_2)
     finally:
-        executor_node.kill_all_components()
+        configuration_executor_node.kill_all_components()
 
 
 @pytest.mark.launch(fixture=generate_test_description)
 @pytest.mark.usefixtures(fixture=tester_node)
-def test_perform_reconfiguration_plan(executor_node, tester_node):
+def test_perform_reconfiguration_plan(
+   configuration_executor_node, tester_node):
     try:
         tester_node.activate_lc_node(rosa_kb_name)
 
         component = Component()
         component.name = 'executor_mock'
         component.package = 'rosa_execute'
-        component.executable = 'executor'
+        component.executable = 'configuration_executor'
         component.node_type = 'LifeCycleNode'
 
         component2 = Component()
         component2.name = 'executor_mock_2'
         component2.package = 'rosa_execute'
-        component2.executable = 'executor'
+        component2.executable = 'configuration_executor'
         component2.node_type = 'LifeCycleNode'
 
-        executor_node.activate_components([component, component2])
+        configuration_executor_node.activate_components(
+            [component, component2])
 
         component3 = Component()
         component3.name = 'ros_typedb_test'
@@ -366,38 +387,41 @@ def test_perform_reconfiguration_plan(executor_node, tester_node):
         reconfig_plan.components_activate = [component3, component4]
         reconfig_plan.component_configurations = [config, config_2]
 
-        result = executor_node.perform_reconfiguration_plan(reconfig_plan)
+        result = configuration_executor_node.perform_reconfiguration_plan(
+            reconfig_plan)
 
         assert result is True
     finally:
-        executor_node.kill_all_components()
+        configuration_executor_node.kill_all_components()
 
 
 @pytest.mark.launch(fixture=generate_test_description)
 @pytest.mark.usefixtures(fixture=tester_node)
-def test_execute(executor_node, tester_node):
+def test_execute(configuration_executor_node, tester_node):
     try:
         tester_node.activate_lc_node(rosa_kb_name)
 
         component = Component()
         component.name = 'executor_mock_2'
         component.package = 'rosa_execute'
-        component.executable = 'executor'
+        component.executable = 'configuration_executor'
         component.node_type = 'LifeCycleNode'
 
-        executor_node.activate_components([component])
+        configuration_executor_node.activate_components([component])
 
-        executor_node.execute()
+        configuration_executor_node.execute()
 
-        component_state = executor_node.get_lc_node_state(component.name)
-        active_nodes = executor_node.get_node_names()
+        component_state = configuration_executor_node.get_lc_node_state(
+            component.name)
+        active_nodes = configuration_executor_node.get_node_names()
 
-        get_param_srv = executor_node.create_client(
+        get_param_srv = configuration_executor_node.create_client(
             GetParameters, '/ros_typedb_test_execute/get_parameters')
         param_req = GetParameters.Request(
             names=[
                 'database_name', 'force_database', 'force_data', 'data_path'])
-        params = executor_node.call_service(get_param_srv, param_req)
+        params = configuration_executor_node.call_service(
+            get_param_srv, param_req)
         expected_params = [
             ParameterValue(type=4, string_value='ros_typedb_executor'),
             ParameterValue(type=1, bool_value=True),
@@ -410,4 +434,4 @@ def test_execute(executor_node, tester_node):
             'ros_typedb_test_execute' in active_nodes and \
             all(p in params.values for p in expected_params)
     finally:
-        executor_node.kill_all_components()
+        configuration_executor_node.kill_all_components()

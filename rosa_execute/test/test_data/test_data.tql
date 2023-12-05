@@ -1,7 +1,7 @@
 insert
 
-$ros_component isa LifeCycleNode, has component-name "executor_mock", has package "rosa_execute", has executable "executor";
-$ros_component_2 isa LifeCycleNode, has component-name "executor_mock_2", has package "rosa_execute", has executable "executor";
+$ros_component isa LifeCycleNode, has component-name "executor_mock", has package "rosa_execute", has executable "configuration_executor";
+$ros_component_2 isa LifeCycleNode, has component-name "executor_mock_2", has package "rosa_execute", has executable "configuration_executor";
 
 
 $ros_typedb isa LifeCycleNode, has component-name "ros_typedb_test_execute", has package "ros_typedb", has executable "ros_typedb";

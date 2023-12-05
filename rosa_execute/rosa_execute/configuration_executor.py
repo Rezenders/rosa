@@ -60,8 +60,8 @@ def check_lc_active(func):
     return inner
 
 
-class Executor(Node):
-    """Executor."""
+class ConfigurationExecutor(Node):
+    """ConfigurationExecutor."""
 
     def __init__(self, node_name, **kwargs):
         super().__init__(node_name, **kwargs)
@@ -194,10 +194,14 @@ class Executor(Node):
         return result_deactivation and result_activation and result_update
 
     def kill_all_components(self):
-        for pid in self.component_pids_dict.values():
-            pgid = os.getpgid(pid)
-            os.killpg(pgid, signal.SIGTERM)
-            os.waitid(os.P_PGID, pgid, os.WEXITED)
+        for c, pid in self.component_pids_dict.items():
+            try:
+                pgid = os.getpgid(pid)
+                os.killpg(pgid, signal.SIGTERM)
+                os.waitid(os.P_PGID, pgid, os.WEXITED)
+            except ProcessLookupError:
+                self.get_logger().warning(f'''
+                    Component {c} process with pid {pid} not found''')
         return True
 
     def kill_component(self, component):

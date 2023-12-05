@@ -24,7 +24,7 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
-            'executor = rosa_execute.executor_node:main'
+            'configuration_executor = rosa_execute.configuration_executor_node:main'
         ],
     },
 )

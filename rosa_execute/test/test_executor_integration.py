@@ -33,11 +33,11 @@ rosa_kb_name = 'rosa_kb_executor_integration'
 def generate_test_description():
     path_to_test = Path(__file__).parents[1]
 
-    executor_node = launch_ros.actions.Node(
+    configuration_executor_node = launch_ros.actions.Node(
         executable=sys.executable,
         arguments=[
             str(path_to_test / 'rosa_execute' /
-                'executor_node.py')],
+                'configuration_executor_node.py')],
         additional_env={'PYTHONUNBUFFERED': '1'},
         name=tested_node,
         output='screen',
@@ -60,7 +60,7 @@ def generate_test_description():
         }]
     )
     return launch.LaunchDescription([
-        executor_node,
+        configuration_executor_node,
         rosa_kb_node,
     ])
 

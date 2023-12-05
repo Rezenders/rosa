@@ -27,18 +27,18 @@ import lifecycle_msgs.msg
 def generate_launch_description():
     executor_node = Node(
         package='rosa_execute',
-        executable='executor',
+        executable='configuration_executor',
     )
 
     shutdown_event = RegisterEventHandler(
         OnShutdown(
             on_shutdown=[
                 EmitEvent(event=ChangeState(
-                  lifecycle_node_matcher=matches_node_name(node_name='executor'),
+                  lifecycle_node_matcher=matches_node_name(node_name='configuration_executor'),
                   transition_id=lifecycle_msgs.msg.Transition.TRANSITION_ACTIVE_SHUTDOWN,
                 )),
                 LogInfo(
-                    msg="[LifecycleLaunch] Executor node is exiting."),
+                    msg="[LifecycleLaunch] ConfigurationExecutor node is exiting."),
             ],
         )
     )
