@@ -194,7 +194,7 @@ class ConfigurationPlanner(Node):
                 'service not available {}'.format(cli.srv_name))
             return None
         future = cli.call_async(request)
-        self.my_executor.spin_until_future_complete(future, timeout_sec=5.0)
+        self.executor.spin_until_future_complete(future, timeout_sec=5.0)
         if future.done() is False:
             self.get_logger().error(
                 'Future not completed {}'.format(cli.srv_name))

@@ -24,7 +24,6 @@ def main(args=None):
         executor = MultiThreadedExecutor()
         lc_node = ConfigurationPlanner('configuration_planner')
         executor.add_node(lc_node)
-        lc_node.my_executor = executor
         try:
             executor.spin()
         except (KeyboardInterrupt, rclpy.executors.ExternalShutdownException):
