@@ -69,7 +69,7 @@ class RosaKB(ROSTypeDBInterface):
             '/diagnostics',
             self.diagnostics_callback,
             1,
-            callback_group=MutuallyExclusiveCallbackGroup()
+            callback_group=self.query_cb_group
         )
 
         self.task_cb_group = MutuallyExclusiveCallbackGroup()
@@ -77,63 +77,63 @@ class RosaKB(ROSTypeDBInterface):
             TaskRequest,
             self.get_name() + '/task/request',
             self.task_request_cb,
-            callback_group=self.task_cb_group
+            callback_group=self.query_cb_group
         )
 
         self.task_selectable_service = self.create_service(
             TasksMatched,
             self.get_name() + '/task/selectable',
             self.task_selectable_cb,
-            callback_group=self.task_cb_group
+            callback_group=self.query_cb_group
         )
 
         self.get_adaptable_functions_service = self.create_service(
             AdaptableFunctions,
             self.get_name() + '/function/adaptable',
             self.function_adaptable_cb,
-            callback_group=MutuallyExclusiveCallbackGroup()
+            callback_group=self.query_cb_group
         )
 
         self.get_adaptable_components_service = self.create_service(
             AdaptableComponents,
             self.get_name() + '/component/adaptable',
             self.component_adaptable_cb,
-            callback_group=MutuallyExclusiveCallbackGroup()
+            callback_group=self.query_cb_group
         )
 
         self.get_selectable_fds_service = self.create_service(
             SelectableFDs,
             self.get_name() + '/function_designs/selectable',
             self.selectable_fd_cb,
-            callback_group=MutuallyExclusiveCallbackGroup()
+            callback_group=self.query_cb_group
         )
 
         self.get_selectable_c_configs_service = self.create_service(
             SelectableComponentConfigs,
             self.get_name() + '/component_configuration/selectable',
             self.selectable_c_config_cb,
-            callback_group=MutuallyExclusiveCallbackGroup()
+            callback_group=self.query_cb_group
         )
 
         self.get_fds_performance_service = self.create_service(
             GetFDPerformance,
             self.get_name() + '/function_designs/performance',
             self.function_design_performance_cb,
-            callback_group=MutuallyExclusiveCallbackGroup()
+            callback_group=self.query_cb_group
         )
 
         self.get_c_configs_performance_service = self.create_service(
             GetComponentConfigPerformance,
             self.get_name() + '/component_configuration/performance',
             self.component_configuration_performance_cb,
-            callback_group=MutuallyExclusiveCallbackGroup()
+            callback_group=self.query_cb_group
         )
 
         self.select_configuration_service = self.create_service(
             SelectedConfig,
             self.get_name() + '/select_configuration',
             self.select_configuration_cb,
-            callback_group=MutuallyExclusiveCallbackGroup()
+            callback_group=self.query_cb_group
         )
 
         self.reconfig_plan_cb_group = MutuallyExclusiveCallbackGroup()
@@ -141,21 +141,21 @@ class RosaKB(ROSTypeDBInterface):
             GetReconfigurationPlan,
             self.get_name() + '/reconfiguration_plan/get',
             self.get_reconfiguration_plan_cb,
-            callback_group=self.reconfig_plan_cb_group
+            callback_group=self.query_cb_group
         )
 
         self.get_latest_reconfiguration_plan_service = self.create_service(
             GetReconfigurationPlan,
             self.get_name() + '/reconfiguration_plan/get_latest',
             self.get_latest_reconfiguration_plan_cb,
-            callback_group=self.reconfig_plan_cb_group
+            callback_group=self.query_cb_group
         )
 
         self.set_reconfiguration_plan_result_service = self.create_service(
             ReconfigurationPlanQuery,
             self.get_name() + '/reconfiguration_plan/result/set',
             self.set_reconfiguration_plan_result_service_cb,
-            callback_group=self.reconfig_plan_cb_group
+            callback_group=self.query_cb_group
         )
 
         self.component_active_cb_group = MutuallyExclusiveCallbackGroup()
@@ -163,21 +163,21 @@ class RosaKB(ROSTypeDBInterface):
             ComponentQuery,
             self.get_name() + '/component/active/set',
             self.set_component_active_cb,
-            callback_group=self.component_active_cb_group
+            callback_group=self.query_cb_group
         )
 
         self.get_component_active_service = self.create_service(
             ComponentQuery,
             self.get_name() + '/component/active/get',
             self.get_component_active_cb,
-            callback_group=self.component_active_cb_group
+            callback_group=self.query_cb_group
         )
 
         self.get_component_parameters_service = self.create_service(
             GetComponentParameters,
             self.get_name() + '/component_parameters/get',
             self.get_component_parameters_cb,
-            callback_group=MutuallyExclusiveCallbackGroup()
+            callback_group=self.query_cb_group
         )
 
         return config_res
