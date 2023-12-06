@@ -48,28 +48,45 @@ class ConfigurationPlanner(Node):
             callback_group=MutuallyExclusiveCallbackGroup())
 
         self.component_adaptable_srv = self.create_client(
-            AdaptableComponents, '/rosa_kb/component/adaptable')
+            AdaptableComponents,
+            '/rosa_kb/component/adaptable',
+            callback_group=MutuallyExclusiveCallbackGroup())
 
         self.function_adaptable_srv = self.create_client(
-            AdaptableFunctions, '/rosa_kb/function/adaptable')
+            AdaptableFunctions,
+            '/rosa_kb/function/adaptable',
+            callback_group=MutuallyExclusiveCallbackGroup()
+        )
 
         self.selectable_fds_srv = self.create_client(
-            SelectableFDs, '/rosa_kb/function_designs/selectable')
+            SelectableFDs,
+            '/rosa_kb/function_designs/selectable',
+            callback_group=MutuallyExclusiveCallbackGroup()
+        )
 
         self.selectable_c_configs_srv = self.create_client(
             SelectableComponentConfigs,
-            '/rosa_kb/component_configuration/selectable')
+            '/rosa_kb/component_configuration/selectable',
+            callback_group=MutuallyExclusiveCallbackGroup()
+        )
 
         self.get_fds_performance_srv = self.create_client(
-            GetFDPerformance, '/rosa_kb/function_designs/performance')
+            GetFDPerformance,
+            '/rosa_kb/function_designs/performance',
+            callback_group=MutuallyExclusiveCallbackGroup()
+        )
 
         self.get_c_configs_performance_srv = self.create_client(
             GetComponentConfigPerformance,
-            '/rosa_kb/component_configuration/performance')
+            '/rosa_kb/component_configuration/performance',
+            callback_group=MutuallyExclusiveCallbackGroup()
+        )
 
         self.select_configuration_srv = self.create_client(
             SelectedConfig,
-            '/rosa_kb/select_configuration')
+            '/rosa_kb/select_configuration',
+            callback_group=MutuallyExclusiveCallbackGroup()
+        )
 
         self.get_logger().info(self.get_name() + ': on_configure() completed.')
         return TransitionCallbackReturn.SUCCESS
@@ -177,8 +194,8 @@ class ConfigurationPlanner(Node):
                 'service not available {}'.format(cli.srv_name))
             return None
         future = cli.call_async(request)
-        if self.executor.spin_until_future_complete(
-                future, timeout_sec=5.0) is False:
+        self.my_executor.spin_until_future_complete(future, timeout_sec=5.0)
+        if future.done() is False:
             self.get_logger().error(
                 'Future not completed {}'.format(cli.srv_name))
             return None
