@@ -171,7 +171,7 @@ class ConfigurationExecutor(Node):
     def execute(self):
         reconfig_plan = self.call_service(
             self.get_reconfig_plan_srv, GetReconfigurationPlan.Request())
-        if reconfig_plan.success is True:
+        if reconfig_plan is not None and reconfig_plan.success is True:
             reconfig_result = self.perform_reconfiguration_plan(
                 reconfig_plan.reconfig_plan)
             rp_query = ReconfigurationPlanQuery.Request()

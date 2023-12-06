@@ -95,19 +95,22 @@ class ConfigurationPlanner(Node):
                 request = SelectableFDs.Request()
                 request.function = function
                 fds = self.call_service(self.selectable_fds_srv, request)
-
-                # get fds performance
-                request = GetFDPerformance.Request()
-                request.fds = fds.fds
-                fds = self.call_service(self.get_fds_performance_srv, request)
-                # sort fds
-                sorted_fds = sorted(
-                    fds.fds, key=lambda x: x.performance, reverse=True)
-                if len(sorted_fds) > 0:
-                    selected_fd = SelectedFunctionDesign()
-                    selected_fd.function_name = function.name
-                    selected_fd.function_design_name = sorted_fds[0].name
-                    selected_functions_fds.append(selected_fd)
+                if fds is not None:
+                    # get fds performance
+                    request = GetFDPerformance.Request()
+                    request.fds = fds.fds
+                    fds = self.call_service(
+                        self.get_fds_performance_srv, request)
+                    # sort fds
+                    if fds is not None:
+                        sorted_fds = sorted(
+                            fds.fds, key=lambda x: x.performance, reverse=True)
+                        if len(sorted_fds) > 0:
+                            selected_fd = SelectedFunctionDesign()
+                            selected_fd.function_name = function.name
+                            selected_fd.function_design_name = \
+                                sorted_fds[0].name
+                            selected_functions_fds.append(selected_fd)
         return selected_functions_fds
 
     def plan_component_adaptation(self, selected_functions_fds=[]):
@@ -126,24 +129,25 @@ class ConfigurationPlanner(Node):
                 c_configs = self.call_service(
                     self.selectable_c_configs_srv, request)
 
-                # get component configs performance
-                request = GetComponentConfigPerformance.Request()
-                request.c_configs = c_configs.c_configs
-                c_configs = self.call_service(
-                    self.get_c_configs_performance_srv, request)
+                if c_configs is not None:
+                    # get component configs performance
+                    request = GetComponentConfigPerformance.Request()
+                    request.c_configs = c_configs.c_configs
+                    c_configs = self.call_service(
+                        self.get_c_configs_performance_srv, request)
 
-                # sort fds
-                sorted_cc = sorted(
-                    c_configs.c_configs,
-                    key=lambda x: x.performance,
-                    reverse=True
-                )
-                if len(sorted_cc) > 0:
-                    selected_cc = SelectedComponentConfig()
-                    selected_cc.component_name = component.name
-                    selected_cc.component_configuration_name = \
-                        sorted_cc[0].name
-                    selected_component_configs.append(selected_cc)
+                    # sort fds
+                    sorted_cc = sorted(
+                        c_configs.c_configs,
+                        key=lambda x: x.performance,
+                        reverse=True
+                    )
+                    if len(sorted_cc) > 0:
+                        selected_cc = SelectedComponentConfig()
+                        selected_cc.component_name = component.name
+                        selected_cc.component_configuration_name = \
+                            sorted_cc[0].name
+                        selected_component_configs.append(selected_cc)
 
         return selected_component_configs
 
