@@ -221,6 +221,7 @@ class RosaKB(ROSTypeDBInterface):
             if diagnostic_status.message.lower() in component_messages:
                 self.update_component_status(diagnostic_status)
 
+    @publish_event(event_type='task_change')
     def task_request_cb(self, req, res):
         if req.required is True and \
           self.typedb_interface.is_task_selectable(req.task.task_name) is True:

@@ -180,7 +180,7 @@ class ConfigurationPlanner(Node):
         return selected_config
 
     def event_cb(self, msg):
-        if msg.data == 'insert_monitoring_data':
+        if msg.data == 'insert_monitoring_data' or msg.data == 'task_change':
             selected_config = self.plan_adaptation()
             # update kb with selected fds and component configs
             if len(selected_config.selected_fds) > 0 \
