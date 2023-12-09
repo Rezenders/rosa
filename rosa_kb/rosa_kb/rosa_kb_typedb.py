@@ -68,7 +68,7 @@ class RosaKB(ROSTypeDBInterface):
             DiagnosticArray,
             '/diagnostics',
             self.diagnostics_callback,
-            1,
+            30,
             callback_group=self.query_cb_group
         )
 
