@@ -121,7 +121,7 @@ class ConfigurationPlanner(Node):
                     # sort fds
                     if fds is not None:
                         sorted_fds = sorted(
-                            fds.fds, key=lambda x: x.priority, reverse=True)
+                            fds.fds, key=lambda x: x.priority)
                         if len(sorted_fds) > 0:
                             selected_fd = SelectedFunctionDesign()
                             selected_fd.function_name = function.name
@@ -157,7 +157,6 @@ class ConfigurationPlanner(Node):
                     sorted_cc = sorted(
                         c_configs.c_configs,
                         key=lambda x: x.priority,
-                        reverse=True
                     )
                     if len(sorted_cc) > 0:
                         selected_cc = SelectedComponentConfig()
