@@ -17,8 +17,8 @@ from rclpy.lifecycle import Node
 from rclpy.lifecycle import State
 from rclpy.lifecycle import TransitionCallbackReturn
 
-from rosa_msgs.msg import SelectedComponentConfiguration
-from rosa_msgs.msg import SelectedFunctionDesign
+from rosa_msgs.msg import ComponentConfiguration
+from rosa_msgs.msg import FunctionDesign
 
 from rosa_msgs.srv import AdaptableFunctions
 from rosa_msgs.srv import AdaptableComponents
@@ -123,9 +123,9 @@ class ConfigurationPlanner(Node):
                         sorted_fds = sorted(
                             fds.fds, key=lambda x: x.priority)
                         if len(sorted_fds) > 0:
-                            selected_fd = SelectedFunctionDesign()
-                            selected_fd.function_name = function.name
-                            selected_fd.function_design_name = \
+                            selected_fd = FunctionDesign()
+                            selected_fd.function.name = function.name
+                            selected_fd.name = \
                                 sorted_fds[0].name
                             selected_functions_fds.append(selected_fd)
         return selected_functions_fds
@@ -134,7 +134,7 @@ class ConfigurationPlanner(Node):
         # get adaptable components
         selected_component_configs = []
         _selected_fds = [
-            fd.function_design_name for fd in selected_functions_fds]
+            fd.name for fd in selected_functions_fds]
         components = self.call_service(
             self.component_adaptable_srv,
             AdaptableComponents.Request(selected_fds=_selected_fds))
@@ -159,9 +159,9 @@ class ConfigurationPlanner(Node):
                         key=lambda x: x.priority,
                     )
                     if len(sorted_cc) > 0:
-                        selected_cc = SelectedComponentConfiguration()
-                        selected_cc.component_name = component.name
-                        selected_cc.component_configuration_name = \
+                        selected_cc = ComponentConfiguration()
+                        selected_cc.component.name = component.name
+                        selected_cc.name = \
                             sorted_cc[0].name
                         selected_component_configs.append(selected_cc)
 

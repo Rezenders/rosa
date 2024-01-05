@@ -38,8 +38,7 @@ from ros_typedb_msgs.msg import Attribute
 from rosa_msgs.msg import Component
 from rosa_msgs.msg import ComponentConfiguration
 from rosa_msgs.msg import Function
-from rosa_msgs.msg import SelectedComponentConfiguration
-from rosa_msgs.msg import SelectedFunctionDesign
+from rosa_msgs.msg import FunctionDesign
 
 from rosa_msgs.srv import AdaptableFunctions
 from rosa_msgs.srv import AdaptableComponents
@@ -433,13 +432,13 @@ def test_rosa_kb_select_configuration():
 
         selected_config = SelectedConfigurations.Request()
 
-        selected_fd = SelectedFunctionDesign()
-        selected_fd.function_name = 'f_reconfigure_fd'
-        selected_fd.function_design_name = 'fd_reconfig_2'
+        selected_fd = FunctionDesign()
+        selected_fd.function.name = 'f_reconfigure_fd'
+        selected_fd.name = 'fd_reconfig_2'
 
-        selected_cc = SelectedComponentConfiguration()
-        selected_cc.component_name = 'component_reconfig_3'
-        selected_cc.component_configuration_name = 'cp_reconfig_2'
+        selected_cc = ComponentConfiguration()
+        selected_cc.component.name = 'component_reconfig_3'
+        selected_cc.name = 'cp_reconfig_2'
 
         selected_config.selected_fds.append(selected_fd)
         selected_config.selected_component_configs.append(selected_cc)
@@ -465,13 +464,13 @@ def test_rosa_kb_get_reconfiguration_plan():
 
         selected_config = SelectedConfigurations.Request()
 
-        selected_fd = SelectedFunctionDesign()
-        selected_fd.function_name = 'f_reconfigure_fd'
-        selected_fd.function_design_name = 'fd_reconfig_2'
+        selected_fd = FunctionDesign()
+        selected_fd.function.name = 'f_reconfigure_fd'
+        selected_fd.name = 'fd_reconfig_2'
 
-        selected_cc = SelectedComponentConfiguration()
-        selected_cc.component_name = 'component_reconfig_3'
-        selected_cc.component_configuration_name = 'cp_reconfig_2'
+        selected_cc = ComponentConfiguration()
+        selected_cc.component.name = 'component_reconfig_3'
+        selected_cc.name = 'cp_reconfig_2'
 
         selected_config.selected_fds.append(selected_fd)
         selected_config.selected_component_configs.append(selected_cc)
@@ -612,13 +611,13 @@ def test_set_reconfiguration_plan_result_service_cb():
 
         selected_config = SelectedConfigurations.Request()
 
-        selected_fd = SelectedFunctionDesign()
-        selected_fd.function_name = 'f_reconfigure_fd'
-        selected_fd.function_design_name = 'fd_reconfig_2'
+        selected_fd = FunctionDesign()
+        selected_fd.function.name = 'f_reconfigure_fd'
+        selected_fd.name = 'fd_reconfig_2'
 
-        selected_cc = SelectedComponentConfiguration()
-        selected_cc.component_name = 'component_reconfig_3'
-        selected_cc.component_configuration_name = 'cp_reconfig_2'
+        selected_cc = ComponentConfiguration()
+        selected_cc.component.name = 'component_reconfig_3'
+        selected_cc.name = 'cp_reconfig_2'
 
         selected_config.selected_fds.append(selected_fd)
         selected_config.selected_component_configs.append(selected_cc)

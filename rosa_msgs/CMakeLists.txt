@@ -17,8 +17,6 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   "msg/Function.msg"
   "msg/FunctionDesign.msg"
   "msg/ReconfigurationPlan.msg"
-  "msg/SelectedFunctionDesign.msg"
-  "msg/SelectedComponentConfiguration.msg"
   "srv/ActionQuery.srv"
   "srv/AdaptableFunctions.srv"
   "srv/AdaptableComponents.srv"

@@ -317,11 +317,11 @@ class RosaKB(ROSTypeDBInterface):
     @publish_event(event_type='insert_reconfiguration_plan')
     def select_configuration_cb(self, req, res):
         _selected_fds = [
-            (selected_fd.function_name, selected_fd.function_design_name)
+            (selected_fd.function.name, selected_fd.name)
             for selected_fd in req.selected_fds]
         _selected_component_configs = [
-            (selected_cc.component_name,
-                selected_cc.component_configuration_name)
+            (selected_cc.component.name,
+                selected_cc.name)
             for selected_cc in req.selected_component_configs]
         result = self.typedb_interface.select_configuration(
             _selected_fds, _selected_component_configs)

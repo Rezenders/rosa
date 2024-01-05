@@ -1,2 +1,0 @@
-string component_name
-string component_configuration_name

@@ -1,4 +1,4 @@
-rosa_msgs/SelectedFunctionDesign[] selected_fds
-rosa_msgs/SelectedComponentConfiguration[] selected_component_configs
+rosa_msgs/FunctionDesign[] selected_fds
+rosa_msgs/ComponentConfiguration[] selected_component_configs
 ---
 bool success
