@@ -87,7 +87,7 @@ def test_plan_function_adaptation():
         result = configuration_planner.plan_function_adaptation()
         selected_fd = SelectedFunctionDesign()
         selected_fd.function_name = 'f_always_improve'
-        selected_fd.function_design_name = 'f_improve_fd2'
+        selected_fd.function_design_name = 'f_improve_fd1'
         assert selected_fd in result
     finally:
         configuration_planner.destroy_node()
@@ -132,7 +132,7 @@ def test_plan_adaptation():
 
         selected_fd = SelectedFunctionDesign()
         selected_fd.function_name = 'f_always_improve'
-        selected_fd.function_design_name = 'f_improve_fd2'
+        selected_fd.function_design_name = 'f_improve_fd1'
 
         selected_cc = SelectedComponentConfig()
         selected_cc.component_name = 'c_always_improve'
