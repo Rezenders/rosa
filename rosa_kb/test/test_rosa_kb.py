@@ -52,8 +52,8 @@ from rosa_msgs.srv import ReconfigurationPlanQuery
 from rosa_msgs.srv import SelectedConfig
 from rosa_msgs.srv import SelectableComponentConfigs
 from rosa_msgs.srv import SelectableFDs
-from rosa_msgs.srv import TasksMatched
-from rosa_msgs.srv import TaskRequest
+from rosa_msgs.srv import SelectableActions
+from rosa_msgs.srv import ActionQuery
 
 from rcl_interfaces.msg import Parameter
 from rcl_interfaces.msg import ParameterValue
@@ -208,29 +208,29 @@ def test_rosa_kb_diagnostics():
         rclpy.shutdown()
 
 
-@pytest.mark.parametrize("task_name, task_required", [
+@pytest.mark.parametrize("name, is_required", [
     ('task1', True),
     ('task_required', False),
 ])
 @pytest.mark.launch(fixture=generate_test_description)
-def test_rosa_kb_task_request(task_name, task_required):
+def test_rosa_kb_action_request(name, is_required):
     rclpy.init()
     try:
         node = MakeTestNode()
         node.start_node()
         node.activate_rosa_kb()
 
-        request = TaskRequest.Request()
-        request.task.task_name = task_name
-        request.required = task_required
+        request = ActionQuery.Request()
+        request.action.name = name
+        request.action.is_required = is_required
 
-        response = node.call_service(node.task_req_srv, request)
+        response = node.call_service(node.action_req_srv, request)
 
         query_req = Query.Request()
         query_req.query_type = 'match'
         query_req.query = f"""
             match $ea isa Task,
-                has task-name "{task_name}",
+                has task-name "{name}",
                 has is-required $task-required;
             get $task-required;
         """
@@ -238,7 +238,7 @@ def test_rosa_kb_task_request(task_name, task_required):
         correct_res = False
         for r in query_res.attributes:
             if r.name == 'task-required' \
-               and r.value.bool_value is task_required:
+               and r.value.bool_value is is_required:
                 correct_res = True
 
         assert response.success is True and correct_res is True
@@ -247,20 +247,20 @@ def test_rosa_kb_task_request(task_name, task_required):
 
 
 @pytest.mark.launch(fixture=generate_test_description)
-def test_rosa_kb_task_selectable():
+def test_rosa_kb_action_selectable():
     rclpy.init()
     try:
         node = MakeTestNode()
         node.start_node()
         node.activate_rosa_kb()
 
-        request = TasksMatched.Request()
-        response = node.call_service(node.task_selectable_srv, request)
-        res_task_names = [r.task_name for r in response.tasks]
+        request = SelectableActions.Request()
+        response = node.call_service(node.action_selectable_srv, request)
+        res_names = [r.name for r in response.actions]
         expected_result = [
             'task_feasible', 'task_required_solved']
-        assert ('task_unfeasible' not in res_task_names) \
-            and all(r in res_task_names for r in expected_result)
+        assert ('task_unfeasible' not in res_names) \
+            and all(r in res_names for r in expected_result)
     finally:
         rclpy.shutdown()
 
@@ -677,11 +677,11 @@ class MakeTestNode(Node):
         self.query_srv = self.create_client(
             Query, '/rosa_kb/query')
 
-        self.task_req_srv = self.create_client(
-            TaskRequest, '/rosa_kb/task/request')
+        self.action_req_srv = self.create_client(
+            ActionQuery, '/rosa_kb/action/request')
 
-        self.task_selectable_srv = self.create_client(
-            TasksMatched, '/rosa_kb/task/selectable')
+        self.action_selectable_srv = self.create_client(
+            SelectableActions, '/rosa_kb/action/selectable')
 
     def start_node(self):
         self.ros_spin_thread = Thread(

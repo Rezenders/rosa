@@ -19,7 +19,7 @@
 #include "behaviortree_cpp/bt_factory.h"
 
 #include "rclcpp/rclcpp.hpp"
-#include "rosa_msgs/srv/task_request.hpp"
+#include "rosa_msgs/srv/action_query.hpp"
 
 namespace rosa_plan
 {
@@ -45,8 +45,8 @@ public:
 
 protected:
   rclcpp::Node::SharedPtr node_;
-  rclcpp::Client<rosa_msgs::srv::TaskRequest>::SharedPtr task_req_client;
-  void cancel_task();
+  rclcpp::Client<rosa_msgs::srv::ActionQuery>::SharedPtr action_req_client;
+  void cancel_action();
 };
 
 }  // namespace rosa_plan

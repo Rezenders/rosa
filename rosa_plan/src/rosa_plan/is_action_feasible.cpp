@@ -13,52 +13,52 @@
 // limitations under the License.
 
 #include <chrono>
-#include "rosa_plan/is_task_feasible.hpp"
+#include "rosa_plan/is_action_feasible.hpp"
 
 namespace rosa_plan
 {
 
 using namespace std::chrono_literals;
 
-IsTaskFeasible::IsTaskFeasible(
+IsActionFeasible::IsActionFeasible(
   const std::string & xml_tag_name,
   const BT::NodeConfig & conf)
 : BT::ConditionNode(xml_tag_name, conf)
 {
   node_ = config().blackboard->get<rclcpp::Node::SharedPtr>("node");
 
-  selectable_tasks_client =
-    node_->create_client<rosa_msgs::srv::TasksMatched>("/rosa_kb/task/selectable");
+  selectable_actions_client =
+    node_->create_client<rosa_msgs::srv::SelectableActions>("/rosa_kb/action/selectable");
 }
 
-BT::NodeStatus IsTaskFeasible::tick()
+BT::NodeStatus IsActionFeasible::tick()
 {
-  std::string task_name;
-  getInput("task_name", task_name);
+  std::string action_name;
+  getInput("action_name", action_name);
 
-  auto request = std::make_shared<rosa_msgs::srv::TasksMatched::Request>();
+  auto request = std::make_shared<rosa_msgs::srv::SelectableActions::Request>();
 
-  while (!selectable_tasks_client->wait_for_service(1s)) {
+  while (!selectable_actions_client->wait_for_service(1s)) {
     if (!rclcpp::ok()) {
       RCLCPP_ERROR(node_->get_logger(), "Interrupted while waiting for the service. Exiting.");
       return BT::NodeStatus::FAILURE;
     }
-    RCLCPP_INFO(node_->get_logger(), "/rosa_kb/task/selectable service not available, waiting again...");
+    RCLCPP_INFO(node_->get_logger(), "/rosa_kb/action/selectable service not available, waiting again...");
   }
 
-  auto response = selectable_tasks_client->async_send_request(request);
+  auto response = selectable_actions_client->async_send_request(request);
   if (rclcpp::spin_until_future_complete(node_, response) ==
     rclcpp::FutureReturnCode::SUCCESS)
   {
-    auto selectable_tasks = response.get()->tasks;
-    for (auto task: selectable_tasks){
-      if (std::strcmp(task.task_name.c_str(), task_name.c_str()) == 0){
+    auto selectable_actions = response.get()->actions;
+    for (auto action: selectable_actions){
+      if (std::strcmp(action.name.c_str(), action_name.c_str()) == 0){
         return BT::NodeStatus::SUCCESS;
       }
     }
     return BT::NodeStatus::FAILURE;
   } else {
-    RCLCPP_ERROR(node_->get_logger(), "Failed to call service tasks selectable");
+    RCLCPP_ERROR(node_->get_logger(), "Failed to call service actions selectable");
     return BT::NodeStatus::FAILURE;
   }
 }

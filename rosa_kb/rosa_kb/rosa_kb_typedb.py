@@ -14,7 +14,7 @@
 import sys
 from datetime import datetime
 
-from rosa_msgs.msg import Task
+from rosa_msgs.msg import Action
 from rosa_msgs.msg import Component
 from rosa_msgs.msg import ComponentConfig
 from rosa_msgs.msg import Function
@@ -32,8 +32,8 @@ from rosa_msgs.srv import ReconfigurationPlanQuery
 from rosa_msgs.srv import SelectedConfig
 from rosa_msgs.srv import SelectableComponentConfigs
 from rosa_msgs.srv import SelectableFDs
-from rosa_msgs.srv import TaskRequest
-from rosa_msgs.srv import TasksMatched
+from rosa_msgs.srv import ActionQuery
+from rosa_msgs.srv import SelectableActions
 
 from rcl_interfaces.msg import Parameter
 
@@ -73,18 +73,18 @@ class RosaKB(ROSTypeDBInterface):
             callback_group=self.query_cb_group
         )
 
-        self.task_cb_group = MutuallyExclusiveCallbackGroup()
-        self.task_request_service = self.create_service(
-            TaskRequest,
-            self.get_name() + '/task/request',
-            self.task_request_cb,
+        self.action_cb_group = MutuallyExclusiveCallbackGroup()
+        self.action_request_service = self.create_service(
+            ActionQuery,
+            self.get_name() + '/action/request',
+            self.action_request_cb,
             callback_group=self.query_cb_group
         )
 
-        self.task_selectable_service = self.create_service(
-            TasksMatched,
-            self.get_name() + '/task/selectable',
-            self.task_selectable_cb,
+        self.action_selectable_service = self.create_service(
+            SelectableActions,
+            self.get_name() + '/action/selectable',
+            self.action_selectable_cb,
             callback_group=self.query_cb_group
         )
 
@@ -222,25 +222,25 @@ class RosaKB(ROSTypeDBInterface):
             if diagnostic_status.message.lower() in component_messages:
                 self.update_component_status(diagnostic_status)
 
-    @publish_event(event_type='task_change')
-    def task_request_cb(self, req, res):
-        if req.required is True and \
-          self.typedb_interface.is_task_selectable(req.task.task_name) is True:
-            self.typedb_interface.request_task(req.task.task_name)
+    @publish_event(event_type='action_update')
+    def action_request_cb(self, req, res):
+        if req.action.is_required is True and \
+          self.typedb_interface.is_task_selectable(req.action.name) is True:
+            self.typedb_interface.request_task(req.action.name)
             res.success = True
-        elif req.required is False:
-            self.typedb_interface.cancel_task(req.task.task_name)
+        elif req.action.is_required is False:
+            self.typedb_interface.cancel_task(req.action.name)
             res.success = True
         else:
             res.success = False
         return res
 
-    def task_selectable_cb(self, req, res):
-        selectable_tasks = self.typedb_interface.get_selectable_tasks()
-        for task_name in selectable_tasks:
-            task = Task()
-            task.task_name = task_name
-            res.tasks.append(task)
+    def action_selectable_cb(self, req, res):
+        selectable_actions = self.typedb_interface.get_selectable_tasks()
+        for action_name in selectable_actions:
+            action = Action()
+            action.name = action_name
+            res.actions.append(action)
         return res
 
     def function_adaptable_cb(self, req, res):

@@ -11,7 +11,7 @@ find_package(std_msgs REQUIRED)
 find_package(rcl_interfaces REQUIRED)
 
 rosidl_generate_interfaces(${PROJECT_NAME}
-  "msg/Task.msg"
+  "msg/Action.msg"
   "msg/Component.msg"
   "msg/ComponentConfig.msg"
   "msg/Function.msg"
@@ -30,8 +30,8 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   "srv/SelectedConfig.srv"
   "srv/SelectableComponentConfigs.srv"
   "srv/SelectableFDs.srv"
-  "srv/TaskRequest.srv"
-  "srv/TasksMatched.srv"
+  "srv/ActionQuery.srv"
+  "srv/SelectableActions.srv"
   DEPENDENCIES std_msgs rcl_interfaces
 )
 

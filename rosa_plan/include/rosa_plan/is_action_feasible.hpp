@@ -12,22 +12,22 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef ROSA_PLAN__IS_TASK_FEASIBLE_HPP_
-#define ROSA_PLAN__IS_TASK_FEASIBLE_HPP_
+#ifndef ROSA_PLAN__IS_ACTION_FEASIBLE_HPP_
+#define ROSA_PLAN__IS_ACTION_FEASIBLE_HPP_
 
 #include "behaviortree_cpp/behavior_tree.h"
 #include "behaviortree_cpp/bt_factory.h"
 
 #include "rclcpp/rclcpp.hpp"
-#include "rosa_msgs/srv/tasks_matched.hpp"
+#include "rosa_msgs/srv/selectable_actions.hpp"
 
 namespace rosa_plan
 {
 
-class IsTaskFeasible : public BT::ConditionNode
+class IsActionFeasible : public BT::ConditionNode
 {
 public:
-  explicit IsTaskFeasible(const std::string & xml_tag_name,
+  explicit IsActionFeasible(const std::string & xml_tag_name,
     const BT::NodeConfig & conf);
 
   BT::NodeStatus tick() override;
@@ -36,15 +36,15 @@ public:
   {
     return BT::PortsList(
       {
-        BT::InputPort<std::string>("task_name"),
+        BT::InputPort<std::string>("action_name"),
       });
   }
 
 private:
   rclcpp::Node::SharedPtr node_;
-  rclcpp::Client<rosa_msgs::srv::TasksMatched>::SharedPtr selectable_tasks_client;
+  rclcpp::Client<rosa_msgs::srv::SelectableActions>::SharedPtr selectable_actions_client;
 };
 
 } //namespace rosa_plan
 
-#endif  // ROSA_PLAN__IS_TASK_FEASIBLE_HPP_
+#endif  // ROSA_PLAN__IS_ACTION_FEASIBLE_HPP_

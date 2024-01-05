@@ -24,31 +24,31 @@ namespace rosa_plan
   : BT::StatefulActionNode(name, conf)
   {
     node_ = config().blackboard->get<rclcpp::Node::SharedPtr>("node");
-    task_req_client =
-      node_->create_client<rosa_msgs::srv::TaskRequest>("/rosa_kb/task/request");
+    action_req_client =
+      node_->create_client<rosa_msgs::srv::ActionQuery>("/rosa_kb/action/request");
   }
 
   BT::NodeStatus RosaAction::onStart(){
     std::cout << "Async action starting: " << this->name() << std::endl;
-    RCLCPP_INFO(node_->get_logger(), "Task requested: %s", this->name().c_str());
+    RCLCPP_INFO(node_->get_logger(), "Action requested: %s", this->name().c_str());
 
-    while (!task_req_client->wait_for_service(1s)) {
+    while (!action_req_client->wait_for_service(1s)) {
       if (!rclcpp::ok()) {
         RCLCPP_ERROR(node_->get_logger(), "Interrupted while waiting for the service. Exiting.");
         return BT::NodeStatus::FAILURE;
       }
-      RCLCPP_INFO(node_->get_logger(), "service /rosa_kb/task/request not available, waiting again...");
+      RCLCPP_INFO(node_->get_logger(), "service /rosa_kb/action/request not available, waiting again...");
     }
 
-    auto request = std::make_shared<rosa_msgs::srv::TaskRequest::Request>();
-    request->task.task_name = this->name();
-    request->required = true;
+    auto request = std::make_shared<rosa_msgs::srv::ActionQuery::Request>();
+    request->action.name = this->name();
+    request->action.is_required = true;
 
-    auto response = task_req_client->async_send_request(request);
+    auto response = action_req_client->async_send_request(request);
     if (rclcpp::spin_until_future_complete(node_, response) ==
       rclcpp::FutureReturnCode::SUCCESS && response.get()->success == true)
     {
-      RCLCPP_INFO(node_->get_logger(), "Task request completed: %s", this->name().c_str());
+      RCLCPP_INFO(node_->get_logger(), "Action request completed: %s", this->name().c_str());
       return BT::NodeStatus::RUNNING;
     } else{
       std::cout << "action failed: " << this->name() << std::endl;
@@ -57,32 +57,32 @@ namespace rosa_plan
     }
   }
 
-  void RosaAction::cancel_task(){
-    RCLCPP_INFO(node_->get_logger(), "Task cancelation requested: %s", this->name().c_str());
+  void RosaAction::cancel_action(){
+    RCLCPP_INFO(node_->get_logger(), "Action cancelation requested: %s", this->name().c_str());
 
-    while (!task_req_client->wait_for_service(1s)) {
+    while (!action_req_client->wait_for_service(1s)) {
       if (!rclcpp::ok()) {
         RCLCPP_ERROR(node_->get_logger(), "Interrupted while waiting for the service. Exiting.");
       }
-      RCLCPP_INFO(node_->get_logger(), "service /rosa_kb/task/request not available, waiting again...");
+      RCLCPP_INFO(node_->get_logger(), "service /rosa_kb/action/request not available, waiting again...");
     }
 
-    auto request = std::make_shared<rosa_msgs::srv::TaskRequest::Request>();
-    request->task.task_name = this->name();
-    request->required = false;
+    auto request = std::make_shared<rosa_msgs::srv::ActionQuery::Request>();
+    request->action.name = this->name();
+    request->action.is_required = false;
 
-    auto response = task_req_client->async_send_request(request);
+    auto response = action_req_client->async_send_request(request);
     if (!(rclcpp::spin_until_future_complete(node_, response) ==
       rclcpp::FutureReturnCode::SUCCESS && response.get()->success == true))
     {
       RCLCPP_ERROR(node_->get_logger(), "Failed to stop action %s", this->name().c_str());
     } else{
-      RCLCPP_INFO(node_->get_logger(), "Task cancelation completed: %s", this->name().c_str());
+      RCLCPP_INFO(node_->get_logger(), "Action cancelation completed: %s", this->name().c_str());
     }
   }
 
   void RosaAction::onHalted(){
     RCLCPP_INFO(node_->get_logger(), "Async action halted: %s", this->name().c_str());
-    cancel_task();
+    cancel_action();
   }
 } //namespace rosa_plan

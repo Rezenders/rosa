@@ -48,14 +48,14 @@ add_library(rosa_action
   src/rosa_plan/rosa_action.cpp
 )
 
-add_library(is_task_feasible_bt_node
+add_library(is_action_feasible_bt_node
   SHARED
-  src/rosa_plan/is_task_feasible.cpp
+  src/rosa_plan/is_action_feasible.cpp
 )
 
 list(APPEND plugin_libs
   rosa_action
-  is_task_feasible_bt_node
+  is_action_feasible_bt_node
 )
 
 foreach(bt_plugin ${plugin_libs})
@@ -119,7 +119,7 @@ endif()
 
 ament_export_libraries(
   rosa_action
-  is_task_feasible_bt_node
+  is_action_feasible_bt_node
 )
 ament_export_include_directories(include)
 ament_export_dependencies(${dependencies})
