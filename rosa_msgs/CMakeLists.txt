@@ -26,12 +26,12 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   "srv/GetComponentParameters.srv"
   "srv/GetComponentConfigurationPriority.srv"
   "srv/GetReconfigurationPlan.srv"
-  "srv/GetFDPriority.srv"
+  "srv/GetFunctionDesignPriority.srv"
   "srv/ReconfigurationPlanQuery.srv"
   "srv/SelectedConfigurations.srv"
   "srv/SelectableActions.srv"
   "srv/SelectableComponentConfigurations.srv"
-  "srv/SelectableFDs.srv"
+  "srv/SelectableFunctionDesigns.srv"
   DEPENDENCIES std_msgs rcl_interfaces
 )
 

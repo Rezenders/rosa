@@ -23,10 +23,10 @@ from rosa_msgs.msg import SelectedFunctionDesign
 from rosa_msgs.srv import AdaptableFunctions
 from rosa_msgs.srv import AdaptableComponents
 from rosa_msgs.srv import GetComponentConfigurationPriority
-from rosa_msgs.srv import GetFDPriority
+from rosa_msgs.srv import GetFunctionDesignPriority
 from rosa_msgs.srv import SelectedConfigurations
 from rosa_msgs.srv import SelectableComponentConfigurations
-from rosa_msgs.srv import SelectableFDs
+from rosa_msgs.srv import SelectableFunctionDesigns
 
 from std_msgs.msg import String
 
@@ -59,7 +59,7 @@ class ConfigurationPlanner(Node):
         )
 
         self.selectable_fds_srv = self.create_client(
-            SelectableFDs,
+            SelectableFunctionDesigns,
             '/rosa_kb/function_designs/selectable',
             callback_group=MutuallyExclusiveCallbackGroup()
         )
@@ -71,7 +71,7 @@ class ConfigurationPlanner(Node):
         )
 
         self.get_fds_priority_srv = self.create_client(
-            GetFDPriority,
+            GetFunctionDesignPriority,
             '/rosa_kb/function_designs/priority',
             callback_group=MutuallyExclusiveCallbackGroup()
         )
@@ -109,12 +109,12 @@ class ConfigurationPlanner(Node):
         # get feasible fds
         if functions is not None:
             for function in functions.functions:
-                request = SelectableFDs.Request()
+                request = SelectableFunctionDesigns.Request()
                 request.function = function
                 fds = self.call_service(self.selectable_fds_srv, request)
                 if fds is not None:
                     # get fds priority
-                    request = GetFDPriority.Request()
+                    request = GetFunctionDesignPriority.Request()
                     request.fds = fds.fds
                     fds = self.call_service(
                         self.get_fds_priority_srv, request)

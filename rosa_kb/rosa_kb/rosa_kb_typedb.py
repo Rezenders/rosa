@@ -27,11 +27,11 @@ from rosa_msgs.srv import ComponentQuery
 from rosa_msgs.srv import GetComponentParameters
 from rosa_msgs.srv import GetComponentConfigurationPriority
 from rosa_msgs.srv import GetReconfigurationPlan
-from rosa_msgs.srv import GetFDPriority
+from rosa_msgs.srv import GetFunctionDesignPriority
 from rosa_msgs.srv import ReconfigurationPlanQuery
 from rosa_msgs.srv import SelectedConfigurations
 from rosa_msgs.srv import SelectableComponentConfigurations
-from rosa_msgs.srv import SelectableFDs
+from rosa_msgs.srv import SelectableFunctionDesigns
 from rosa_msgs.srv import ActionQuery
 from rosa_msgs.srv import SelectableActions
 
@@ -103,7 +103,7 @@ class RosaKB(ROSTypeDBInterface):
         )
 
         self.get_selectable_fds_service = self.create_service(
-            SelectableFDs,
+            SelectableFunctionDesigns,
             self.get_name() + '/function_designs/selectable',
             self.selectable_fd_cb,
             callback_group=self.query_cb_group
@@ -117,7 +117,7 @@ class RosaKB(ROSTypeDBInterface):
         )
 
         self.get_fds_priority_service = self.create_service(
-            GetFDPriority,
+            GetFunctionDesignPriority,
             self.get_name() + '/function_designs/priority',
             self.function_design_priority_cb,
             callback_group=self.query_cb_group

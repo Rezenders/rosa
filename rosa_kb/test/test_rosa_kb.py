@@ -47,11 +47,11 @@ from rosa_msgs.srv import ComponentQuery
 from rosa_msgs.srv import GetComponentParameters
 from rosa_msgs.srv import GetComponentConfigurationPriority
 from rosa_msgs.srv import GetReconfigurationPlan
-from rosa_msgs.srv import GetFDPriority
+from rosa_msgs.srv import GetFunctionDesignPriority
 from rosa_msgs.srv import ReconfigurationPlanQuery
 from rosa_msgs.srv import SelectedConfigurations
 from rosa_msgs.srv import SelectableComponentConfigurations
-from rosa_msgs.srv import SelectableFDs
+from rosa_msgs.srv import SelectableFunctionDesigns
 from rosa_msgs.srv import SelectableActions
 from rosa_msgs.srv import ActionQuery
 
@@ -313,9 +313,9 @@ def test_rosa_kb_selectable_fds():
         node.start_node()
         node.activate_rosa_kb()
         node.selectable_fds_srv = node.create_client(
-            SelectableFDs, '/rosa_kb/function_designs/selectable')
+            SelectableFunctionDesigns, '/rosa_kb/function_designs/selectable')
 
-        request = SelectableFDs.Request()
+        request = SelectableFunctionDesigns.Request()
 
         _f = Function()
         _f.name = 'f_fd_feasible_unfeasible'
@@ -364,11 +364,11 @@ def test_rosa_kb_get_fds_priority():
         node.start_node()
         node.activate_rosa_kb()
         node.selectable_fds_srv = node.create_client(
-            SelectableFDs, '/rosa_kb/function_designs/selectable')
+            SelectableFunctionDesigns, '/rosa_kb/function_designs/selectable')
         node.fd_priority_srv = node.create_client(
-            GetFDPriority, '/rosa_kb/function_designs/priority')
+            GetFunctionDesignPriority, '/rosa_kb/function_designs/priority')
 
-        request_fds = SelectableFDs.Request()
+        request_fds = SelectableFunctionDesigns.Request()
 
         _f = Function()
         _f.name = 'f_fd_feasible_unfeasible'
@@ -376,7 +376,7 @@ def test_rosa_kb_get_fds_priority():
 
         response_fd = node.call_service(node.selectable_fds_srv, request_fds)
 
-        request_p = GetFDPriority.Request()
+        request_p = GetFunctionDesignPriority.Request()
         request_p.fds = response_fd.fds
         response_p = node.call_service(node.fd_priority_srv, request_p)
         result = [fd.priority for fd in response_p.fds]
