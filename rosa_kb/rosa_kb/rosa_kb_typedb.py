@@ -11,6 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+import sys
 from datetime import datetime
 
 from rosa_msgs.msg import Task
@@ -296,6 +297,8 @@ class RosaKB(ROSTypeDBInterface):
             p = self.typedb_interface.get_function_design_priority(fd.name)
             if p is not None and len(p) > 0:
                 fd.priority = p[0]
+            else:
+                fd.priority = sys.float_info.max
             res.fds.append(fd)
         res.success = True
         return res
@@ -306,6 +309,8 @@ class RosaKB(ROSTypeDBInterface):
                 c_config.name)
             if p is not None and len(p) > 0:
                 c_config.priority = p[0]
+            else:
+                c_config.priority = sys.float_info.max
             res.c_configs.append(c_config)
         res.success = True
         return res
