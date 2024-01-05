@@ -224,12 +224,12 @@ class ModelInterface(TypeDBInterface):
         query_result = self.get_unsolved_thing_raw('Component')
         return [r.get("name").get('value') for r in query_result]
 
-    def update_function_design_performance(self, fd_name, value):
+    def update_function_design_priority(self, fd_name, value):
         return self.update_attribute_in_thing(
             'function-design',
             'function-design-name',
             fd_name,
-            'performance',
+            'priority',
             value)
 
     def update_measured_attribute(self, attribute_name, value):
@@ -284,16 +284,16 @@ class ModelInterface(TypeDBInterface):
         result = self.get_selectable_fds_raw(function)
         return [r.get('name').get('value') for r in result]
 
-    def get_function_design_performance(self, fd):
+    def get_function_design_priority(self, fd):
         return self.get_attribute_from_thing(
-            'function-design', 'function-design-name', fd, 'performance')
+            'function-design', 'function-design-name', fd, 'priority')
 
-    def get_component_configuration_performance(self, cc):
+    def get_component_configuration_priority(self, cc):
         return self.get_attribute_from_thing(
             'component-configuration',
             'component-configuration-name',
             cc,
-            'performance')
+            'priority')
 
     # toogle fd and component config selection
     def toogle_thing_selection(self, thing, name, value):

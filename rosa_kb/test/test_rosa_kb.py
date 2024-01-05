@@ -45,9 +45,9 @@ from rosa_msgs.srv import AdaptableFunctions
 from rosa_msgs.srv import AdaptableComponents
 from rosa_msgs.srv import ComponentQuery
 from rosa_msgs.srv import GetComponentParameters
-from rosa_msgs.srv import GetComponentConfigPerformance
+from rosa_msgs.srv import GetComponentConfigPriority
 from rosa_msgs.srv import GetReconfigurationPlan
-from rosa_msgs.srv import GetFDPerformance
+from rosa_msgs.srv import GetFDPriority
 from rosa_msgs.srv import ReconfigurationPlanQuery
 from rosa_msgs.srv import SelectedConfig
 from rosa_msgs.srv import SelectableComponentConfigs
@@ -357,7 +357,7 @@ def test_rosa_kb_selectable_c_configs():
 
 
 @pytest.mark.launch(fixture=generate_test_description)
-def test_rosa_kb_get_fds_performance():
+def test_rosa_kb_get_fds_priority():
     rclpy.init()
     try:
         node = MakeTestNode()
@@ -365,8 +365,8 @@ def test_rosa_kb_get_fds_performance():
         node.activate_rosa_kb()
         node.selectable_fds_srv = node.create_client(
             SelectableFDs, '/rosa_kb/function_designs/selectable')
-        node.fd_performance_srv = node.create_client(
-            GetFDPerformance, '/rosa_kb/function_designs/performance')
+        node.fd_priority_srv = node.create_client(
+            GetFDPriority, '/rosa_kb/function_designs/priority')
 
         request_fds = SelectableFDs.Request()
 
@@ -376,10 +376,10 @@ def test_rosa_kb_get_fds_performance():
 
         response_fd = node.call_service(node.selectable_fds_srv, request_fds)
 
-        request_p = GetFDPerformance.Request()
+        request_p = GetFDPriority.Request()
         request_p.fds = response_fd.fds
-        response_p = node.call_service(node.fd_performance_srv, request_p)
-        result = [fd.performance for fd in response_p.fds]
+        response_p = node.call_service(node.fd_priority_srv, request_p)
+        result = [fd.priority for fd in response_p.fds]
         expected_result = [1.0]
         assert all(r in result for r in expected_result) \
             and response_p.success is True
@@ -388,7 +388,7 @@ def test_rosa_kb_get_fds_performance():
 
 
 @pytest.mark.launch(fixture=generate_test_description)
-def test_rosa_kb_get_component_configuration_performance():
+def test_rosa_kb_get_component_configuration_priority():
     rclpy.init()
     try:
         node = MakeTestNode()
@@ -397,9 +397,9 @@ def test_rosa_kb_get_component_configuration_performance():
         node.selectable_c_configs_srv = node.create_client(
             SelectableComponentConfigs,
             '/rosa_kb/component_configuration/selectable')
-        node.c_configs_performance_srv = node.create_client(
-            GetComponentConfigPerformance,
-            '/rosa_kb/component_configuration/performance')
+        node.c_configs_priority_srv = node.create_client(
+            GetComponentConfigPriority,
+            '/rosa_kb/component_configuration/priority')
 
         request_c_configs = SelectableComponentConfigs.Request()
 
@@ -410,11 +410,11 @@ def test_rosa_kb_get_component_configuration_performance():
         response_c_configs = node.call_service(
             node.selectable_c_configs_srv, request_c_configs)
 
-        request_p = GetComponentConfigPerformance.Request()
+        request_p = GetComponentConfigPriority.Request()
         request_p.c_configs = response_c_configs.c_configs
         response_p = node.call_service(
-            node.c_configs_performance_srv, request_p)
-        result = [c_config.performance for c_config in response_p.c_configs]
+            node.c_configs_priority_srv, request_p)
+        result = [c_config.priority for c_config in response_p.c_configs]
         expected_result = [1.0]
         assert all(r in result for r in expected_result) \
             and response_p.success is True

@@ -24,9 +24,9 @@ from rosa_msgs.srv import AdaptableFunctions
 from rosa_msgs.srv import AdaptableComponents
 from rosa_msgs.srv import ComponentQuery
 from rosa_msgs.srv import GetComponentParameters
-from rosa_msgs.srv import GetComponentConfigPerformance
+from rosa_msgs.srv import GetComponentConfigPriority
 from rosa_msgs.srv import GetReconfigurationPlan
-from rosa_msgs.srv import GetFDPerformance
+from rosa_msgs.srv import GetFDPriority
 from rosa_msgs.srv import ReconfigurationPlanQuery
 from rosa_msgs.srv import SelectedConfig
 from rosa_msgs.srv import SelectableComponentConfigs
@@ -115,17 +115,17 @@ class RosaKB(ROSTypeDBInterface):
             callback_group=self.query_cb_group
         )
 
-        self.get_fds_performance_service = self.create_service(
-            GetFDPerformance,
-            self.get_name() + '/function_designs/performance',
-            self.function_design_performance_cb,
+        self.get_fds_priority_service = self.create_service(
+            GetFDPriority,
+            self.get_name() + '/function_designs/priority',
+            self.function_design_priority_cb,
             callback_group=self.query_cb_group
         )
 
-        self.get_c_configs_performance_service = self.create_service(
-            GetComponentConfigPerformance,
-            self.get_name() + '/component_configuration/performance',
-            self.component_configuration_performance_cb,
+        self.get_c_configs_priority_service = self.create_service(
+            GetComponentConfigPriority,
+            self.get_name() + '/component_configuration/priority',
+            self.component_configuration_priority_cb,
             callback_group=self.query_cb_group
         )
 
@@ -291,21 +291,21 @@ class RosaKB(ROSTypeDBInterface):
         res.success = True
         return res
 
-    def function_design_performance_cb(self, req, res):
+    def function_design_priority_cb(self, req, res):
         for fd in req.fds:
-            p = self.typedb_interface.get_function_design_performance(fd.name)
+            p = self.typedb_interface.get_function_design_priority(fd.name)
             if p is not None and len(p) > 0:
-                fd.performance = p[0]
+                fd.priority = p[0]
             res.fds.append(fd)
         res.success = True
         return res
 
-    def component_configuration_performance_cb(self, req, res):
+    def component_configuration_priority_cb(self, req, res):
         for c_config in req.c_configs:
-            p = self.typedb_interface.get_component_configuration_performance(
+            p = self.typedb_interface.get_component_configuration_priority(
                 c_config.name)
             if p is not None and len(p) > 0:
-                c_config.performance = p[0]
+                c_config.priority = p[0]
             res.c_configs.append(c_config)
         res.success = True
         return res

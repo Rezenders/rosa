@@ -1,10 +1,10 @@
- define
+define
 
 ## ATTRIBUTES
 name sub attribute,
     abstract,
     value string;
-    
+
 task-name sub name;
 function-name sub name;
 function-design-name sub name;
@@ -42,15 +42,15 @@ parameter-value sub attribute,
 
 parameter-type sub attribute,
     value string,
-    regex "^(boolean|boolean_array|double|double_array|long|long_array|string|string_array)$";   
-   
+    regex "^(boolean|boolean_array|double|double_array|long|long_array|string|string_array)$";
+
 attribute-value sub attribute,
     value double;
 
 attribute-measurement sub attribute,
     value double;
 
-performance sub attribute,
+priority sub attribute,
     value double;
 
 is-required sub attribute,
@@ -94,7 +94,7 @@ task-requirement sub relation,
 
 function-design sub relation,
     owns function-design-name @key,
-    owns performance,
+    owns priority,
     owns is-selected,
     owns function-design-status,
     relates function,
@@ -104,7 +104,7 @@ function-design sub relation,
 
 component-configuration sub relation,
     owns component-configuration-name @key,
-    owns performance,
+    owns priority,
     owns is-selected,
     owns component-configuration-status,
     relates component,
@@ -138,7 +138,7 @@ component-adaptation sub relation,
     abstract,
     relates component,
     plays reconfiguration-plan:architectural-adaptation;
-        
+
 component-activation sub component-adaptation;
 component-deactivation sub component-adaptation;
 
@@ -153,7 +153,7 @@ Task sub entity,
     owns is-required,
     plays task-requirement:task,
     plays constrainment:constrained;
-    
+
 Function sub entity,
     owns function-name @key,
     owns function-status,
@@ -161,7 +161,7 @@ Function sub entity,
     owns always-improve,
     plays task-requirement:required-function,
     plays function-design:function;
-    
+
 Component sub entity,
     owns component-name @key,
     owns component-status,
@@ -173,14 +173,14 @@ Component sub entity,
     plays constrainment:constrained,
     plays estimation:causer,
     plays component-adaptation:component;
-    
+
 ComponentParameter sub entity,
     owns parameter-key,
     owns parameter-value,
     owns parameter-type,
     plays component-configuration:parameter;
 
-    
+
 Attribute sub entity,
     abstract,
     owns attribute-name @key,
@@ -192,13 +192,13 @@ EnvironmentalAttribute sub Attribute;
 QualityAttribute sub Attribute;
 
 # Rules
-  
+
 rule implicit-function-is-required:
     when {
         (required-function:$function, task: $t) isa task-requirement;
-        $t has is-required true;       
-    } then { 
-        $function has is-required true; 
+        $t has is-required true;
+    } then {
+        $function has is-required true;
     };
 
 rule implicit-component-is-required:
@@ -212,7 +212,7 @@ rule constrainment-status-violated:
     when{
         $constrainment (constraint: $constraint) isa constrainment, has attribute-value $value;
         $constraint has attribute-measurement $measurement;
-        {    
+        {
             {
                 $constrainment has constrainment-operator ">=";
             } or {
@@ -236,25 +236,25 @@ rule constrainment-status-violated:
              not {
                 $measurement < $value;
             };
-        };            
+        };
     } then {
         $constrainment has constrainment-status 'violated';
     };
- 
+
 rule constrainment-status-satisfied:
     when{
         $constrainment (constraint: $constraint) isa constrainment, has attribute-value $value;
         $constraint has attribute-measurement $measurement;
-        {    
+        {
             {
                 $constrainment has constrainment-operator ">=";
             } or {
                 not {$constrainment has constrainment-operator $op;};
             };
-            $measurement >= $value;           
+            $measurement >= $value;
         } or {
             $constrainment has constrainment-operator ">";
-            $measurement > $value;            
+            $measurement > $value;
         }  or {
             $constrainment has constrainment-operator "<=";
             $measurement <= $value;
@@ -274,21 +274,21 @@ rule constrainment-status-ok-no-measurement:
     } then {
         $constrainment has constrainment-status 'not evaluated';
     };
-    
+
 rule component-configuration-status-unfeasible:
     when{
         $component-config isa component-configuration;
-        (constrained: $component-config) isa constrainment, has constrainment-status 'violated';    
+        (constrained: $component-config) isa constrainment, has constrainment-status 'violated';
     } then {
         $component-config has component-configuration-status 'unfeasible';
     };
-    
+
 rule component-configuration-status-feasible:
     when{
         $component-config isa component-configuration;
         not {
             $component-config has component-configuration-status 'unfeasible';
-        }; 
+        };
     } then {
         $component-config has component-configuration-status 'feasible';
     };
@@ -296,13 +296,13 @@ rule component-configuration-status-feasible:
 rule component-status-unfeasible:
     when{
         $c isa Component;
-        {        
+        {
             (component: $c) isa component-configuration;  # (1)
             not {  # (2)
                 (component: $c) isa component-configuration, has component-configuration-status $status;
                 $status != 'unfeasible';
             };
-        } or {                              
+        } or {
             (constrained: $c) isa constrainment, has constrainment-status 'violated';
         };
     } then {
@@ -358,7 +358,7 @@ rule component-status-feasible:
             $c has is-required true;
         };
         not {
-            $c has component-status $c_status; 
+            $c has component-status $c_status;
             $c_status like 'unfeasible|failure|configuration error|unsolved|solved';
         };
         {
@@ -371,19 +371,19 @@ rule component-status-feasible:
     } then {
         $c has component-status 'feasible';
     };
-    
+
 # This might result in several unfeasible status being included if there are more than 1 component with failure or unfeasible status. I don't think this is a problem.
 rule function-design-status-unfeasible:
     when{
          $fd isa function-design;
-        {           
+        {
             $fd (required-component: $c) isa function-design;
             $c isa Component, has component-status $c_status;
             not {
                 $c isa Component, has component-status $c_status2;
                 $c_status2 like 'configuration error|unsolved|solved|feasible';
             };
-        } or {                        
+        } or {
             (constrained: $fd) isa constrainment, has constrainment-status 'violated';
         };
     } then {
@@ -396,12 +396,12 @@ rule function-design-status-implicit-configuration-error:
         not {
             $fd has function-design-status $fd_status; $fd_status like 'unfeasible';
         };
-        $c isa Component, has component-status $c_status;       
+        $c isa Component, has component-status $c_status;
         not {
             $c isa Component, has component-status $c_status2;
             $c_status2 like 'unfeasible';
         };
-        $c_status = 'configuration error';        
+        $c_status = 'configuration error';
     } then {
         $fd has function-design-status 'implicit configuration error';
     };
@@ -412,7 +412,7 @@ rule function-design-status-unsolved:
         not {
             $fd has function-design-status $fd_status; $fd_status like 'unfeasible|implicit configuration error';
         };
-        $c isa Component, has component-status $c_status;       
+        $c isa Component, has component-status $c_status;
         not {
             $c_status like 'failure|unfeasible|configuration error';
         };
@@ -441,7 +441,7 @@ rule function-design-status-feasible:
         $fd (required-component: $c) isa function-design;
         not {
             $fd has function-design-status $fd_status; $fd_status like 'unfeasible|implicit configuration error|unsolved|solved';
-        }; 
+        };
         not {
             $fd has is-selected $selected; $selected = true;
         };
@@ -452,7 +452,7 @@ rule function-design-status-feasible:
         $fd has function-design-status 'feasible';
     };
 
-## Function status rules    
+## Function status rules
 rule function-status-unfeasible:
     when {
         $f isa Function;
@@ -470,10 +470,10 @@ rule function-status-configuration-error:
         not {
             $f has function-status $f_status; $f_status like 'unfeasible';
         };
-        $fd (function: $f) isa function-design, has is-selected true, has function-design-status 'unfeasible';        
+        $fd (function: $f) isa function-design, has is-selected true, has function-design-status 'unfeasible';
     } then {
         $f has function-status 'configuration error';
-    };  
+    };
 
 rule function-status-implicit-configuration-error:
     when {
@@ -484,13 +484,13 @@ rule function-status-implicit-configuration-error:
         $fd (function: $f) isa function-design, has is-selected true, has function-design-status 'implicit configuration error';
     } then {
         $f has function-status 'implicit configuration error';
-    };  
+    };
 
 rule function-status-unsolved:
     when {
         $f isa Function, has is-required true;
         not {
-            $f has function-status $f_status; 
+            $f has function-status $f_status;
             $f_status like 'unfeasible|configuration error|implicit configuration error|solved';
         };
         not {
@@ -500,13 +500,13 @@ rule function-status-unsolved:
     } then {
         $f has function-status 'unsolved';
     };
-        
-    
+
+
 rule function-status-solved:
     when {
         $f isa Function, has is-required true;
         not {
-            $f has function-status $f_status; 
+            $f has function-status $f_status;
             $f_status like 'unfeasible|configuration error|implicit configuration error';
         };
         $fd (function: $f) isa function-design, has is-selected true, has function-design-status 'solved';
@@ -520,17 +520,17 @@ rule function-status-feasible:
         not {
             $f has function-status $f_status;
             $f_status like 'unfeasible|configuration error|implicit configuration error|unsolved|solved';
-        };                  
+        };
         not {
             $f has is-required true;
         };
         $fd (function: $f) isa function-design, has function-design-status $fd_status;
-        $fd_status != 'unfeasible';    
+        $fd_status != 'unfeasible';
     } then {
         $f has function-status 'feasible';
     };
 
-## task requirement status rules    
+## task requirement status rules
 rule task-status-unfeasible:
     when {
         $t isa Task;
@@ -538,8 +538,8 @@ rule task-status-unfeasible:
             (required-function: $f, task: $t) isa task-requirement;
             $f has function-status $f_status;
             $f_status = 'unfeasible';
-        } 
-        or {                  
+        }
+        or {
             (constrained: $t) isa constrainment, has constrainment-status 'violated';
         };
     } then {
@@ -559,8 +559,8 @@ rule task-status-implicit-configuration-error:
              $f_status = 'unfeasible';
         };
         $f_status like 'configuration error|implicit configuration error';
-    } then { 
-        $t has task-status 'implicit configuration error';     
+    } then {
+        $t has task-status 'implicit configuration error';
     };
 
 rule task-status-unsolved:
@@ -576,12 +576,12 @@ rule task-status-unsolved:
         };
         $f_status like 'unsolved';
     } then {
-        $t has task-status 'unsolved';     
+        $t has task-status 'unsolved';
     };
 
 rule task-status-solved:
     when {
-        (required-function: $f, task: $t) isa task-requirement; 
+        (required-function: $f, task: $t) isa task-requirement;
         $t has is-required true;
         not {
             $t has task-status $t_status;
@@ -592,8 +592,8 @@ rule task-status-solved:
             $f_status != 'solved';
         };
     } then {
-        $t has task-status 'solved';  
-    }; 
+        $t has task-status 'solved';
+    };
 
 rule task-status-feasible:
     when {
@@ -608,5 +608,4 @@ rule task-status-feasible:
         $f_status != 'unfeasible';
     } then {
         $t has task-status 'feasible';
-    }; 
-
+    };

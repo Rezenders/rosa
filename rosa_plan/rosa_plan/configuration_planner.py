@@ -22,8 +22,8 @@ from rosa_msgs.msg import SelectedFunctionDesign
 
 from rosa_msgs.srv import AdaptableFunctions
 from rosa_msgs.srv import AdaptableComponents
-from rosa_msgs.srv import GetComponentConfigPerformance
-from rosa_msgs.srv import GetFDPerformance
+from rosa_msgs.srv import GetComponentConfigPriority
+from rosa_msgs.srv import GetFDPriority
 from rosa_msgs.srv import SelectedConfig
 from rosa_msgs.srv import SelectableComponentConfigs
 from rosa_msgs.srv import SelectableFDs
@@ -70,15 +70,15 @@ class ConfigurationPlanner(Node):
             callback_group=MutuallyExclusiveCallbackGroup()
         )
 
-        self.get_fds_performance_srv = self.create_client(
-            GetFDPerformance,
-            '/rosa_kb/function_designs/performance',
+        self.get_fds_priority_srv = self.create_client(
+            GetFDPriority,
+            '/rosa_kb/function_designs/priority',
             callback_group=MutuallyExclusiveCallbackGroup()
         )
 
-        self.get_c_configs_performance_srv = self.create_client(
-            GetComponentConfigPerformance,
-            '/rosa_kb/component_configuration/performance',
+        self.get_c_configs_priority_srv = self.create_client(
+            GetComponentConfigPriority,
+            '/rosa_kb/component_configuration/priority',
             callback_group=MutuallyExclusiveCallbackGroup()
         )
 
@@ -113,15 +113,15 @@ class ConfigurationPlanner(Node):
                 request.function = function
                 fds = self.call_service(self.selectable_fds_srv, request)
                 if fds is not None:
-                    # get fds performance
-                    request = GetFDPerformance.Request()
+                    # get fds priority
+                    request = GetFDPriority.Request()
                     request.fds = fds.fds
                     fds = self.call_service(
-                        self.get_fds_performance_srv, request)
+                        self.get_fds_priority_srv, request)
                     # sort fds
                     if fds is not None:
                         sorted_fds = sorted(
-                            fds.fds, key=lambda x: x.performance, reverse=True)
+                            fds.fds, key=lambda x: x.priority, reverse=True)
                         if len(sorted_fds) > 0:
                             selected_fd = SelectedFunctionDesign()
                             selected_fd.function_name = function.name
@@ -147,16 +147,16 @@ class ConfigurationPlanner(Node):
                     self.selectable_c_configs_srv, request)
 
                 if c_configs is not None:
-                    # get component configs performance
-                    request = GetComponentConfigPerformance.Request()
+                    # get component configs priority
+                    request = GetComponentConfigPriority.Request()
                     request.c_configs = c_configs.c_configs
                     c_configs = self.call_service(
-                        self.get_c_configs_performance_srv, request)
+                        self.get_c_configs_priority_srv, request)
 
                     # sort fds
                     sorted_cc = sorted(
                         c_configs.c_configs,
-                        key=lambda x: x.performance,
+                        key=lambda x: x.priority,
                         reverse=True
                     )
                     if len(sorted_cc) > 0:

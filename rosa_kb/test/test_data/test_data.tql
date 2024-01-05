@@ -17,14 +17,14 @@ $c_failure isa Component, has component-name "component_failure", has component-
 $cp1 isa ComponentParameter, has parameter-key "param1", has parameter-value "2.0";
 $cp2 isa ComponentParameter, has parameter-key "param2", has parameter-value "3.0";
 
-$cc1 (component: $c1, parameter: $cp1) isa component-configuration, has component-configuration-name "low param", has performance 1.0;
-$cc2 (component: $c1, parameter: $cp2) isa component-configuration, has component-configuration-name "high param", has performance 10.0;
+$cc1 (component: $c1, parameter: $cp1) isa component-configuration, has component-configuration-name "low param", has priority 1.0;
+$cc2 (component: $c1, parameter: $cp2) isa component-configuration, has component-configuration-name "high param", has priority 10.0;
 
 $c_op isa Component, has component-name "component_operators";
-$cc3 (component: $c_op, parameter: $cp2) isa component-configuration, has component-configuration-name "high param >=", has performance 9.0;
-$cc4 (component: $c_op, parameter: $cp2) isa component-configuration, has component-configuration-name "high param >", has performance 8.0;
-$cc5 (component: $c_op, parameter: $cp2) isa component-configuration, has component-configuration-name "high param <=", has performance 7.0;
-$cc6 (component: $c_op, parameter: $cp2) isa component-configuration, has component-configuration-name "high param <", has performance 6.0;
+$cc3 (component: $c_op, parameter: $cp2) isa component-configuration, has component-configuration-name "high param >=", has priority 9.0;
+$cc4 (component: $c_op, parameter: $cp2) isa component-configuration, has component-configuration-name "high param >", has priority 8.0;
+$cc5 (component: $c_op, parameter: $cp2) isa component-configuration, has component-configuration-name "high param <=", has priority 7.0;
+$cc6 (component: $c_op, parameter: $cp2) isa component-configuration, has component-configuration-name "high param <", has priority 6.0;
 
 $ea1 isa EnvironmentalAttribute, has attribute-name "ea1";
 $ea_measurement isa EnvironmentalAttribute, has attribute-name "ea_measurement", has attribute-measurement 1.0;
@@ -41,8 +41,8 @@ $c3 isa Component, has component-name "component3";
 $c4 isa Component, has component-name "component4";
 $c5 isa Component, has component-name "component5";
 
-(function: $f2, required-component: $c2, required-component: $c3) isa function-design, has function-design-name "f2_fd1_c2_c3", has performance 2.0;
-(function: $f2, required-component: $c4, required-component: $c5) isa function-design, has function-design-name "f2_fd2_c4_c5", has performance 1.0;
+(function: $f2, required-component: $c2, required-component: $c3) isa function-design, has function-design-name "f2_fd1_c2_c3", has priority 2.0;
+(function: $f2, required-component: $c4, required-component: $c5) isa function-design, has function-design-name "f2_fd2_c4_c5", has priority 1.0;
 
 # Task inspect pipeline
 $t2 isa Task, has task-name "task2";
@@ -86,10 +86,10 @@ $c_unsolved isa Component, has component-name "c_unsolved", has component-status
 $fd_unsolved (function:$f_unsolved, required-component:$c_unsolved) isa function-design, has function-design-name "fd_unsolved", has function-design-status "unsolved";
 
 $f_always_improve isa Function, has function-name "f_always_improve", has always-improve true, has function-status 'solved';
-(function: $f_always_improve, required-component: $c2, required-component: $c3) isa function-design, has function-design-name "f_improve_fd1", has performance 1.0;
-(function: $f_always_improve, required-component: $c4, required-component: $c5) isa function-design, has function-design-name "f_improve_fd2", has performance 3.0;
+(function: $f_always_improve, required-component: $c2, required-component: $c3) isa function-design, has function-design-name "f_improve_fd1", has priority 1.0;
+(function: $f_always_improve, required-component: $c4, required-component: $c5) isa function-design, has function-design-name "f_improve_fd2", has priority 3.0;
 $c_always_improve isa Component, has component-name "c_always_improve", has always-improve true, has component-status 'solved';
-(component:$c_always_improve, parameter:$cp_reconfig_1) isa component-configuration, has component-configuration-name "c_improve_fd1", has performance 2.0;
+(component:$c_always_improve, parameter:$cp_reconfig_1) isa component-configuration, has component-configuration-name "c_improve_fd1", has priority 2.0;
 (component:$c_always_improve, parameter:$cp_reconfig_2) isa component-configuration, has component-configuration-name "c_improve_fd2";
 
 ## data to test select_reconfiguration
@@ -100,16 +100,16 @@ $f_reconfigure_c_config isa Function, has function-name "f_reconfigure_f_config"
 $component_reconfig_1 isa Component, has component-name "component_reconfig_1", has is-active true;
 $component_reconfig_2 isa Component, has component-name "component_reconfig_2";
 $component_reconfig_3 isa Component, has component-name "component_reconfig_3";
-(function:$f_reconfigure_fd, required-component:$component_reconfig_1) isa function-design, has function-design-name "fd_reconfig_1", has performance 10.0, has is-selected true;
-(function:$f_reconfigure_fd, required-component:$component_reconfig_2, required-component:$c_still_required) isa function-design, has function-design-name "fd_reconfig_2", has performance 9.0;
-(function:$f_reconfigure_c_config, required-component:$component_reconfig_3) isa function-design, has function-design-name "fd_reconfig_3", has performance 9.0, has is-selected true;
+(function:$f_reconfigure_fd, required-component:$component_reconfig_1) isa function-design, has function-design-name "fd_reconfig_1", has priority 10.0, has is-selected true;
+(function:$f_reconfigure_fd, required-component:$component_reconfig_2, required-component:$c_still_required) isa function-design, has function-design-name "fd_reconfig_2", has priority 9.0;
+(function:$f_reconfigure_c_config, required-component:$component_reconfig_3) isa function-design, has function-design-name "fd_reconfig_3", has priority 9.0, has is-selected true;
 $cp_reconfig_1 isa ComponentParameter, has parameter-key "cp_reconfig_1", has parameter-value "2.0";
 $cp_reconfig_2 isa ComponentParameter, has parameter-key "cp_reconfig_2", has parameter-value "3.0";
 $c_config_reconfig_1  (component:$component_reconfig_3, parameter:$cp_reconfig_1) isa component-configuration, has component-configuration-name "cp_reconfig_1", has is-selected true;
 $c_config_reconfig_2  (component:$component_reconfig_3, parameter:$cp_reconfig_2) isa component-configuration, has component-configuration-name "cp_reconfig_2";
 
 $f_fd_feasible_unfeasible isa Function, has function-name "f_fd_feasible_unfeasible";
-(function: $f_fd_feasible_unfeasible) isa function-design, has function-design-name "f_fd_feasible", has function-design-status 'feasible', has performance 1.0;
+(function: $f_fd_feasible_unfeasible) isa function-design, has function-design-name "f_fd_feasible", has function-design-status 'feasible', has priority 1.0;
 (function: $f_fd_feasible_unfeasible) isa function-design, has function-design-name "f_fd_unfeasible", has function-design-status 'unfeasible';
 #$f_required isa Function, has function-name "function_required", has is-required true;
 #$f_required_activated isa Function, has function-name "function_required_activated", has is-required true, has function-status 'activated';
@@ -117,8 +117,8 @@ $f_fd_feasible_unfeasible isa Function, has function-name "f_fd_feasible_unfeasi
 #$f_required_empty isa Function, has function-name "function_required_empty";
 
 $c_cc_feasible_unfeasible isa Component, has component-name "c_cc_feasible_unfeasible";
-(component: $c_cc_feasible_unfeasible) isa component-configuration, has component-configuration-name "c_cc_feasible", has component-configuration-status "feasible", has performance 1.0;
-(component: $c_cc_feasible_unfeasible) isa component-configuration, has component-configuration-name "c_cc_unfeasible", has component-configuration-status "unfeasible", has performance 2.0;
+(component: $c_cc_feasible_unfeasible) isa component-configuration, has component-configuration-name "c_cc_feasible", has component-configuration-status "feasible", has priority 1.0;
+(component: $c_cc_feasible_unfeasible) isa component-configuration, has component-configuration-name "c_cc_unfeasible", has component-configuration-status "unfeasible", has priority 2.0;
 
 $get_cp_c isa Component, has component-name "get_cp_c";
 $get_cp_1 isa ComponentParameter, has parameter-key "get_cp_1", has parameter-value "True", has parameter-type "boolean";

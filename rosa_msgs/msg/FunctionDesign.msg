@@ -1,3 +1,3 @@
 string name
 string status
-float64 performance
+float64 priority
