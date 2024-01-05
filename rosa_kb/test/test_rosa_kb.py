@@ -36,22 +36,20 @@ from lifecycle_msgs.srv import GetState
 from ros_typedb_msgs.msg import Attribute
 
 from rosa_msgs.msg import Component
-from rosa_msgs.msg import ComponentConfig
+from rosa_msgs.msg import ComponentConfiguration
 from rosa_msgs.msg import Function
-from rosa_msgs.msg import SelectedComponentConfig
-from rosa_msgs.msg import SelectedFunctionDesign
+from rosa_msgs.msg import FunctionDesign
 
 from rosa_msgs.srv import AdaptableFunctions
 from rosa_msgs.srv import AdaptableComponents
 from rosa_msgs.srv import ComponentQuery
 from rosa_msgs.srv import GetComponentParameters
-from rosa_msgs.srv import GetComponentConfigPriority
-from rosa_msgs.srv import GetReconfigurationPlan
-from rosa_msgs.srv import GetFDPriority
+from rosa_msgs.srv import GetComponentConfigurationPriority
 from rosa_msgs.srv import ReconfigurationPlanQuery
-from rosa_msgs.srv import SelectedConfig
-from rosa_msgs.srv import SelectableComponentConfigs
-from rosa_msgs.srv import SelectableFDs
+from rosa_msgs.srv import GetFunctionDesignPriority
+from rosa_msgs.srv import SelectedConfigurations
+from rosa_msgs.srv import SelectableComponentConfigurations
+from rosa_msgs.srv import SelectableFunctionDesigns
 from rosa_msgs.srv import SelectableActions
 from rosa_msgs.srv import ActionQuery
 
@@ -313,9 +311,9 @@ def test_rosa_kb_selectable_fds():
         node.start_node()
         node.activate_rosa_kb()
         node.selectable_fds_srv = node.create_client(
-            SelectableFDs, '/rosa_kb/function_designs/selectable')
+            SelectableFunctionDesigns, '/rosa_kb/function_designs/selectable')
 
-        request = SelectableFDs.Request()
+        request = SelectableFunctionDesigns.Request()
 
         _f = Function()
         _f.name = 'f_fd_feasible_unfeasible'
@@ -338,10 +336,10 @@ def test_rosa_kb_selectable_c_configs():
         node.start_node()
         node.activate_rosa_kb()
         node.selectable_c_configs_srv = node.create_client(
-            SelectableComponentConfigs,
+            SelectableComponentConfigurations,
             '/rosa_kb/component_configuration/selectable')
 
-        request = SelectableComponentConfigs.Request()
+        request = SelectableComponentConfigurations.Request()
 
         _c = Component()
         _c.name = 'c_cc_feasible_unfeasible'
@@ -364,11 +362,11 @@ def test_rosa_kb_get_fds_priority():
         node.start_node()
         node.activate_rosa_kb()
         node.selectable_fds_srv = node.create_client(
-            SelectableFDs, '/rosa_kb/function_designs/selectable')
+            SelectableFunctionDesigns, '/rosa_kb/function_designs/selectable')
         node.fd_priority_srv = node.create_client(
-            GetFDPriority, '/rosa_kb/function_designs/priority')
+            GetFunctionDesignPriority, '/rosa_kb/function_designs/priority')
 
-        request_fds = SelectableFDs.Request()
+        request_fds = SelectableFunctionDesigns.Request()
 
         _f = Function()
         _f.name = 'f_fd_feasible_unfeasible'
@@ -376,7 +374,7 @@ def test_rosa_kb_get_fds_priority():
 
         response_fd = node.call_service(node.selectable_fds_srv, request_fds)
 
-        request_p = GetFDPriority.Request()
+        request_p = GetFunctionDesignPriority.Request()
         request_p.fds = response_fd.fds
         response_p = node.call_service(node.fd_priority_srv, request_p)
         result = [fd.priority for fd in response_p.fds]
@@ -395,13 +393,13 @@ def test_rosa_kb_get_component_configuration_priority():
         node.start_node()
         node.activate_rosa_kb()
         node.selectable_c_configs_srv = node.create_client(
-            SelectableComponentConfigs,
+            SelectableComponentConfigurations,
             '/rosa_kb/component_configuration/selectable')
         node.c_configs_priority_srv = node.create_client(
-            GetComponentConfigPriority,
+            GetComponentConfigurationPriority,
             '/rosa_kb/component_configuration/priority')
 
-        request_c_configs = SelectableComponentConfigs.Request()
+        request_c_configs = SelectableComponentConfigurations.Request()
 
         _cc = Component()
         _cc.name = 'c_cc_feasible_unfeasible'
@@ -410,7 +408,7 @@ def test_rosa_kb_get_component_configuration_priority():
         response_c_configs = node.call_service(
             node.selectable_c_configs_srv, request_c_configs)
 
-        request_p = GetComponentConfigPriority.Request()
+        request_p = GetComponentConfigurationPriority.Request()
         request_p.c_configs = response_c_configs.c_configs
         response_p = node.call_service(
             node.c_configs_priority_srv, request_p)
@@ -430,17 +428,17 @@ def test_rosa_kb_select_configuration():
         node.start_node()
         node.activate_rosa_kb()
         node.selected_config_srv = node.create_client(
-            SelectedConfig, '/rosa_kb/select_configuration')
+            SelectedConfigurations, '/rosa_kb/select_configuration')
 
-        selected_config = SelectedConfig.Request()
+        selected_config = SelectedConfigurations.Request()
 
-        selected_fd = SelectedFunctionDesign()
-        selected_fd.function_name = 'f_reconfigure_fd'
-        selected_fd.function_design_name = 'fd_reconfig_2'
+        selected_fd = FunctionDesign()
+        selected_fd.function.name = 'f_reconfigure_fd'
+        selected_fd.name = 'fd_reconfig_2'
 
-        selected_cc = SelectedComponentConfig()
-        selected_cc.component_name = 'component_reconfig_3'
-        selected_cc.component_configuration_name = 'cp_reconfig_2'
+        selected_cc = ComponentConfiguration()
+        selected_cc.component.name = 'component_reconfig_3'
+        selected_cc.name = 'cp_reconfig_2'
 
         selected_config.selected_fds.append(selected_fd)
         selected_config.selected_component_configs.append(selected_cc)
@@ -462,17 +460,17 @@ def test_rosa_kb_get_reconfiguration_plan():
         node.activate_rosa_kb()
 
         node.selected_config_srv = node.create_client(
-            SelectedConfig, '/rosa_kb/select_configuration')
+            SelectedConfigurations, '/rosa_kb/select_configuration')
 
-        selected_config = SelectedConfig.Request()
+        selected_config = SelectedConfigurations.Request()
 
-        selected_fd = SelectedFunctionDesign()
-        selected_fd.function_name = 'f_reconfigure_fd'
-        selected_fd.function_design_name = 'fd_reconfig_2'
+        selected_fd = FunctionDesign()
+        selected_fd.function.name = 'f_reconfigure_fd'
+        selected_fd.name = 'fd_reconfig_2'
 
-        selected_cc = SelectedComponentConfig()
-        selected_cc.component_name = 'component_reconfig_3'
-        selected_cc.component_configuration_name = 'cp_reconfig_2'
+        selected_cc = ComponentConfiguration()
+        selected_cc.component.name = 'component_reconfig_3'
+        selected_cc.name = 'cp_reconfig_2'
 
         selected_config.selected_fds.append(selected_fd)
         selected_config.selected_component_configs.append(selected_cc)
@@ -480,26 +478,26 @@ def test_rosa_kb_get_reconfiguration_plan():
         node.call_service(node.selected_config_srv, selected_config)
 
         node.get_latest_reconfig_plan_srv = node.create_client(
-            GetReconfigurationPlan,
+            ReconfigurationPlanQuery,
             '/rosa_kb/reconfiguration_plan/get_latest')
         reconfig_plan = node.call_service(
             node.get_latest_reconfig_plan_srv,
-            GetReconfigurationPlan.Request())
+            ReconfigurationPlanQuery.Request())
 
         node.get_reconfig_plan_srv = node.create_client(
-            GetReconfigurationPlan,
+            ReconfigurationPlanQuery,
             '/rosa_kb/reconfiguration_plan/get')
         reconfig_plan_2 = node.call_service(
             node.get_reconfig_plan_srv,
-            GetReconfigurationPlan.Request(
-                start_time=reconfig_plan.reconfig_plan.start_time))
+            ReconfigurationPlanQuery.Request(
+                reconfig_plan=reconfig_plan.reconfig_plan))
 
         _c = Component()
         _c.name = 'component_reconfig_2'
         _c.status = 'unsolved'
         _c.node_type = 'Component'
 
-        _cc = ComponentConfig()
+        _cc = ComponentConfiguration()
         _cc.name = 'cp_reconfig_2'
         assert reconfig_plan.success is True \
             and _c in reconfig_plan.reconfig_plan.components_activate \
@@ -556,7 +554,7 @@ def test_get_component_parameters_cb():
         node.start_node()
         node.activate_rosa_kb()
 
-        c_config = ComponentConfig()
+        c_config = ComponentConfiguration()
         c_config.name = 'get_cp_cc'
 
         srv_get = node.create_client(
@@ -609,17 +607,17 @@ def test_set_reconfiguration_plan_result_service_cb():
         node.activate_rosa_kb()
 
         node.selected_config_srv = node.create_client(
-            SelectedConfig, '/rosa_kb/select_configuration')
+            SelectedConfigurations, '/rosa_kb/select_configuration')
 
-        selected_config = SelectedConfig.Request()
+        selected_config = SelectedConfigurations.Request()
 
-        selected_fd = SelectedFunctionDesign()
-        selected_fd.function_name = 'f_reconfigure_fd'
-        selected_fd.function_design_name = 'fd_reconfig_2'
+        selected_fd = FunctionDesign()
+        selected_fd.function.name = 'f_reconfigure_fd'
+        selected_fd.name = 'fd_reconfig_2'
 
-        selected_cc = SelectedComponentConfig()
-        selected_cc.component_name = 'component_reconfig_3'
-        selected_cc.component_configuration_name = 'cp_reconfig_2'
+        selected_cc = ComponentConfiguration()
+        selected_cc.component.name = 'component_reconfig_3'
+        selected_cc.name = 'cp_reconfig_2'
 
         selected_config.selected_fds.append(selected_fd)
         selected_config.selected_component_configs.append(selected_cc)
@@ -627,10 +625,10 @@ def test_set_reconfiguration_plan_result_service_cb():
         node.call_service(node.selected_config_srv, selected_config)
 
         node.get_latest_reconfig_plan = node.create_client(
-            GetReconfigurationPlan,
+            ReconfigurationPlanQuery,
             '/rosa_kb/reconfiguration_plan/get_latest')
         reconfig_plan = node.call_service(
-            node.get_latest_reconfig_plan, GetReconfigurationPlan.Request())
+            node.get_latest_reconfig_plan, ReconfigurationPlanQuery.Request())
 
         node.set_reconfig_plan_result_srv = node.create_client(
             ReconfigurationPlanQuery,
@@ -643,11 +641,11 @@ def test_set_reconfiguration_plan_result_service_cb():
             node.set_reconfig_plan_result_srv, rp_query)
 
         node.get_reconfig_plan_srv = node.create_client(
-            GetReconfigurationPlan,
+            ReconfigurationPlanQuery,
             '/rosa_kb/reconfiguration_plan/get')
 
-        rp_req = GetReconfigurationPlan.Request()
-        rp_req.start_time = \
+        rp_req = ReconfigurationPlanQuery.Request()
+        rp_req.reconfig_plan.start_time = \
             reconfig_plan.reconfig_plan.start_time
         reconfig_plan_2 = node.call_service(
             node.get_reconfig_plan_srv, rp_req)

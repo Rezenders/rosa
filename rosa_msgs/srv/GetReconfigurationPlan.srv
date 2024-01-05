@@ -1,4 +1,0 @@
-string start_time
----
-bool success
-rosa_msgs/ReconfigurationPlan reconfig_plan

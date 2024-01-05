@@ -30,10 +30,10 @@ from rclpy.node import Node
 
 from std_msgs.msg import String
 from rosa_plan.configuration_planner import ConfigurationPlanner
-from rosa_msgs.msg import SelectedComponentConfig
-from rosa_msgs.msg import SelectedFunctionDesign
 from ros_typedb_msgs.srv import Query
 
+from rosa_msgs.msg import ComponentConfiguration
+from rosa_msgs.msg import FunctionDesign
 
 test_node = 'test_configuration_planner'
 rosa_kb_name = 'rosa_kb'
@@ -85,9 +85,9 @@ def test_plan_function_adaptation():
         node.activate_lc_node(rosa_kb_name)
 
         result = configuration_planner.plan_function_adaptation()
-        selected_fd = SelectedFunctionDesign()
-        selected_fd.function_name = 'f_always_improve'
-        selected_fd.function_design_name = 'f_improve_fd1'
+        selected_fd = FunctionDesign()
+        selected_fd.function.name = 'f_always_improve'
+        selected_fd.name = 'f_improve_fd1'
         assert selected_fd in result
     finally:
         configuration_planner.destroy_node()
@@ -107,9 +107,9 @@ def test_plan_component_adaptation():
         node.activate_lc_node(rosa_kb_name)
 
         result = configuration_planner.plan_component_adaptation()
-        selected_cc = SelectedComponentConfig()
-        selected_cc.component_name = 'c_always_improve'
-        selected_cc.component_configuration_name = 'c_improve_fd1'
+        selected_cc = ComponentConfiguration()
+        selected_cc.component.name = 'c_always_improve'
+        selected_cc.name = 'c_improve_fd1'
         assert selected_cc in result
     finally:
         configuration_planner.destroy_node()
@@ -130,13 +130,13 @@ def test_plan_adaptation():
 
         result = configuration_planner.plan_adaptation()
 
-        selected_fd = SelectedFunctionDesign()
-        selected_fd.function_name = 'f_always_improve'
-        selected_fd.function_design_name = 'f_improve_fd1'
+        selected_fd = FunctionDesign()
+        selected_fd.function.name = 'f_always_improve'
+        selected_fd.name = 'f_improve_fd1'
 
-        selected_cc = SelectedComponentConfig()
-        selected_cc.component_name = 'c_always_improve'
-        selected_cc.component_configuration_name = 'c_improve_fd1'
+        selected_cc = ComponentConfiguration()
+        selected_cc.component.name = 'c_always_improve'
+        selected_cc.name = 'c_improve_fd1'
 
         assert selected_fd in result.selected_fds and \
             selected_cc in result.selected_component_configs

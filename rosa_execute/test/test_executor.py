@@ -29,7 +29,7 @@ from ros_pytest.fixture import tester_node
 from rosa_execute.configuration_executor import ConfigurationExecutor
 
 from rosa_msgs.msg import Component
-from rosa_msgs.msg import ComponentConfig
+from rosa_msgs.msg import ComponentConfiguration
 from rosa_msgs.msg import ReconfigurationPlan
 from rosa_msgs.srv import ComponentQuery
 from rcl_interfaces.msg import Parameter
@@ -305,8 +305,8 @@ def test_perform_parameter_adaptation(
         result = configuration_executor_node.activate_components(
             [component, component2])
 
-        config = ComponentConfig(name='ros_typedb_config')
-        config_2 = ComponentConfig(name='ros_typedb_config_2')
+        config = ComponentConfiguration(name='ros_typedb_config')
+        config_2 = ComponentConfiguration(name='ros_typedb_config_2')
         result = configuration_executor_node.perform_parameter_adaptation(
             [config, config_2])
 
@@ -379,8 +379,8 @@ def test_perform_reconfiguration_plan(
         component4.executable = 'ros_typedb'
         component4.node_type = 'LifeCycleNode'
 
-        config = ComponentConfig(name='ros_typedb_config')
-        config_2 = ComponentConfig(name='ros_typedb_config_2')
+        config = ComponentConfiguration(name='ros_typedb_config')
+        config_2 = ComponentConfiguration(name='ros_typedb_config_2')
 
         reconfig_plan = ReconfigurationPlan()
         reconfig_plan.components_deactivate = [component, component2]

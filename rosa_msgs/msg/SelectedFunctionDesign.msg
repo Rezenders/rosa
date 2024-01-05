@@ -1,2 +1,0 @@
-string function_name
-string function_design_name

@@ -1,4 +1,4 @@
-rosa_msgs/ComponentConfig c_config
+rosa_msgs/ComponentConfiguration c_config
 ---
 bool success
 rosa_msgs/Component component
