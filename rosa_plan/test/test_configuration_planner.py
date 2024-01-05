@@ -30,7 +30,7 @@ from rclpy.node import Node
 
 from std_msgs.msg import String
 from rosa_plan.configuration_planner import ConfigurationPlanner
-from rosa_msgs.msg import SelectedComponentConfig
+from rosa_msgs.msg import SelectedComponentConfiguration
 from rosa_msgs.msg import SelectedFunctionDesign
 from ros_typedb_msgs.srv import Query
 
@@ -107,7 +107,7 @@ def test_plan_component_adaptation():
         node.activate_lc_node(rosa_kb_name)
 
         result = configuration_planner.plan_component_adaptation()
-        selected_cc = SelectedComponentConfig()
+        selected_cc = SelectedComponentConfiguration()
         selected_cc.component_name = 'c_always_improve'
         selected_cc.component_configuration_name = 'c_improve_fd1'
         assert selected_cc in result
@@ -134,7 +134,7 @@ def test_plan_adaptation():
         selected_fd.function_name = 'f_always_improve'
         selected_fd.function_design_name = 'f_improve_fd1'
 
-        selected_cc = SelectedComponentConfig()
+        selected_cc = SelectedComponentConfiguration()
         selected_cc.component_name = 'c_always_improve'
         selected_cc.component_configuration_name = 'c_improve_fd1'
 

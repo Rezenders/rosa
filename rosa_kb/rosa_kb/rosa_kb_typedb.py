@@ -16,7 +16,7 @@ from datetime import datetime
 
 from rosa_msgs.msg import Action
 from rosa_msgs.msg import Component
-from rosa_msgs.msg import ComponentConfig
+from rosa_msgs.msg import ComponentConfiguration
 from rosa_msgs.msg import Function
 from rosa_msgs.msg import FunctionDesign
 from rosa_msgs.msg import ReconfigurationPlan
@@ -25,12 +25,12 @@ from rosa_msgs.srv import AdaptableFunctions
 from rosa_msgs.srv import AdaptableComponents
 from rosa_msgs.srv import ComponentQuery
 from rosa_msgs.srv import GetComponentParameters
-from rosa_msgs.srv import GetComponentConfigPriority
+from rosa_msgs.srv import GetComponentConfigurationPriority
 from rosa_msgs.srv import GetReconfigurationPlan
 from rosa_msgs.srv import GetFDPriority
 from rosa_msgs.srv import ReconfigurationPlanQuery
-from rosa_msgs.srv import SelectedConfig
-from rosa_msgs.srv import SelectableComponentConfigs
+from rosa_msgs.srv import SelectedConfigurations
+from rosa_msgs.srv import SelectableComponentConfigurations
 from rosa_msgs.srv import SelectableFDs
 from rosa_msgs.srv import ActionQuery
 from rosa_msgs.srv import SelectableActions
@@ -110,7 +110,7 @@ class RosaKB(ROSTypeDBInterface):
         )
 
         self.get_selectable_c_configs_service = self.create_service(
-            SelectableComponentConfigs,
+            SelectableComponentConfigurations,
             self.get_name() + '/component_configuration/selectable',
             self.selectable_c_config_cb,
             callback_group=self.query_cb_group
@@ -124,14 +124,14 @@ class RosaKB(ROSTypeDBInterface):
         )
 
         self.get_c_configs_priority_service = self.create_service(
-            GetComponentConfigPriority,
+            GetComponentConfigurationPriority,
             self.get_name() + '/component_configuration/priority',
             self.component_configuration_priority_cb,
             callback_group=self.query_cb_group
         )
 
         self.select_configuration_service = self.create_service(
-            SelectedConfig,
+            SelectedConfigurations,
             self.get_name() + '/select_configuration',
             self.select_configuration_cb,
             callback_group=self.query_cb_group
@@ -286,7 +286,7 @@ class RosaKB(ROSTypeDBInterface):
         c_configs = self.typedb_interface.get_selectable_c_configs(
             req.component.name)
         for c_config in c_configs:
-            _c_config = ComponentConfig()
+            _c_config = ComponentConfiguration()
             _c_config.name = c_config
             res.c_configs.append(_c_config)
         res.success = True
@@ -353,7 +353,7 @@ class RosaKB(ROSTypeDBInterface):
                 _component = self.get_component_all_attributes(c_deactivate)
                 reconfig_plan.components_deactivate.append(_component)
             for c_config in reconfig_plan_dict['c_config']:
-                _c_config = ComponentConfig()
+                _c_config = ComponentConfiguration()
                 _c_config.name = c_config
                 reconfig_plan.component_configurations.append(_c_config)
             reconfig_plan.start_time = reconfig_plan_dict['start-time']\

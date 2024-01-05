@@ -17,15 +17,15 @@ from rclpy.lifecycle import Node
 from rclpy.lifecycle import State
 from rclpy.lifecycle import TransitionCallbackReturn
 
-from rosa_msgs.msg import SelectedComponentConfig
+from rosa_msgs.msg import SelectedComponentConfiguration
 from rosa_msgs.msg import SelectedFunctionDesign
 
 from rosa_msgs.srv import AdaptableFunctions
 from rosa_msgs.srv import AdaptableComponents
-from rosa_msgs.srv import GetComponentConfigPriority
+from rosa_msgs.srv import GetComponentConfigurationPriority
 from rosa_msgs.srv import GetFDPriority
-from rosa_msgs.srv import SelectedConfig
-from rosa_msgs.srv import SelectableComponentConfigs
+from rosa_msgs.srv import SelectedConfigurations
+from rosa_msgs.srv import SelectableComponentConfigurations
 from rosa_msgs.srv import SelectableFDs
 
 from std_msgs.msg import String
@@ -65,7 +65,7 @@ class ConfigurationPlanner(Node):
         )
 
         self.selectable_c_configs_srv = self.create_client(
-            SelectableComponentConfigs,
+            SelectableComponentConfigurations,
             '/rosa_kb/component_configuration/selectable',
             callback_group=MutuallyExclusiveCallbackGroup()
         )
@@ -77,13 +77,13 @@ class ConfigurationPlanner(Node):
         )
 
         self.get_c_configs_priority_srv = self.create_client(
-            GetComponentConfigPriority,
+            GetComponentConfigurationPriority,
             '/rosa_kb/component_configuration/priority',
             callback_group=MutuallyExclusiveCallbackGroup()
         )
 
         self.select_configuration_srv = self.create_client(
-            SelectedConfig,
+            SelectedConfigurations,
             '/rosa_kb/select_configuration',
             callback_group=MutuallyExclusiveCallbackGroup()
         )
@@ -141,14 +141,14 @@ class ConfigurationPlanner(Node):
         # get feasible component configs
         if components is not None:
             for component in components.components:
-                request = SelectableComponentConfigs.Request()
+                request = SelectableComponentConfigurations.Request()
                 request.component = component
                 c_configs = self.call_service(
                     self.selectable_c_configs_srv, request)
 
                 if c_configs is not None:
                     # get component configs priority
-                    request = GetComponentConfigPriority.Request()
+                    request = GetComponentConfigurationPriority.Request()
                     request.c_configs = c_configs.c_configs
                     c_configs = self.call_service(
                         self.get_c_configs_priority_srv, request)
@@ -159,7 +159,7 @@ class ConfigurationPlanner(Node):
                         key=lambda x: x.priority,
                     )
                     if len(sorted_cc) > 0:
-                        selected_cc = SelectedComponentConfig()
+                        selected_cc = SelectedComponentConfiguration()
                         selected_cc.component_name = component.name
                         selected_cc.component_configuration_name = \
                             sorted_cc[0].name
@@ -172,7 +172,7 @@ class ConfigurationPlanner(Node):
         selected_component_configs = self.plan_component_adaptation(
             selected_functions_fds)
 
-        selected_config = SelectedConfig.Request()
+        selected_config = SelectedConfigurations.Request()
         selected_config.selected_fds = selected_functions_fds
         selected_config.selected_component_configs = \
             selected_component_configs
