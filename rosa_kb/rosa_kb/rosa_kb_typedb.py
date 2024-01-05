@@ -26,7 +26,6 @@ from rosa_msgs.srv import AdaptableComponents
 from rosa_msgs.srv import ComponentQuery
 from rosa_msgs.srv import GetComponentParameters
 from rosa_msgs.srv import GetComponentConfigurationPriority
-from rosa_msgs.srv import GetReconfigurationPlan
 from rosa_msgs.srv import GetFunctionDesignPriority
 from rosa_msgs.srv import ReconfigurationPlanQuery
 from rosa_msgs.srv import SelectedConfigurations
@@ -139,14 +138,14 @@ class RosaKB(ROSTypeDBInterface):
 
         self.reconfig_plan_cb_group = MutuallyExclusiveCallbackGroup()
         self.get_reconfiguration_plan_service = self.create_service(
-            GetReconfigurationPlan,
+            ReconfigurationPlanQuery,
             self.get_name() + '/reconfiguration_plan/get',
             self.get_reconfiguration_plan_cb,
             callback_group=self.query_cb_group
         )
 
         self.get_latest_reconfiguration_plan_service = self.create_service(
-            GetReconfigurationPlan,
+            ReconfigurationPlanQuery,
             self.get_name() + '/reconfiguration_plan/get_latest',
             self.get_latest_reconfiguration_plan_cb,
             callback_group=self.query_cb_group
@@ -376,7 +375,7 @@ class RosaKB(ROSTypeDBInterface):
 
     def get_reconfiguration_plan_cb(self, req, res):
         reconfig_plan_dict = self.typedb_interface.get_reconfiguration_plan(
-            datetime.fromisoformat(req.start_time))
+            datetime.fromisoformat(req.reconfig_plan.start_time))
         if reconfig_plan_dict is not False:
             res.reconfig_plan = self.reconfig_plan_dict_to_ros_msg(
                 reconfig_plan_dict)

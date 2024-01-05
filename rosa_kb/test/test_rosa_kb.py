@@ -46,9 +46,8 @@ from rosa_msgs.srv import AdaptableComponents
 from rosa_msgs.srv import ComponentQuery
 from rosa_msgs.srv import GetComponentParameters
 from rosa_msgs.srv import GetComponentConfigurationPriority
-from rosa_msgs.srv import GetReconfigurationPlan
-from rosa_msgs.srv import GetFunctionDesignPriority
 from rosa_msgs.srv import ReconfigurationPlanQuery
+from rosa_msgs.srv import GetFunctionDesignPriority
 from rosa_msgs.srv import SelectedConfigurations
 from rosa_msgs.srv import SelectableComponentConfigurations
 from rosa_msgs.srv import SelectableFunctionDesigns
@@ -480,19 +479,19 @@ def test_rosa_kb_get_reconfiguration_plan():
         node.call_service(node.selected_config_srv, selected_config)
 
         node.get_latest_reconfig_plan_srv = node.create_client(
-            GetReconfigurationPlan,
+            ReconfigurationPlanQuery,
             '/rosa_kb/reconfiguration_plan/get_latest')
         reconfig_plan = node.call_service(
             node.get_latest_reconfig_plan_srv,
-            GetReconfigurationPlan.Request())
+            ReconfigurationPlanQuery.Request())
 
         node.get_reconfig_plan_srv = node.create_client(
-            GetReconfigurationPlan,
+            ReconfigurationPlanQuery,
             '/rosa_kb/reconfiguration_plan/get')
         reconfig_plan_2 = node.call_service(
             node.get_reconfig_plan_srv,
-            GetReconfigurationPlan.Request(
-                start_time=reconfig_plan.reconfig_plan.start_time))
+            ReconfigurationPlanQuery.Request(
+                reconfig_plan=reconfig_plan.reconfig_plan))
 
         _c = Component()
         _c.name = 'component_reconfig_2'
@@ -627,10 +626,10 @@ def test_set_reconfiguration_plan_result_service_cb():
         node.call_service(node.selected_config_srv, selected_config)
 
         node.get_latest_reconfig_plan = node.create_client(
-            GetReconfigurationPlan,
+            ReconfigurationPlanQuery,
             '/rosa_kb/reconfiguration_plan/get_latest')
         reconfig_plan = node.call_service(
-            node.get_latest_reconfig_plan, GetReconfigurationPlan.Request())
+            node.get_latest_reconfig_plan, ReconfigurationPlanQuery.Request())
 
         node.set_reconfig_plan_result_srv = node.create_client(
             ReconfigurationPlanQuery,
@@ -643,11 +642,11 @@ def test_set_reconfiguration_plan_result_service_cb():
             node.set_reconfig_plan_result_srv, rp_query)
 
         node.get_reconfig_plan_srv = node.create_client(
-            GetReconfigurationPlan,
+            ReconfigurationPlanQuery,
             '/rosa_kb/reconfiguration_plan/get')
 
-        rp_req = GetReconfigurationPlan.Request()
-        rp_req.start_time = \
+        rp_req = ReconfigurationPlanQuery.Request()
+        rp_req.reconfig_plan.start_time = \
             reconfig_plan.reconfig_plan.start_time
         reconfig_plan_2 = node.call_service(
             node.get_reconfig_plan_srv, rp_req)

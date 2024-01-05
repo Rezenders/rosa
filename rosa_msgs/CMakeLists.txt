@@ -25,7 +25,6 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   "srv/ComponentQuery.srv"
   "srv/GetComponentParameters.srv"
   "srv/GetComponentConfigurationPriority.srv"
-  "srv/GetReconfigurationPlan.srv"
   "srv/GetFunctionDesignPriority.srv"
   "srv/ReconfigurationPlanQuery.srv"
   "srv/SelectedConfigurations.srv"

@@ -29,7 +29,6 @@ from lifecycle_msgs.srv import GetState
 from std_msgs.msg import String
 from rosa_msgs.srv import ComponentQuery
 from rosa_msgs.srv import GetComponentParameters
-from rosa_msgs.srv import GetReconfigurationPlan
 from rosa_msgs.srv import ReconfigurationPlanQuery
 
 from rcl_interfaces.srv import SetParametersAtomically
@@ -80,7 +79,7 @@ class ConfigurationExecutor(Node):
             callback_group=MutuallyExclusiveCallbackGroup())
 
         self.get_reconfig_plan_srv = self.create_client(
-            GetReconfigurationPlan,
+            ReconfigurationPlanQuery,
             '/rosa_kb/reconfiguration_plan/get_latest',
             callback_group=self.cb_group
         )
@@ -170,7 +169,7 @@ class ConfigurationExecutor(Node):
     @check_lc_active
     def execute(self):
         reconfig_plan = self.call_service(
-            self.get_reconfig_plan_srv, GetReconfigurationPlan.Request())
+            self.get_reconfig_plan_srv, ReconfigurationPlanQuery.Request())
         if reconfig_plan is not None and reconfig_plan.success is True:
             reconfig_result = self.perform_reconfiguration_plan(
                 reconfig_plan.reconfig_plan)
