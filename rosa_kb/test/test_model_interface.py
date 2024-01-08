@@ -93,16 +93,24 @@ def test_get_unsolved_components(kb_interface):
     assert 'c_required' in unsolved_components
 
 
-def test_get_measurement_attribute(kb_interface):
+def test_get_latest_measurement(kb_interface):
     value = 1.0
-    measured_value = kb_interface.get_measured_attribute('ea_measurement')
+    measured_value = kb_interface.get_latest_measurement(
+        'ea_measurement')
     assert value == measured_value
 
 
-def test_update_measurement_attribute(kb_interface):
+def test_get_measurement(kb_interface):
+    value = 1.8
+    measured_value = kb_interface.get_measurement(
+        'ea_measurement', datetime.fromisoformat('2023-01-08T06:12:11.111'))
+    assert value == measured_value
+
+
+def test_add_measurement(kb_interface):
     value = 1.32
-    kb_interface.update_measured_attribute('ea_measurement', 1.32)
-    measured_value = kb_interface.get_measured_attribute('ea_measurement')
+    kb_interface.add_measurement('ea_measurement', 1.32)
+    measured_value = kb_interface.get_latest_measurement('ea_measurement')
     assert value == measured_value
 
 
@@ -111,15 +119,13 @@ def test_toogle_function_design_selection(kb_interface):
         'function-design', 'f2_fd1_c2_c3', True)
     fd_selected = kb_interface.get_attribute_from_thing(
         'function-design',
-        'function-design-name',
-        'f2_fd1_c2_c3',
+        [('function-design-name', 'f2_fd1_c2_c3')],
         'is-selected')
     kb_interface.toogle_thing_selection(
         'function-design', 'f2_fd1_c2_c3', False)
     fd_not_selected = kb_interface.get_attribute_from_thing(
         'function-design',
-        'function-design-name',
-        'f2_fd1_c2_c3',
+        [('function-design-name', 'f2_fd1_c2_c3')],
         'is-selected')
     assert fd_selected[0] is True and fd_not_selected[0] is False
 
@@ -128,19 +134,16 @@ def test_select_function_design(kb_interface):
     kb_interface.select_function_design('function2', 'f2_fd1_c2_c3')
     fd1_selected = kb_interface.get_attribute_from_thing(
         'function-design',
-        'function-design-name',
-        'f2_fd1_c2_c3',
+        [('function-design-name', 'f2_fd1_c2_c3')],
         'is-selected')
     kb_interface.select_function_design('function2', 'f2_fd2_c4_c5')
     fd1_not_selected = kb_interface.get_attribute_from_thing(
         'function-design',
-        'function-design-name',
-        'f2_fd1_c2_c3',
+        [('function-design-name', 'f2_fd1_c2_c3')],
         'is-selected')
     fd2_selected = kb_interface.get_attribute_from_thing(
         'function-design',
-        'function-design-name',
-        'f2_fd2_c4_c5',
+        [('function-design-name', 'f2_fd2_c4_c5')],
         'is-selected')
 
     assert fd1_selected[0] is True and fd1_not_selected[0] is False \
@@ -151,19 +154,16 @@ def test_select_component_configuration(kb_interface):
     kb_interface.select_component_configuration('component1', 'high param')
     high_selected = kb_interface.get_attribute_from_thing(
         'component-configuration',
-        'component-configuration-name',
-        'high param',
+        [('component-configuration-name', 'high param')],
         'is-selected')
     kb_interface.select_component_configuration('component1', 'low param')
     high_not_selected = kb_interface.get_attribute_from_thing(
         'component-configuration',
-        'component-configuration-name',
-        'high param',
+        [('component-configuration-name', 'high param')],
         'is-selected')
     low_selected = kb_interface.get_attribute_from_thing(
         'component-configuration',
-        'component-configuration-name',
-        'low param',
+        [('component-configuration-name', 'low param')],
         'is-selected')
     assert high_selected[0] is True and high_not_selected[0] is False and \
            low_selected[0] is True
@@ -191,7 +191,7 @@ def test_create_reconfiguration_plan(
             _match_query, _prefix_list = kb_interface.create_match_query(
                 [('Component', 'component-name', c) for c in c_activate],
                 'ca_')
-            end_query += kb_interface.create_relationship_insert_query(
+            end_query += kb_interface.create_relationship_query(
                 'component-activation',
                 {'component': _prefix_list},
                 prefix='ca'
@@ -205,7 +205,7 @@ def test_create_reconfiguration_plan(
             _match_query, _prefix_list = kb_interface.create_match_query(
                 [('Component', 'component-name', c) for c in c_deactivate],
                 'cd_')
-            end_query += kb_interface.create_relationship_insert_query(
+            end_query += kb_interface.create_relationship_query(
                 'component-deactivation',
                 {'component': _prefix_list},
                 prefix='cd'
@@ -219,7 +219,7 @@ def test_create_reconfiguration_plan(
             _match_query, _prefix_list = kb_interface.create_match_query(
                 [('component-configuration', 'component-configuration-name', c)
                  for c in c_config], 'cc_')
-            end_query += kb_interface.create_relationship_insert_query(
+            end_query += kb_interface.create_relationship_query(
                 'parameter-adaptation',
                 {'component-configuration': _prefix_list},
                 prefix='cc'
@@ -263,7 +263,7 @@ def test_select_configuration(
             _match_query, _prefix_list = kb_interface.create_match_query(
                 [('Component', 'component-name', c) for c in exp_c_activate],
                 'ca')
-            end_query += kb_interface.create_relationship_insert_query(
+            end_query += kb_interface.create_relationship_query(
                 'component-activation',
                 {'component': _prefix_list},
                 prefix='ca'
@@ -278,7 +278,7 @@ def test_select_configuration(
             _match_query, _prefix_list = kb_interface.create_match_query(
                 [('Component', 'component-name', c) for c in exp_c_deactivate],
                 'cd')
-            end_query += kb_interface.create_relationship_insert_query(
+            end_query += kb_interface.create_relationship_query(
                 'component-deactivation',
                 {'component': _prefix_list},
                 prefix='cd'
@@ -293,7 +293,7 @@ def test_select_configuration(
             _match_query, _prefix_list = kb_interface.create_match_query(
                 [('component-configuration', 'component-configuration-name', c)
                  for c in exp_c_config], 'cc_')
-            end_query += kb_interface.create_relationship_insert_query(
+            end_query += kb_interface.create_relationship_query(
                 'parameter-adaptation',
                 {'component-configuration': _prefix_list},
                 prefix='cc'

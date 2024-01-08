@@ -89,7 +89,7 @@ class ModelInterface(TypeDBInterface):
     # Check if a Action is required
     def is_action_required(self, action_name):
         is_required = self.get_attribute_from_thing(
-             'Action', 'action-name', action_name, 'is-required')
+             'Action', [('action-name', action_name)], 'is-required')
         if len(is_required) == 0:
             return False
         return is_required[0]
@@ -97,12 +97,12 @@ class ModelInterface(TypeDBInterface):
     # Check if a Action is feasible
     def is_action_feasible(self, action_name):
         status = self.get_attribute_from_thing(
-             'Action', 'action-name', action_name, 'action-status')
+             'Action', [('action-name', action_name)], 'action-status')
         return all(x in status for x in ['feasible'])
 
     def is_action_selectable(self, action_name):
         status = self.get_attribute_from_thing(
-             'Action', 'action-name', action_name, 'action-status')
+             'Action', [('action-name', action_name)], 'action-status')
         return 'unfeasible' not in status
 
     def get_selectable_thing_raw(self, thing):
@@ -232,23 +232,57 @@ class ModelInterface(TypeDBInterface):
             'priority',
             value)
 
-    def update_measured_attribute(self, attribute_name, value):
-        return self.update_attribute_in_thing(
-            'Attribute',
-            'attribute-name',
-            attribute_name,
-            'attribute-measurement',
-            float(value))
+    def add_measurement(self, name, value):
+        query = f"""
+            match
+                $attr isa Attribute, has attribute-name "{name}";
+                $m (measured-attribute:$attr) isa measurement,
+                    has latest $latest;
+                $latest == true;
+            delete $m has $latest;
+        """
+        self.delete_from_database(query)
 
-    def get_measured_attribute(self, attribute_name):
-        measurement = self.get_attribute_from_thing(
-             'Attribute',
-             'attribute-name',
-             attribute_name,
-             'attribute-measurement')
-        if len(measurement) == 0:
+        time = self.convert_py_type_to_query_type(datetime.now())
+        query = f"""
+            match
+                $attr isa Attribute, has attribute-name "{name}";
+            insert
+                $m (measured-attribute:$attr) isa measurement,
+                    has latest true,
+                    has measurement-value {value},
+                    has measurement-time {time};
+        """
+        query_result = self.insert_database(query)
+        return query_result
+
+    def get_latest_measurement(self, name):
+        query = f"""
+            match
+                $attr isa Attribute, has attribute-name "{name}";
+                $m (measured-attribute:$attr) isa measurement,
+                    has latest true , has measurement-value $value;
+                get $value;
+        """
+        query_result = self.match_database(query)
+        if query_result is None or len(query_result) == 0:
             return None
-        return measurement[0]
+        return query_result[0].get('value').get('value')
+
+    def get_measurement(self, name, time):
+        time = self.convert_py_type_to_query_type(time)
+        query = f"""
+            match
+                $attr isa Attribute,
+                    has attribute-name "{name}";
+                $m (measured-attribute:$attr) isa measurement,
+                    has measurement-time {time} , has measurement-value $value;
+                get $value;
+        """
+        query_result = self.match_database(query)
+        if query_result is None or len(query_result) == 0:
+            return None
+        return query_result[0].get('value').get('value')
 
     def get_selectable_c_configs_raw(self, component):
         query = f'''
@@ -286,21 +320,19 @@ class ModelInterface(TypeDBInterface):
 
     def get_function_design_priority(self, fd):
         return self.get_attribute_from_thing(
-            'function-design', 'function-design-name', fd, 'priority')
+            'function-design', [('function-design-name', fd)], 'priority')
 
     def get_component_configuration_priority(self, cc):
         return self.get_attribute_from_thing(
             'component-configuration',
-            'component-configuration-name',
-            cc,
+            [('component-configuration-name', cc)],
             'priority')
 
     # toogle fd and component config selection
     def toogle_thing_selection(self, thing, name, value):
         is_selected = self.get_attribute_from_thing(
             thing,
-            '{}-name'.format(thing.lower()),
-            name,
+            [('{}-name'.format(thing.lower()), name)],
             'is-selected')
         if len(is_selected) > 0 and is_selected[0] is value:
             return None
@@ -350,8 +382,7 @@ class ModelInterface(TypeDBInterface):
     def toogle_thing_activation(self, thing, name, value):
         is_activated = self.get_attribute_from_thing(
             thing,
-            '{}-name'.format(thing.lower()),
-            name,
+            [('{}-name'.format(thing.lower()), name)],
             'is-active')
         if len(is_activated) > 0 and is_activated[0] is value:
             return True
@@ -368,8 +399,7 @@ class ModelInterface(TypeDBInterface):
     def is_component_active(self, name):
         is_activated = self.get_attribute_from_thing(
             'Component',
-            'component-name',
-            name,
+            [('component-name', name)],
             'is-active')
         if len(is_activated) > 0:
             return is_activated[0]
@@ -405,7 +435,7 @@ class ModelInterface(TypeDBInterface):
                 [('Component', 'component-name', c) for c in c_activate], 'ca')
             match_query += _match_query
 
-            insert_query += self.create_relationship_insert_query(
+            insert_query += self.create_relationship_query(
                 'component-activation',
                 {'component': _prefix_list},
                 prefix='rca'
@@ -418,7 +448,7 @@ class ModelInterface(TypeDBInterface):
                 'cd')
             match_query += _match_query
 
-            insert_query += self.create_relationship_insert_query(
+            insert_query += self.create_relationship_query(
                 'component-deactivation',
                 {'component': _prefix_list},
                 prefix='rcd'
@@ -434,7 +464,7 @@ class ModelInterface(TypeDBInterface):
             )
             match_query += _match_query
 
-            insert_query += self.create_relationship_insert_query(
+            insert_query += self.create_relationship_query(
                 'parameter-adaptation',
                 {'component-configuration': _prefix_list},
                 prefix='rcc'
@@ -442,7 +472,7 @@ class ModelInterface(TypeDBInterface):
             parameter_adaptation.append('rcc')
 
         start_time = datetime.now()
-        insert_query += self.create_relationship_insert_query(
+        insert_query += self.create_relationship_query(
             'reconfiguration-plan',
             {
                 'architectural-adaptation': architectural_adaptation,
@@ -464,12 +494,12 @@ class ModelInterface(TypeDBInterface):
             # select components that need to be activated
             for c in self.get_components_in_function_design(fd):
                 c_active = self.get_attribute_from_thing(
-                    'Component', 'component-name', c, 'is-active')
+                    'Component', [('component-name', c)], 'is-active')
                 if True not in c_active:
                     _c_activate.append(c)
             # select components that need to be deactivated
             fd_selected = self.get_attribute_from_thing(
-                'function-design', 'function-design-name', fd, 'is-selected')
+                'function-design', [('function-design-name', fd)], 'is-selected')
             if len(fd_selected) == 0  \
                or len(fd_selected) > 0 and fd_selected[0] is False:
                 _fd = self.get_relationship_with_attribute(
@@ -482,7 +512,7 @@ class ModelInterface(TypeDBInterface):
                 if len(_fd) > 0:
                     for c in self.get_components_in_function_design(_fd[0]):
                         c_active = self.get_attribute_from_thing(
-                            'Component', 'component-name', c, 'is-active')
+                            'Component', [('component-name', c)], 'is-active')
                         if c not in _c_activate and len(c_active) > 0 \
                            and c_active[0] is True:
                             _c_deactivate.append(c)
@@ -494,8 +524,7 @@ class ModelInterface(TypeDBInterface):
         for component, config in components_selected_config:
             config_selected = self.get_attribute_from_thing(
                 'component-configuration',
-                'component-configuration-name',
-                config,
+                [('component-configuration-name', config)],
                 'is-selected'
             )
             if len(config_selected) == 0  \

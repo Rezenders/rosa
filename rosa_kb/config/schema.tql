@@ -47,9 +47,6 @@ parameter-type sub attribute,
 attribute-value sub attribute,
     value double;
 
-attribute-measurement sub attribute,
-    value double;
-
 priority sub attribute,
     value double;
 
@@ -86,6 +83,12 @@ result sub attribute,
 
 always-improve sub attribute,
     value boolean;
+
+measurement-time sub time;
+measurement-value sub attribute,
+    value double;
+latest sub attribute,
+    value boolean;  
 
 ### Relationships
 functional-requirement sub relation,
@@ -146,6 +149,12 @@ parameter-adaptation sub relation,
     relates component-configuration,
     plays reconfiguration-plan:parameter-adaptation;
 
+measurement sub relation,
+    owns measurement-time,
+    owns measurement-value,
+    owns latest,
+    relates measured-attribute;
+
 ### Concepts
 Action sub entity,
     owns action-name @key,
@@ -184,9 +193,9 @@ ComponentParameter sub entity,
 Attribute sub entity,
     abstract,
     owns attribute-name @key,
-    owns attribute-measurement,
     plays constrainment:constraint,
-    plays estimation:affected;
+    plays estimation:affected,
+    plays measurement:measured-attribute;
 
 EnvironmentalAttribute sub Attribute;
 QualityAttribute sub Attribute;
@@ -211,7 +220,7 @@ rule implicit-component-is-required:
 rule constrainment-status-violated:
     when{
         $constrainment (constraint: $constraint) isa constrainment, has attribute-value $value;
-        $constraint has attribute-measurement $measurement;
+        (measured-attribute:$constraint) isa measurement, has latest true, has measurement-value $measurement;
         {
             {
                 $constrainment has constrainment-operator ">=";
@@ -244,7 +253,7 @@ rule constrainment-status-violated:
 rule constrainment-status-satisfied:
     when{
         $constrainment (constraint: $constraint) isa constrainment, has attribute-value $value;
-        $constraint has attribute-measurement $measurement;
+        (measured-attribute:$constraint) isa measurement, has latest true, has measurement-value $measurement;
         {
             {
                 $constrainment has constrainment-operator ">=";
@@ -270,7 +279,9 @@ rule constrainment-status-satisfied:
 rule constrainment-status-ok-no-measurement:
     when{
         $constrainment (constraint: $constraint, constrained: $constrained) isa constrainment;
-        not {$constraint has attribute-measurement $measurement;};
+        not {
+        (measured-attribute:$constraint) isa measurement, has latest true, has measurement-value $measurement;
+        };
     } then {
         $constrainment has constrainment-status 'not evaluated';
     };

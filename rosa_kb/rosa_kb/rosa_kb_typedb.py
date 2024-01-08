@@ -188,7 +188,7 @@ class RosaKB(ROSTypeDBInterface):
     @publish_event(event_type='insert_monitoring_data')
     def update_measurement(self, diagnostic_status):
         for value in diagnostic_status.values:
-            self.typedb_interface.update_measured_attribute(
+            self.typedb_interface.add_measurement(
                 value.key, value.value)
 
     @publish_event(event_type='insert_monitoring_data')
