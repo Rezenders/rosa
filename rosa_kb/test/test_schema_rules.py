@@ -12,12 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import pytest
-from ros_typedb.typedb_interface import TypeDBInterface
+from rosa_kb.typedb_model_interface import ModelInterface
 
 
 @pytest.fixture
 def kb_interface():
-    kb_interface = TypeDBInterface(
+    kb_interface = ModelInterface(
         "localhost:1729",
         "pytest_database",
         "config/schema.tql",
@@ -44,12 +44,7 @@ def test_constrainment_status_inference(
         kb_interface, att_name, att_value, config_name, constrainment_status):
 
     if att_value != '':
-        kb_interface.update_attribute_in_thing(
-            'Attribute',
-            'attribute-name',
-            att_name,
-            'attribute-measurement',
-            att_value)
+        kb_interface.add_measurement(att_name, att_value)
     query = f'''
         match
             $ea isa EnvironmentalAttribute, has attribute-name "{att_name}";
@@ -87,12 +82,7 @@ def test_constrainment_status_propagation(kb_interface, type, name):
 def test_component_configuration_status_inference(
         kb_interface, att_name, att_value, config_name, config_status):
     if att_value != '':
-        kb_interface.update_attribute_in_thing(
-            'Attribute',
-            'attribute-name',
-            att_name,
-            'attribute-measurement',
-            att_value)
+        kb_interface.add_measurement(att_name, att_value)
     query = f'''
         match
             $config isa component-configuration,

@@ -157,15 +157,16 @@ def test_rosa_kb_diagnostics():
         query_req.query_type = 'match'
         query_req.query = """
             match $ea isa Attribute,
-                has attribute-name "ea_measurement",
-                has attribute-measurement $measurement;
+                has attribute-name "ea_measurement";
+                $m (measured-attribute:$ea) isa measurement,
+                    has measurement-value $measurement;
             get $measurement;
         """
         query_res = node.call_service(node.query_srv, query_req)
 
         measurement = Attribute(
             name='measurement',
-            type='attribute-measurement',
+            type='measurement-value',
             value=ParameterValue(type=3, double_value=1.72))
 
         query_req = Query.Request()
@@ -195,7 +196,6 @@ def test_rosa_kb_diagnostics():
             name='c_status',
             type='component-status',
             value=ParameterValue(type=4, string_value='feasible'))
-
         assert measurement in query_res.attributes \
             and c_status in query_res2.attributes \
             and c_status2 in query_res3.attributes

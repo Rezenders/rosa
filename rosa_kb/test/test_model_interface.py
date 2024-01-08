@@ -93,16 +93,24 @@ def test_get_unsolved_components(kb_interface):
     assert 'c_required' in unsolved_components
 
 
-def test_get_measurement_attribute(kb_interface):
+def test_get_latest_measurement(kb_interface):
     value = 1.0
-    measured_value = kb_interface.get_measured_attribute('ea_measurement')
+    measured_value = kb_interface.get_latest_measurement(
+        'ea_measurement')
     assert value == measured_value
 
 
-def test_update_measurement_attribute(kb_interface):
+def test_get_measurement(kb_interface):
+    value = 1.8
+    measured_value = kb_interface.get_measurement(
+        'ea_measurement', datetime.fromisoformat('2023-01-08T06:12:11.111'))
+    assert value == measured_value
+
+
+def test_add_measurement(kb_interface):
     value = 1.32
-    kb_interface.update_measured_attribute('ea_measurement', 1.32)
-    measured_value = kb_interface.get_measured_attribute('ea_measurement')
+    kb_interface.add_measurement('ea_measurement', 1.32)
+    measured_value = kb_interface.get_latest_measurement('ea_measurement')
     assert value == measured_value
 
 

@@ -232,23 +232,57 @@ class ModelInterface(TypeDBInterface):
             'priority',
             value)
 
-    def update_measured_attribute(self, attribute_name, value):
-        return self.update_attribute_in_thing(
-            'Attribute',
-            'attribute-name',
-            attribute_name,
-            'attribute-measurement',
-            float(value))
+    def add_measurement(self, name, value):
+        query = f"""
+            match
+                $attr isa Attribute, has attribute-name "{name}";
+                $m (measured-attribute:$attr) isa measurement,
+                    has latest $latest;
+                $latest == true;
+            delete $m has $latest;
+        """
+        self.delete_from_database(query)
 
-    def get_measured_attribute(self, attribute_name):
-        measurement = self.get_attribute_from_thing(
-             'Attribute',
-             'attribute-name',
-             attribute_name,
-             'attribute-measurement')
-        if len(measurement) == 0:
+        time = self.convert_py_type_to_query_type(datetime.now())
+        query = f"""
+            match
+                $attr isa Attribute, has attribute-name "{name}";
+            insert
+                $m (measured-attribute:$attr) isa measurement,
+                    has latest true,
+                    has measurement-value {value},
+                    has measurement-time {time};
+        """
+        query_result = self.insert_database(query)
+        return query_result
+
+    def get_latest_measurement(self, name):
+        query = f"""
+            match
+                $attr isa Attribute, has attribute-name "{name}";
+                $m (measured-attribute:$attr) isa measurement,
+                    has latest true , has measurement-value $value;
+                get $value;
+        """
+        query_result = self.match_database(query)
+        if query_result is None or len(query_result) == 0:
             return None
-        return measurement[0]
+        return query_result[0].get('value').get('value')
+
+    def get_measurement(self, name, time):
+        time = self.convert_py_type_to_query_type(time)
+        query = f"""
+            match
+                $attr isa Attribute,
+                    has attribute-name "{name}";
+                $m (measured-attribute:$attr) isa measurement,
+                    has measurement-time {time} , has measurement-value $value;
+                get $value;
+        """
+        query_result = self.match_database(query)
+        if query_result is None or len(query_result) == 0:
+            return None
+        return query_result[0].get('value').get('value')
 
     def get_selectable_c_configs_raw(self, component):
         query = f'''
