@@ -74,8 +74,7 @@ def test_constrainment_status_inference(
 def test_constrainment_status_propagation(kb_interface, type, name):
     status_inferred = kb_interface.get_attribute_from_thing(
         type,
-        type.lower()+'-name',
-        name,
+        [(type.lower()+'-name', name)],
         type.lower()+'-status')
     assert 'unfeasible' == status_inferred[0]
 
@@ -151,8 +150,7 @@ def test_component_status_inference(
         c_active)
     c_status_inferred = kb_interface.get_attribute_from_thing(
         'Component',
-        'component-name',
-        c_name,
+        [('component-name', c_name)],
         'component-status')
     print(c_status_inferred)
     assert all(x in c_status_inferred for x in [c_status]) is True
@@ -203,8 +201,7 @@ def test_function_design_status_inference(
         fd_selected)
     fd_status_inferred = kb_interface.get_attribute_from_thing(
         'function-design',
-        'function-design-name',
-        fd_name,
+        [('function-design-name', fd_name)],
         'function-design-status')
     assert all(x in fd_status_inferred for x in [fd_status]) is True
 
@@ -255,8 +252,7 @@ def test_function_status_inference(
         f_required)
     f_status_inferred = kb_interface.get_attribute_from_thing(
         'Function',
-        'function-name',
-        f_name,
+        [('function-name', f_name)],
         'function-status')
     assert all(x in f_status_inferred for x in [f_status]) is True
 
@@ -299,7 +295,6 @@ def test_action_status_inference(
         t_required)
     t_status_inferred = kb_interface.get_attribute_from_thing(
         'Action',
-        'action-name',
-        t_name,
+        [('action-name', t_name)],
         'action-status')
     assert all(x in t_status_inferred for x in [t_status]) is True

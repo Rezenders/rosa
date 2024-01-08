@@ -111,15 +111,13 @@ def test_toogle_function_design_selection(kb_interface):
         'function-design', 'f2_fd1_c2_c3', True)
     fd_selected = kb_interface.get_attribute_from_thing(
         'function-design',
-        'function-design-name',
-        'f2_fd1_c2_c3',
+        [('function-design-name', 'f2_fd1_c2_c3')],
         'is-selected')
     kb_interface.toogle_thing_selection(
         'function-design', 'f2_fd1_c2_c3', False)
     fd_not_selected = kb_interface.get_attribute_from_thing(
         'function-design',
-        'function-design-name',
-        'f2_fd1_c2_c3',
+        [('function-design-name', 'f2_fd1_c2_c3')],
         'is-selected')
     assert fd_selected[0] is True and fd_not_selected[0] is False
 
@@ -128,19 +126,16 @@ def test_select_function_design(kb_interface):
     kb_interface.select_function_design('function2', 'f2_fd1_c2_c3')
     fd1_selected = kb_interface.get_attribute_from_thing(
         'function-design',
-        'function-design-name',
-        'f2_fd1_c2_c3',
+        [('function-design-name', 'f2_fd1_c2_c3')],
         'is-selected')
     kb_interface.select_function_design('function2', 'f2_fd2_c4_c5')
     fd1_not_selected = kb_interface.get_attribute_from_thing(
         'function-design',
-        'function-design-name',
-        'f2_fd1_c2_c3',
+        [('function-design-name', 'f2_fd1_c2_c3')],
         'is-selected')
     fd2_selected = kb_interface.get_attribute_from_thing(
         'function-design',
-        'function-design-name',
-        'f2_fd2_c4_c5',
+        [('function-design-name', 'f2_fd2_c4_c5')],
         'is-selected')
 
     assert fd1_selected[0] is True and fd1_not_selected[0] is False \
@@ -151,19 +146,16 @@ def test_select_component_configuration(kb_interface):
     kb_interface.select_component_configuration('component1', 'high param')
     high_selected = kb_interface.get_attribute_from_thing(
         'component-configuration',
-        'component-configuration-name',
-        'high param',
+        [('component-configuration-name', 'high param')],
         'is-selected')
     kb_interface.select_component_configuration('component1', 'low param')
     high_not_selected = kb_interface.get_attribute_from_thing(
         'component-configuration',
-        'component-configuration-name',
-        'high param',
+        [('component-configuration-name', 'high param')],
         'is-selected')
     low_selected = kb_interface.get_attribute_from_thing(
         'component-configuration',
-        'component-configuration-name',
-        'low param',
+        [('component-configuration-name', 'low param')],
         'is-selected')
     assert high_selected[0] is True and high_not_selected[0] is False and \
            low_selected[0] is True
