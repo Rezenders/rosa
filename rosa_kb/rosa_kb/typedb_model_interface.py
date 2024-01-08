@@ -50,24 +50,24 @@ class ModelInterface(TypeDBInterface):
             force_data
         )
 
-    # Request task
-    def request_task(self, task_name):
+    # Request action
+    def request_action(self, action_name):
         return self.update_attribute_in_thing(
-            'Task', 'task-name', task_name, 'is-required', True)
+            'Action', 'action-name', action_name, 'is-required', True)
 
-    # Cancel task
-    def cancel_task(self, task_name):
+    # Cancel action
+    def cancel_action(self, action_name):
         return self.update_attribute_in_thing(
-            'Task', 'task-name', task_name, 'is-required', False)
+            'Action', 'action-name', action_name, 'is-required', False)
 
-    # Update status of a task
-    def update_task_status(self, task_name, task_status):
+    # Update status of a action
+    def update_action_status(self, action_name, action_status):
         return self.update_attribute_in_thing(
-            'Task',
-            'task-name',
-            task_name,
-            'task-status',
-            task_status
+            'Action',
+            'action-name',
+            action_name,
+            'action-status',
+            action_status
         )
 
     def delete_component_status(self, component):
@@ -86,23 +86,23 @@ class ModelInterface(TypeDBInterface):
             component_status
         )
 
-    # Check if a Task is required
-    def is_task_required(self, task_name):
+    # Check if a Action is required
+    def is_action_required(self, action_name):
         is_required = self.get_attribute_from_thing(
-             'Task', 'task-name', task_name, 'is-required')
+             'Action', 'action-name', action_name, 'is-required')
         if len(is_required) == 0:
             return False
         return is_required[0]
 
-    # Check if a Task is feasible
-    def is_task_feasible(self, task_name):
+    # Check if a Action is feasible
+    def is_action_feasible(self, action_name):
         status = self.get_attribute_from_thing(
-             'Task', 'task-name', task_name, 'task-status')
+             'Action', 'action-name', action_name, 'action-status')
         return all(x in status for x in ['feasible'])
 
-    def is_task_selectable(self, task_name):
+    def is_action_selectable(self, action_name):
         status = self.get_attribute_from_thing(
-             'Task', 'task-name', task_name, 'task-status')
+             'Action', 'action-name', action_name, 'action-status')
         return 'unfeasible' not in status
 
     def get_selectable_thing_raw(self, thing):
@@ -115,8 +115,8 @@ class ModelInterface(TypeDBInterface):
         query_result = self.match_database(query)
         return query_result
 
-    def get_selectable_tasks(self):
-        query_result = self.get_selectable_thing_raw('Task')
+    def get_selectable_actions(self):
+        query_result = self.get_selectable_thing_raw('Action')
         return [r.get('name').get('value') for r in query_result]
 
     # Get all entities with is-required property equal to True and

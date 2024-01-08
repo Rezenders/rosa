@@ -5,7 +5,7 @@ name sub attribute,
     abstract,
     value string;
 
-task-name sub name;
+action-name sub name;
 function-name sub name;
 function-design-name sub name;
 component-name sub name;
@@ -16,7 +16,7 @@ status sub attribute,
     abstract,
     value string;
 
-task-status sub status,
+action-status sub status,
     regex "^(solved|unsolved|feasible|unfeasible|implicit configuration error)$";
 
 function-status sub status,
@@ -88,8 +88,8 @@ always-improve sub attribute,
     value boolean;
 
 ### Relationships
-task-requirement sub relation,
-    relates task,
+functional-requirement sub relation,
+    relates action,
     relates required-function;
 
 function-design sub relation,
@@ -147,11 +147,11 @@ parameter-adaptation sub relation,
     plays reconfiguration-plan:parameter-adaptation;
 
 ### Concepts
-Task sub entity,
-    owns task-name @key,
-    owns task-status,
+Action sub entity,
+    owns action-name @key,
+    owns action-status,
     owns is-required,
-    plays task-requirement:task,
+    plays functional-requirement:action,
     plays constrainment:constrained;
 
 Function sub entity,
@@ -159,7 +159,7 @@ Function sub entity,
     owns function-status,
     owns is-required,
     owns always-improve,
-    plays task-requirement:required-function,
+    plays functional-requirement:required-function,
     plays function-design:function;
 
 Component sub entity,
@@ -195,8 +195,8 @@ QualityAttribute sub Attribute;
 
 rule implicit-function-is-required:
     when {
-        (required-function:$function, task: $t) isa task-requirement;
-        $t has is-required true;
+        (required-function:$function, action: $a) isa functional-requirement;
+        $a has is-required true;
     } then {
         $function has is-required true;
     };
@@ -530,29 +530,29 @@ rule function-status-feasible:
         $f has function-status 'feasible';
     };
 
-## task requirement status rules
-rule task-status-unfeasible:
+## functional requirement status rules
+rule action-status-unfeasible:
     when {
-        $t isa Task;
+        $a isa Action;
         {
-            (required-function: $f, task: $t) isa task-requirement;
+            (required-function: $f, action: $a) isa functional-requirement;
             $f has function-status $f_status;
             $f_status = 'unfeasible';
         }
         or {
-            (constrained: $t) isa constrainment, has constrainment-status 'violated';
+            (constrained: $a) isa constrainment, has constrainment-status 'violated';
         };
     } then {
-        $t has task-status 'unfeasible';
+        $a has action-status 'unfeasible';
     };
 
 # add condition to check if tr_status is not unfeasible?
-rule task-status-implicit-configuration-error:
+rule action-status-implicit-configuration-error:
     when {
-        (required-function: $f, task: $t) isa task-requirement;
-        $t has is-required true;
+        (required-function: $f, action: $a) isa functional-requirement;
+        $a has is-required true;
         not {
-            $t has task-status $t_status; $t_status = 'unfeasible';
+            $a has action-status $a_status; $a_status = 'unfeasible';
         };
         $f has function-status $f_status;
         not {
@@ -560,15 +560,15 @@ rule task-status-implicit-configuration-error:
         };
         $f_status like 'configuration error|implicit configuration error';
     } then {
-        $t has task-status 'implicit configuration error';
+        $a has action-status 'implicit configuration error';
     };
 
-rule task-status-unsolved:
+rule action-status-unsolved:
     when {
-        (required-function: $f, task: $t) isa task-requirement;
-        $t has is-required true;
+        (required-function: $f, action: $a) isa functional-requirement;
+        $a has is-required true;
         not {
-            $t has task-status $t_status; $t_status like 'unfeasible|implicit configuration error';
+            $a has action-status $a_status; $a_status like 'unfeasible|implicit configuration error';
         };
         $f has function-status $f_status;
         not {
@@ -576,36 +576,36 @@ rule task-status-unsolved:
         };
         $f_status like 'unsolved';
     } then {
-        $t has task-status 'unsolved';
+        $a has action-status 'unsolved';
     };
 
-rule task-status-solved:
+rule action-status-solved:
     when {
-        (required-function: $f, task: $t) isa task-requirement;
-        $t has is-required true;
+        (required-function: $f, action: $a) isa functional-requirement;
+        $a has is-required true;
         not {
-            $t has task-status $t_status;
-            $t_status like 'unfeasible|implicit configuration error|unsolved';
+            $a has action-status $a_status;
+            $a_status like 'unfeasible|implicit configuration error|unsolved';
         };
         $f has function-status $f_status;
         not {
             $f_status != 'solved';
         };
     } then {
-        $t has task-status 'solved';
+        $a has action-status 'solved';
     };
 
-rule task-status-feasible:
+rule action-status-feasible:
     when {
-        (required-function: $f, task: $t) isa task-requirement;
+        (required-function: $f, action: $a) isa functional-requirement;
         not {
-            $t has is-required true;
+            $a has is-required true;
         };
         not {
-            $t has task-status $t_status; $t_status like 'unfeasible|implicit configuration error|unsolved|solved';
+            $a has action-status $a_status; $a_status like 'unfeasible|implicit configuration error|unsolved|solved';
         };
         $f has function-status $f_status;
         $f_status != 'unfeasible';
     } then {
-        $t has task-status 'feasible';
+        $a has action-status 'feasible';
     };

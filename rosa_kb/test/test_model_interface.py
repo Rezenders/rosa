@@ -30,57 +30,57 @@ def kb_interface():
     return kb_interface
 
 
-def test_request_task(kb_interface):
-    kb_interface.request_task('task1')
-    is_required = kb_interface.is_task_required('task1')
+def test_request_action(kb_interface):
+    kb_interface.request_action('action1')
+    is_required = kb_interface.is_action_required('action1')
     assert is_required is True
 
 
-def test_cancel_task(kb_interface):
-    kb_interface.request_task('task1')
-    kb_interface.cancel_task('task1')
-    is_required = kb_interface.is_task_required('task1')
+def test_cancel_action(kb_interface):
+    kb_interface.request_action('action1')
+    kb_interface.cancel_action('action1')
+    is_required = kb_interface.is_action_required('action1')
     assert is_required is False
 
 
-@pytest.mark.parametrize("task_name, expected_result", [
-    ('task_required', True),
-    # ('task_required_activated', True),
-    ('task_not_required', False),
-    ('task_required_empty', False),
+@pytest.mark.parametrize("action_name, expected_result", [
+    ('action_required', True),
+    # ('action_required_activated', True),
+    ('action_not_required', False),
+    ('action_required_empty', False),
 ])
-def test_is_task_required(kb_interface, task_name, expected_result):
-    assert kb_interface.is_task_required(task_name) is expected_result
+def test_is_action_required(kb_interface, action_name, expected_result):
+    assert kb_interface.is_action_required(action_name) is expected_result
 
 
-@pytest.mark.parametrize("task_name, expected_result", [
-    ('task_required', False),
-    ('task_feasible', True),
-    ('task_unfeasible', False),
+@pytest.mark.parametrize("action_name, expected_result", [
+    ('action_required', False),
+    ('action_feasible', True),
+    ('action_unfeasible', False),
 ])
-def test_is_task_feasible(kb_interface, task_name, expected_result):
-    assert kb_interface.is_task_feasible(task_name) is expected_result
+def test_is_action_feasible(kb_interface, action_name, expected_result):
+    assert kb_interface.is_action_feasible(action_name) is expected_result
 
 
-@pytest.mark.parametrize("task_name, expected_result", [
-    ('task_required', True),
-    ('task_feasible', True),
-    ('task_unfeasible', False),
+@pytest.mark.parametrize("action_name, expected_result", [
+    ('action_required', True),
+    ('action_feasible', True),
+    ('action_unfeasible', False),
 ])
-def test_is_task_selectable(kb_interface, task_name, expected_result):
-    assert kb_interface.is_task_selectable(task_name) is expected_result
+def test_is_action_selectable(kb_interface, action_name, expected_result):
+    assert kb_interface.is_action_selectable(action_name) is expected_result
 
 
-def test_get_selectable_tasks(kb_interface):
-    result = kb_interface.get_selectable_tasks()
+def test_get_selectable_actions(kb_interface):
+    result = kb_interface.get_selectable_actions()
     expected_result = [
-        'task_feasible', 'task_required_solved']
-    assert ('task_unfeasible' not in result) \
+        'action_feasible', 'action_required_solved']
+    assert ('action_unfeasible' not in result) \
            and all(r in result for r in expected_result)
 
 
 def test_get_unsolved_functions(kb_interface):
-    kb_interface.request_task('task1')
+    kb_interface.request_action('action1')
     unsolved_functions = kb_interface.get_unsolved_functions()
     from collections import Counter
     print('unsolved: ', unsolved_functions)
@@ -333,8 +333,8 @@ def test_select_configuration(
 
 
 @pytest.mark.parametrize("thing, status, exp", [
-    ('Task', 'feasible', 'task_feasible'),
-    ('Task', 'unfeasible', 'task_unfeasible'),
+    ('Action', 'feasible', 'action_feasible'),
+    ('Action', 'unfeasible', 'action_unfeasible'),
     ('Function', 'unsolved', 'f_unsolved'),
     ('Component', 'unsolved', 'c_unsolved'),
     ('function-design', 'unsolved', 'fd_unsolved'),

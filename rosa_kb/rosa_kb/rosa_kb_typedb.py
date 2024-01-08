@@ -224,18 +224,18 @@ class RosaKB(ROSTypeDBInterface):
     @publish_event(event_type='action_update')
     def action_request_cb(self, req, res):
         if req.action.is_required is True and \
-          self.typedb_interface.is_task_selectable(req.action.name) is True:
-            self.typedb_interface.request_task(req.action.name)
+          self.typedb_interface.is_action_selectable(req.action.name) is True:
+            self.typedb_interface.request_action(req.action.name)
             res.success = True
         elif req.action.is_required is False:
-            self.typedb_interface.cancel_task(req.action.name)
+            self.typedb_interface.cancel_action(req.action.name)
             res.success = True
         else:
             res.success = False
         return res
 
     def action_selectable_cb(self, req, res):
-        selectable_actions = self.typedb_interface.get_selectable_tasks()
+        selectable_actions = self.typedb_interface.get_selectable_actions()
         for action_name in selectable_actions:
             action = Action()
             action.name = action_name

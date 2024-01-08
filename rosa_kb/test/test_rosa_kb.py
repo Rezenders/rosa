@@ -207,8 +207,8 @@ def test_rosa_kb_diagnostics():
 
 
 @pytest.mark.parametrize("name, is_required", [
-    ('task1', True),
-    ('task_required', False),
+    ('action1', True),
+    ('action_required', False),
 ])
 @pytest.mark.launch(fixture=generate_test_description)
 def test_rosa_kb_action_request(name, is_required):
@@ -227,15 +227,15 @@ def test_rosa_kb_action_request(name, is_required):
         query_req = Query.Request()
         query_req.query_type = 'match'
         query_req.query = f"""
-            match $ea isa Task,
-                has task-name "{name}",
-                has is-required $task-required;
-            get $task-required;
+            match $ea isa Action,
+                has action-name "{name}",
+                has is-required $action-required;
+            get $action-required;
         """
         query_res = node.call_service(node.query_srv, query_req)
         correct_res = False
         for r in query_res.attributes:
-            if r.name == 'task-required' \
+            if r.name == 'action-required' \
                and r.value.bool_value is is_required:
                 correct_res = True
 
@@ -256,8 +256,8 @@ def test_rosa_kb_action_selectable():
         response = node.call_service(node.action_selectable_srv, request)
         res_names = [r.name for r in response.actions]
         expected_result = [
-            'task_feasible', 'task_required_solved']
-        assert ('task_unfeasible' not in res_names) \
+            'action_feasible', 'action_required_solved']
+        assert ('action_unfeasible' not in res_names) \
             and all(r in res_names for r in expected_result)
     finally:
         rclpy.shutdown()

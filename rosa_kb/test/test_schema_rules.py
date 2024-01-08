@@ -66,7 +66,7 @@ def test_constrainment_status_inference(
 
 
 @pytest.mark.parametrize("type, name", [
-    ('Task', 'task_constrained'),
+    ('Action', 'action_constrained'),
     ('function-design', 'fd_constrained'),
     ('Component', 'c_constrained'),
     ('component-configuration', 'cc_constrained'),
@@ -262,26 +262,26 @@ def test_function_status_inference(
 
 
 @pytest.mark.parametrize("functions, t_name, t_required, t_status", [
-    ([('function1', 'unfeasible')], 'task1', False, 'unfeasible'),
-    ([('function1', 'unsolved'), ('function2', 'unfeasible')], 'task1', True, 'unfeasible'),
-    ([('function1', 'configuration error'), ('function2', 'unfeasible')], 'task1', True, 'unfeasible'),
-    ([('function1', 'configuration error')], 'task1', True, 'implicit configuration error'),
-    ([('function1', 'configuration error'), ('function2', 'feasible')], 'task1', True, 'implicit configuration error'),
-    ([('function1', 'configuration error'), ('function2', 'implicit configuration error')], 'task1', True, 'implicit configuration error'),
-    ([('function1', 'implicit configuration error')], 'task1', True, 'implicit configuration error'),
-    ([('function1', 'configuration error'), ('function2', 'solved')], 'task1', True, 'implicit configuration error'),
-    ([('function1', 'configuration error'), ('function2', 'unsolved')], 'task1', True, 'implicit configuration error'),
-    ([('function1', 'unsolved')], 'task1', True, 'unsolved'),
-    ([('function1', 'unsolved'), ('function2', 'solved')], 'task1', True, 'unsolved'),
-    ([('function1', 'unsolved'), ('function2', 'unsolved')], 'task1', True, 'unsolved'),
-    ([('function1', 'feasible')], 'task1', False, 'feasible'),
-    ([('function1', 'unsolved')], 'task1', False, 'feasible'),
-    ([('function1', 'configuration error'), ('function2', 'unsolved')], 'task1', False, 'feasible'),
-    ([('function1', 'configuration error'), ('function2', 'implicit configuration error')], 'task1', False, 'feasible'),
-    ([('function1', 'feasible'), ('function2', 'feasible')], 'task1', False, 'feasible'),
-    ([('function1', 'solved'), ('function2', 'solved')], 'task1', True, 'solved'),
+    ([('function1', 'unfeasible')], 'action1', False, 'unfeasible'),
+    ([('function1', 'unsolved'), ('function2', 'unfeasible')], 'action1', True, 'unfeasible'),
+    ([('function1', 'configuration error'), ('function2', 'unfeasible')], 'action1', True, 'unfeasible'),
+    ([('function1', 'configuration error')], 'action1', True, 'implicit configuration error'),
+    ([('function1', 'configuration error'), ('function2', 'feasible')], 'action1', True, 'implicit configuration error'),
+    ([('function1', 'configuration error'), ('function2', 'implicit configuration error')], 'action1', True, 'implicit configuration error'),
+    ([('function1', 'implicit configuration error')], 'action1', True, 'implicit configuration error'),
+    ([('function1', 'configuration error'), ('function2', 'solved')], 'action1', True, 'implicit configuration error'),
+    ([('function1', 'configuration error'), ('function2', 'unsolved')], 'action1', True, 'implicit configuration error'),
+    ([('function1', 'unsolved')], 'action1', True, 'unsolved'),
+    ([('function1', 'unsolved'), ('function2', 'solved')], 'action1', True, 'unsolved'),
+    ([('function1', 'unsolved'), ('function2', 'unsolved')], 'action1', True, 'unsolved'),
+    ([('function1', 'feasible')], 'action1', False, 'feasible'),
+    ([('function1', 'unsolved')], 'action1', False, 'feasible'),
+    ([('function1', 'configuration error'), ('function2', 'unsolved')], 'action1', False, 'feasible'),
+    ([('function1', 'configuration error'), ('function2', 'implicit configuration error')], 'action1', False, 'feasible'),
+    ([('function1', 'feasible'), ('function2', 'feasible')], 'action1', False, 'feasible'),
+    ([('function1', 'solved'), ('function2', 'solved')], 'action1', True, 'solved'),
 ])
-def test_task_status_inference(
+def test_action_status_inference(
      kb_interface, functions, t_name, t_required, t_status):
     for f in functions:
         kb_interface.update_attribute_in_thing(
@@ -292,14 +292,14 @@ def test_task_status_inference(
             f[1]
         )
     kb_interface.update_attribute_in_thing(
-        'Task',
-        'task-name',
+        'Action',
+        'action-name',
         t_name,
         'is-required',
         t_required)
     t_status_inferred = kb_interface.get_attribute_from_thing(
-        'Task',
-        'task-name',
+        'Action',
+        'action-name',
         t_name,
-        'task-status')
+        'action-status')
     assert all(x in t_status_inferred for x in [t_status]) is True

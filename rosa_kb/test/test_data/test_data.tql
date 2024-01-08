@@ -2,12 +2,12 @@ insert
 
 $f_no_fd isa Function, has function-name "function_no_fd";
 
-$t1 isa Task, has task-name "task1";
+$a1 isa Action, has action-name "action1";
 
 $f1 isa Function, has function-name "function1";
 $f2 isa Function, has function-name "function2";
 
-(task:$t1, required-function:$f1, required-function:$f2) isa task-requirement;
+(action:$a1, required-function:$f1, required-function:$f2) isa functional-requirement;
 
 $c1 isa Component, has component-name "component1";
 $c_failure isa Component, has component-name "component_failure", has component-status 'failure';
@@ -44,19 +44,19 @@ $c5 isa Component, has component-name "component5";
 (function: $f2, required-component: $c2, required-component: $c3) isa function-design, has function-design-name "f2_fd1_c2_c3", has priority 2.0;
 (function: $f2, required-component: $c4, required-component: $c5) isa function-design, has function-design-name "f2_fd2_c4_c5", has priority 1.0;
 
-# Task inspect pipeline
-$t2 isa Task, has task-name "task2";
+# Action inspect pipeline
+$t2 isa Action, has action-name "action2";
 $f3 isa Function, has function-name "function3";
-(task:$t2, required-function:$f2, required-function:$f3) isa task-requirement;
+(action:$t2, required-function:$f2, required-function:$f3) isa functional-requirement;
 $c6 isa Component, has component-name "component6";
 $c7 isa Component, has component-name "component7";
 (function: $f3, required-component: $c6, required-component: $c7) isa function-design, has function-design-name "f3_fd1_c6_c7";
 
-$t_required isa Task, has task-name "task_required", has is-required true;
-$t_required_activated isa Task, has task-name "task_required_solved", has is-required true, has task-status 'solved';
-$t_not_required isa Task, has task-name "task_not_required", has is-required false;
+$t_required isa Action, has action-name "action_required", has is-required true;
+$t_required_activated isa Action, has action-name "action_required_solved", has is-required true, has action-status 'solved';
+$t_not_required isa Action, has action-name "action_not_required", has is-required false;
 $f_not_required isa Function, has function-name "f_not_required";
-(task:$t_not_required, required-function:$f_not_required) isa task-requirement;
+(action:$t_not_required, required-function:$f_not_required) isa functional-requirement;
 $c_not_required isa Component, has component-name "c_not_required", has is-active true;
 $c_still_required isa Component, has component-name "c_still_required", has is-active true;
 (function:$f_not_required, required-component:$c_not_required, required-component:$c_still_required) isa function-design, has function-design-name "fd_selected_not_required", has is-selected true;
@@ -65,11 +65,11 @@ $cp_not_required2 isa ComponentParameter, has parameter-key "cp_not_required2", 
 $cc_not_required  (component:$c_not_required, parameter:$cp_not_required) isa component-configuration, has component-configuration-name "cc_not_required", has is-selected true, has component-configuration-status 'unfeasible';
 $cc_not_required2  (component:$c_not_required, parameter:$cp_not_required2) isa component-configuration, has component-configuration-name "cc_not_required2";
 
-$t_required_empty isa Task, has task-name "task_required_empty";
-$t_feasible isa Task, has task-name "task_feasible", has task-status 'feasible';
-$t_unfeasible isa Task, has task-name "task_unfeasible", has task-status 'unfeasible';
+$t_required_empty isa Action, has action-name "action_required_empty";
+$t_feasible isa Action, has action-name "action_feasible", has action-status 'feasible';
+$t_unfeasible isa Action, has action-name "action_unfeasible", has action-status 'unfeasible';
 
-$t_constrained isa Task, has task-name "task_constrained";
+$t_constrained isa Action, has action-name "action_constrained";
 $f_constrained isa Function, has function-name "f_constrained";
 $fd_constrained (function:$f_constrained) isa function-design, has function-design-name "fd_constrained";
 $c_constrained isa Component, has component-name "c_constrained";
@@ -93,10 +93,10 @@ $c_always_improve isa Component, has component-name "c_always_improve", has alwa
 (component:$c_always_improve, parameter:$cp_reconfig_2) isa component-configuration, has component-configuration-name "c_improve_fd2";
 
 ## data to test select_reconfiguration
-$t_reconfigure isa Task, has task-name "t_reconfigure", has is-required true;
+$t_reconfigure isa Action, has action-name "t_reconfigure", has is-required true;
 $f_reconfigure_fd isa Function, has function-name "f_reconfigure_fd";
 $f_reconfigure_c_config isa Function, has function-name "f_reconfigure_f_config";
-(task: $t_reconfigure, required-function: $f_reconfigure_fd, required-function: $f_reconfigure_c_config) isa task-requirement;
+(action: $t_reconfigure, required-function: $f_reconfigure_fd, required-function: $f_reconfigure_c_config) isa functional-requirement;
 $component_reconfig_1 isa Component, has component-name "component_reconfig_1", has is-active true;
 $component_reconfig_2 isa Component, has component-name "component_reconfig_2";
 $component_reconfig_3 isa Component, has component-name "component_reconfig_3";
