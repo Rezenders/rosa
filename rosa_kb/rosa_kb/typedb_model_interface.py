@@ -401,7 +401,7 @@ class ModelInterface(TypeDBInterface):
                 [('Component', 'component-name', c) for c in c_activate], 'ca')
             match_query += _match_query
 
-            insert_query += self.create_relationship_insert_query(
+            insert_query += self.create_relationship_query(
                 'component-activation',
                 {'component': _prefix_list},
                 prefix='rca'
@@ -414,7 +414,7 @@ class ModelInterface(TypeDBInterface):
                 'cd')
             match_query += _match_query
 
-            insert_query += self.create_relationship_insert_query(
+            insert_query += self.create_relationship_query(
                 'component-deactivation',
                 {'component': _prefix_list},
                 prefix='rcd'
@@ -430,7 +430,7 @@ class ModelInterface(TypeDBInterface):
             )
             match_query += _match_query
 
-            insert_query += self.create_relationship_insert_query(
+            insert_query += self.create_relationship_query(
                 'parameter-adaptation',
                 {'component-configuration': _prefix_list},
                 prefix='rcc'
@@ -438,7 +438,7 @@ class ModelInterface(TypeDBInterface):
             parameter_adaptation.append('rcc')
 
         start_time = datetime.now()
-        insert_query += self.create_relationship_insert_query(
+        insert_query += self.create_relationship_query(
             'reconfiguration-plan',
             {
                 'architectural-adaptation': architectural_adaptation,

@@ -183,7 +183,7 @@ def test_create_reconfiguration_plan(
             _match_query, _prefix_list = kb_interface.create_match_query(
                 [('Component', 'component-name', c) for c in c_activate],
                 'ca_')
-            end_query += kb_interface.create_relationship_insert_query(
+            end_query += kb_interface.create_relationship_query(
                 'component-activation',
                 {'component': _prefix_list},
                 prefix='ca'
@@ -197,7 +197,7 @@ def test_create_reconfiguration_plan(
             _match_query, _prefix_list = kb_interface.create_match_query(
                 [('Component', 'component-name', c) for c in c_deactivate],
                 'cd_')
-            end_query += kb_interface.create_relationship_insert_query(
+            end_query += kb_interface.create_relationship_query(
                 'component-deactivation',
                 {'component': _prefix_list},
                 prefix='cd'
@@ -211,7 +211,7 @@ def test_create_reconfiguration_plan(
             _match_query, _prefix_list = kb_interface.create_match_query(
                 [('component-configuration', 'component-configuration-name', c)
                  for c in c_config], 'cc_')
-            end_query += kb_interface.create_relationship_insert_query(
+            end_query += kb_interface.create_relationship_query(
                 'parameter-adaptation',
                 {'component-configuration': _prefix_list},
                 prefix='cc'
@@ -255,7 +255,7 @@ def test_select_configuration(
             _match_query, _prefix_list = kb_interface.create_match_query(
                 [('Component', 'component-name', c) for c in exp_c_activate],
                 'ca')
-            end_query += kb_interface.create_relationship_insert_query(
+            end_query += kb_interface.create_relationship_query(
                 'component-activation',
                 {'component': _prefix_list},
                 prefix='ca'
@@ -270,7 +270,7 @@ def test_select_configuration(
             _match_query, _prefix_list = kb_interface.create_match_query(
                 [('Component', 'component-name', c) for c in exp_c_deactivate],
                 'cd')
-            end_query += kb_interface.create_relationship_insert_query(
+            end_query += kb_interface.create_relationship_query(
                 'component-deactivation',
                 {'component': _prefix_list},
                 prefix='cd'
@@ -285,7 +285,7 @@ def test_select_configuration(
             _match_query, _prefix_list = kb_interface.create_match_query(
                 [('component-configuration', 'component-configuration-name', c)
                  for c in exp_c_config], 'cc_')
-            end_query += kb_interface.create_relationship_insert_query(
+            end_query += kb_interface.create_relationship_query(
                 'parameter-adaptation',
                 {'component-configuration': _prefix_list},
                 prefix='cc'
