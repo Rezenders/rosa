@@ -15,4 +15,4 @@ $cc_ros_typedb (component:$ros_typedb, parameter:$database_name, parameter:$forc
 $ca (component:$ros_typedb, component:$ros_component) isa component-activation;
 $cd (component:$ros_component_2) isa component-deactivation;
 $pa (component-configuration:$cc_ros_typedb) isa parameter-adaptation;
-(architectural-adaptation:$ca, architectural-adaptation:$cd, parameter-adaptation:$pa) isa reconfiguration-plan, has start-time 2023-11-26T22:03:17.269;
+(structural-adaptation:$ca, structural-adaptation:$cd, parameter-adaptation:$pa) isa reconfiguration-plan, has start-time 2023-11-26T22:03:17.269;
