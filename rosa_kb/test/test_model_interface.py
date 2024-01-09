@@ -187,7 +187,7 @@ def test_create_reconfiguration_plan(
         assert result is True and start_time is None
     else:
         if len(c_activate) > 0:
-            query += "architectural-adaptation:$ca"
+            query += "structural-adaptation:$ca"
             _match_query, _prefix_list = kb_interface.create_match_query(
                 [('Component', 'component-name', c) for c in c_activate],
                 'ca_')
@@ -201,7 +201,7 @@ def test_create_reconfiguration_plan(
         if len(c_deactivate) > 0:
             if query != "match (":
                 query += ','
-            query += "architectural-adaptation:$cd"
+            query += "structural-adaptation:$cd"
             _match_query, _prefix_list = kb_interface.create_match_query(
                 [('Component', 'component-name', c) for c in c_deactivate],
                 'cd_')
@@ -259,7 +259,7 @@ def test_select_configuration(
         if len(exp_c_activate) > 0:
             if query == "match $rp ":
                 query += '('
-            query += "architectural-adaptation:$ca"
+            query += "structural-adaptation:$ca"
             _match_query, _prefix_list = kb_interface.create_match_query(
                 [('Component', 'component-name', c) for c in exp_c_activate],
                 'ca')
@@ -274,7 +274,7 @@ def test_select_configuration(
                 query += '('
             elif len(query) > len("match $rp ("):
                 query += ','
-            query += "architectural-adaptation:$cd"
+            query += "structural-adaptation:$cd"
             _match_query, _prefix_list = kb_interface.create_match_query(
                 [('Component', 'component-name', c) for c in exp_c_deactivate],
                 'cd')

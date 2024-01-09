@@ -88,7 +88,7 @@ measurement-time sub time;
 measurement-value sub attribute,
     value double;
 latest sub attribute,
-    value boolean;  
+    value boolean;
 
 ### Relationships
 functional-requirement sub relation,
@@ -134,13 +134,13 @@ reconfiguration-plan sub relation,
     owns start-time,
     owns end-time,
     owns result,
-    relates architectural-adaptation,
+    relates structural-adaptation,
     relates parameter-adaptation;
 
 component-adaptation sub relation,
     abstract,
     relates component,
-    plays reconfiguration-plan:architectural-adaptation;
+    plays reconfiguration-plan:structural-adaptation;
 
 component-activation sub component-adaptation;
 component-deactivation sub component-adaptation;

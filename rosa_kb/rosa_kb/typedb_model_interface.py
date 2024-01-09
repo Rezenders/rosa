@@ -429,7 +429,7 @@ class ModelInterface(TypeDBInterface):
            len(c_config) == 0:
             return True, None
 
-        architectural_adaptation = []
+        structural_adaptation = []
         if len(c_activate) > 0:
             _match_query, _prefix_list = self.create_match_query(
                 [('Component', 'component-name', c) for c in c_activate], 'ca')
@@ -440,7 +440,7 @@ class ModelInterface(TypeDBInterface):
                 {'component': _prefix_list},
                 prefix='rca'
             )
-            architectural_adaptation.append('rca')
+            structural_adaptation.append('rca')
 
         if len(c_deactivate) > 0:
             _match_query, _prefix_list = self.create_match_query(
@@ -453,7 +453,7 @@ class ModelInterface(TypeDBInterface):
                 {'component': _prefix_list},
                 prefix='rcd'
             )
-            architectural_adaptation.append('rcd')
+            structural_adaptation.append('rcd')
 
         parameter_adaptation = []
         if len(c_config) > 0:
@@ -475,7 +475,7 @@ class ModelInterface(TypeDBInterface):
         insert_query += self.create_relationship_query(
             'reconfiguration-plan',
             {
-                'architectural-adaptation': architectural_adaptation,
+                'structural-adaptation': structural_adaptation,
                 'parameter-adaptation': parameter_adaptation
             },
             attribute_list=[('start-time',  start_time)],
@@ -499,7 +499,9 @@ class ModelInterface(TypeDBInterface):
                     _c_activate.append(c)
             # select components that need to be deactivated
             fd_selected = self.get_attribute_from_thing(
-                'function-design', [('function-design-name', fd)], 'is-selected')
+                'function-design',
+                [('function-design-name', fd)],
+                'is-selected')
             if len(fd_selected) == 0  \
                or len(fd_selected) > 0 and fd_selected[0] is False:
                 _fd = self.get_relationship_with_attribute(
@@ -710,7 +712,7 @@ class ModelInterface(TypeDBInterface):
         :rtype: dict[str, list[str]]
         """
         query = f'''
-            match (architectural-adaptation:$ca_) isa reconfiguration-plan,
+            match (structural-adaptation:$ca_) isa reconfiguration-plan,
                 has start-time {start_time.isoformat(timespec='milliseconds')};
             $ca_ (component:$ca) isa component-activation;
             $ca isa Component, has component-name $c_activate;
@@ -720,7 +722,7 @@ class ModelInterface(TypeDBInterface):
         c_activate = [r.get('c_activate').get('value') for r in result]
 
         query = f'''
-            match (architectural-adaptation:$cd_) isa reconfiguration-plan,
+            match (structural-adaptation:$cd_) isa reconfiguration-plan,
                 has start-time {start_time.isoformat(timespec='milliseconds')};
             $cd_ (component:$cd) isa component-deactivation;
             $cd isa Component, has component-name $c_deactivate;
