@@ -420,6 +420,9 @@ class RosaKB(ROSTypeDBInterface):
         res_update = self.typedb_interface.update_reconfiguration_plan_result(
             req.reconfig_plan.start_time, req.reconfig_plan.result)
         if res_update is not None:
+            if req.reconfig_plan.result is True:
+                self.typedb_interface\
+                    .update_outdated_reconfiguration_plans_result()
             res.success = True
             res.reconfig_plan.result = req.reconfig_plan.result
         return res
