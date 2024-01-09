@@ -26,7 +26,9 @@ def kb_interface():
         ["config/schema.tql", "config/ros_schema.tql"],
         ["test/test_data/test_data.tql", "test/test_data/ros_test_data.tql"],
         force_database=True,
-        force_data=True)
+        force_data=True,
+        infer=True
+    )
     return kb_interface
 
 

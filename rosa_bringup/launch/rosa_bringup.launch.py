@@ -30,6 +30,7 @@ def generate_launch_description():
     address = LaunchConfiguration('address')
     force_data = LaunchConfiguration('force_data')
     force_database = LaunchConfiguration('force_database')
+    infer = LaunchConfiguration('infer')
     managed_nodes = LaunchConfiguration('managed_nodes')
 
     pkg_rosa_kb = get_package_share_directory(
@@ -94,6 +95,12 @@ def generate_launch_description():
         description='force database'
     )
 
+    infer_arg = DeclareLaunchArgument(
+        'infer',
+        default_value='True',
+        description='inference engine'
+    )
+
     default_managed_nodes = "[{0},{1},{2}]".format(
         'rosa_kb', 'configuration_planner', 'configuration_executor')
 
@@ -112,6 +119,7 @@ def generate_launch_description():
             'address': address,
             'force_data': force_data,
             'force_database': force_database,
+            'infer': infer,
         }.items()
     )
 
@@ -138,6 +146,7 @@ def generate_launch_description():
         address_arg,
         force_data_arg,
         force_database_arg,
+        infer_arg,
         managed_nodes_arg,
         rosa_kb,
         rosa_plan,

@@ -39,7 +39,7 @@ def convert_parameter_type_to_py_type(param, type):
 
 class ModelInterface(TypeDBInterface):
     def __init__(self, address, database_name, schema_path, data_path=None,
-                 force_database=False, force_data=False):
+                 force_database=False, force_data=False, infer=False):
 
         super().__init__(
             address,
@@ -47,7 +47,8 @@ class ModelInterface(TypeDBInterface):
             schema_path,
             data_path,
             force_database,
-            force_data
+            force_data,
+            infer
         )
 
     # Request action

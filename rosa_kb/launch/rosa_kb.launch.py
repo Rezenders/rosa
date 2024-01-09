@@ -28,6 +28,7 @@ def generate_launch_description():
     address = LaunchConfiguration('address')
     force_data = LaunchConfiguration('force_data')
     force_database = LaunchConfiguration('force_database')
+    infer = LaunchConfiguration('infer')
 
     pkg_rosa_kb = get_package_share_directory('rosa_kb')
 
@@ -71,6 +72,12 @@ def generate_launch_description():
         description='force database'
     )
 
+    infer_arg = DeclareLaunchArgument(
+        'infer',
+        default_value='True',
+        description='use inference engine'
+    )
+
     rosa_kb_node = Node(
         package='rosa_kb',
         executable='rosa_kb',
@@ -83,6 +90,7 @@ def generate_launch_description():
             'address': address,
             'force_data': force_data,
             'force_database': force_database,
+            'infer': infer,
         }]
     )
 
@@ -93,5 +101,6 @@ def generate_launch_description():
         address_arg,
         force_data_arg,
         force_database_arg,
+        infer_arg,
         rosa_kb_node,
     ])

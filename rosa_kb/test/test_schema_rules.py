@@ -23,7 +23,9 @@ def kb_interface():
         "config/schema.tql",
         "test/test_data/test_data.tql",  # TODO:better way to handle empty data
         force_database=True,
-        force_data=True)
+        force_data=True,
+        infer=True
+    )
     return kb_interface
 
 
