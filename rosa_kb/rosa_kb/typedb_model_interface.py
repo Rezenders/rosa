@@ -11,35 +11,74 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+"""python interface to interact with typedb's ROSA knowledge model."""
+
 from ros_typedb.typedb_interface import TypeDBInterface
 from datetime import datetime
 
+from typedb.driver import ConceptMap
 
-def convert_parameter_type_to_py_type(param, type):
+from typing import Iterator
+from typing import Literal
+from typing import TypedDict
+from typing import Optional
+
+
+class MatchResultDict(TypedDict):
+    """TypedDict for match result."""
+
+    type: str  #: attribute name, e.g., name, age, height etc
+    value_type: str  #: value type, e.g., boolean, long etc
+    value: str  #: value
+
+
+def convert_component_parameter_value_to_py_type(
+    param: dict[str, MatchResultDict],
+    param_type: Literal[
+        'boolean', 'boolean_array', 'double', 'double_array',
+        'long', 'long_array', 'string', 'string_array']
+     ) -> bool | list[bool] | float | list[float] | int | list[int] | str | \
+      list[str]:
+    """
+    Convert ComponentParameter value to python type.
+
+    :param param: ComponentParameter value
+    :param param_type: CompomentParameter parameter-type
+    :return: converted value
+    """
     def process_array(param, func):
         return [func(p.strip()) for p in param.strip('[]').split(',')]
 
-    if type == 'boolean':
+    if param_type == 'boolean':
         return param.lower() == 'true'
-    elif type == 'boolean_array':
+    elif param_type == 'boolean_array':
         return process_array(param, lambda p: p.lower() == 'true')
-    elif type == 'double':
+    elif param_type == 'double':
         return float(param)
-    elif type == 'double_array':
+    elif param_type == 'double_array':
         return process_array(param, float)
-    elif type == 'long':
+    elif param_type == 'long':
         return int(param)
-    elif type == 'long_array':
+    elif param_type == 'long_array':
         return process_array(param, int)
-    elif type == 'string':
+    elif param_type == 'string':
         return param
-    elif type == 'string_array':
+    elif param_type == 'string_array':
         return process_array(param, str)
 
 
 class ModelInterface(TypeDBInterface):
-    def __init__(self, address, database_name, schema_path, data_path=None,
-                 force_database=False, force_data=False, infer=False):
+    """Class to interact with the ROSA knowledge model in typeDB."""
+
+    def __init__(
+            self,
+            address: str,
+            database_name: str,
+            schema_path: Optional[list[str] | str] = None,
+            data_path: Optional[list[str] | str] = None,
+            force_database: Optional[bool] = False,
+            force_data: Optional[bool] = False,
+            infer: Optional[bool] = False) -> None:
 
         super().__init__(
             address,
@@ -51,18 +90,37 @@ class ModelInterface(TypeDBInterface):
             infer
         )
 
-    # Request action
-    def request_action(self, action_name):
+    def request_action(self, action_name: str) -> Iterator[ConceptMap] | None:
+        """
+        Request Action.
+
+        :param action_name: action name
+        :return: insert query result
+        """
         return self.update_attribute_in_thing(
             'Action', 'action-name', action_name, 'is-required', True)
 
-    # Cancel action
-    def cancel_action(self, action_name):
+    def cancel_action(self, action_name: str) -> Iterator[ConceptMap] | None:
+        """
+        Cancel Action.
+
+        :param action_name: action name
+        :return: insert query result
+        """
         return self.update_attribute_in_thing(
             'Action', 'action-name', action_name, 'is-required', False)
 
-    # Update status of a action
-    def update_action_status(self, action_name, action_status):
+    def update_action_status(
+            self,
+            action_name: str,
+            action_status: str) -> Iterator[ConceptMap] | None:
+        """
+        Update Action status.
+
+        :param action_name: action name
+        :param action_status: action_status
+        :return: insert query result
+        """
         return self.update_attribute_in_thing(
             'Action',
             'action-name',
@@ -71,42 +129,81 @@ class ModelInterface(TypeDBInterface):
             action_status
         )
 
-    def delete_component_status(self, component):
+    def delete_component_status(
+            self, component_name: str) -> Literal[True] | None:
+        """
+        Delete Component status.
+
+        :param component_name: component name
+        :return: delete query result
+        """
         return self.delete_attribute_from_thing(
             'Component',
             'component-name',
-            component,
+            component_name,
             'component-status')
 
-    def update_component_status(self, component, component_status):
+    def update_component_status(
+            self,
+            component_name: str,
+            component_status: str) -> Iterator[ConceptMap] | None:
+        """
+        Update Component status.
+
+        :param component_name: component name
+        :return: delete query result
+        """
         return self.update_attribute_in_thing(
             'Component',
             'component-name',
-            component,
+            component_name,
             'component-status',
             component_status
         )
 
-    # Check if a Action is required
-    def is_action_required(self, action_name):
+    def is_action_required(self, action_name: str) -> bool:
+        """
+        Check whether an Action is required.
+
+        :param action_name: Action name
+        :return: whether the action is required or not
+        """
         is_required = self.get_attribute_from_thing(
              'Action', [('action-name', action_name)], 'is-required')
         if len(is_required) == 0:
             return False
         return is_required[0]
 
-    # Check if a Action is feasible
-    def is_action_feasible(self, action_name):
+    def is_action_feasible(self, action_name: str) -> bool:
+        """
+        Check if an Action only has status feasible.
+
+        :param action_name: Action name
+        :return: whether the action is feasible or not
+        """
         status = self.get_attribute_from_thing(
              'Action', [('action-name', action_name)], 'action-status')
         return all(x in status for x in ['feasible'])
 
-    def is_action_selectable(self, action_name):
+    def is_action_selectable(self, action_name: str) -> bool:
+        """
+        Check whether an Action can be selected, i.e., it can be performed.
+
+        :param action_name: Action name
+        :return: whether the action is feasible or not
+        """
         status = self.get_attribute_from_thing(
              'Action', [('action-name', action_name)], 'action-status')
         return 'unfeasible' not in status
 
-    def get_selectable_thing_raw(self, thing):
+    def get_selectable_thing_raw(
+         self, thing: str) -> list[dict[str, MatchResultDict]]:
+        """
+        Get the name of selectable individuals of a specific Thing.
+
+        :param thing: Thing type
+        :return: name of selectable individuals
+        """
         query = f'''
             match
             $t isa {thing}, has name $name;
@@ -116,22 +213,23 @@ class ModelInterface(TypeDBInterface):
         query_result = self.match_database(query)
         return query_result
 
-    def get_selectable_actions(self):
+    def get_selectable_actions(self) -> list[str]:
+        """
+        Get the name of selectable Actions.
+
+        :return: name of selectable actions
+        """
         query_result = self.get_selectable_thing_raw('Action')
         return [r.get('name').get('value') for r in query_result]
 
-    # Get all entities with is-required property equal to True and
-    # function-status equal to 'solved' raw
-    def get_instances_of_thing_with_status(self, thing, status):
+    def get_instances_of_thing_with_status(
+            self, thing: str, status: str) -> list[str]:
         """
-        Get name of instances of a certain thing that have a certain status.
+        Get name of instances of a certain Thing that have a certain status.
 
         :param thing: thing type to query.
-        :type thing: str
         :param status: status.
-        :type status: str
-        :return: Names of instances with status.
-        :rtype: list[str]
+        :return: name of instances with status.
         """
         query = f'''
             match
@@ -144,22 +242,22 @@ class ModelInterface(TypeDBInterface):
         query_result = self.match_database(query)
         return [r.get('name').get('value') for r in query_result]
 
-    def get_solved_functions(self):
+    def get_solved_functions(self) -> list[str]:
+        """Get functions with status solved."""
         return self.get_instances_of_thing_with_status(
             'Function', 'solved')
 
-    def get_solved_components(self):
+    def get_solved_components(self) -> list[str]:
+        """Get components with status solved."""
         return self.get_instances_of_thing_with_status(
             'Component', 'solved')
 
-    def get_instances_thing_always_improve(self, thing):
+    def get_instances_thing_always_improve(self, thing: str) -> list[str]:
         """
-        Get name of instances of a certain thing that have always-improve true.
+        Get name of instances of a certain Thing that have always-improve true.
 
-        :param thing: thing type to query.
-        :type thing: str
-        :return: Names of instances with always-improve true.
-        :rtype: list[str]
+        :param thing: Thing type to query.
+        :return: name of instances with always-improve true.
         """
         query = f'''
             match
@@ -170,7 +268,18 @@ class ModelInterface(TypeDBInterface):
         query_result = self.match_database(query)
         return [r.get('name').get('value') for r in query_result]
 
-    def get_adaptable_things_raw(self, thing):
+    def get_adaptable_things_raw(
+         self, thing: str) -> list[dict[str, MatchResultDict]]:
+        """
+        Get the name of adaptable individuals of a certain Thing.
+
+        Get the name of adaptable individuals of a certain Thing. An individual
+        is adaptable when it has an 'always-improve' attribute set to true, or
+        when it has status 'unsolved' or 'configuration error'
+
+        :param thing: Thing type
+        :return: name of adaptable individuals
+        """
         query = f'''
             match
                 $t isa {thing}, has {thing.lower()}-name $name;
@@ -187,23 +296,43 @@ class ModelInterface(TypeDBInterface):
         query_result = self.match_database(query)
         return query_result
 
-    def get_adaptable_functions(self):
+    def get_adaptable_functions(self) -> list[str]:
+        """
+        Get the name of adaptable Functions.
+
+        Get the name of adaptable Functions. A function is adaptable when its
+        'always-improve' attribute is true, or when it status is 'unsolved' or
+        'configuration error'
+
+        :return: name of adaptable functions
+        """
         query_result = self.get_adaptable_things_raw('Function')
-        if query_result is not None or query_result is not False:
-            return [r.get('name').get('value') for r in query_result]
-        else:
-            return False
+        return [r.get('name').get('value') for r in query_result]
 
-    def get_adaptable_components(self):
+    def get_adaptable_components(self) -> list[str]:
+        """
+        Get the name of adaptable Components.
+
+        Get the name of adaptable Components. A component is adaptable when its
+        'always-improve' attribute is true, or when it status is 'unsolved' or
+        'configuration error'
+
+        :return: name of adaptable components
+        """
         query_result = self.get_adaptable_things_raw('Component')
-        if query_result is not None or query_result is not False:
-            return [r.get('name').get('value') for r in query_result]
-        else:
-            return False
+        return [r.get('name').get('value') for r in query_result]
 
-    # Get all entities with is-required property equal to True and
-    # function-status equal to 'unsolved' raw
-    def get_unsolved_thing_raw(self, thing):
+    def get_unsolved_thing_raw(
+         self, thing: str) -> list[dict[str, MatchResultDict]]:
+        """
+        Get unsolved individuals of a certain Thing type.
+
+        Get unsolved individuals of a certain Thing type. An individual is
+        unsolved when its 'is-required' attribute is True and its status is
+        'unsolved'.
+
+        :return: name of unsolved individuals
+        """
         query = f'''
             match
                 $e isa {thing}, has is-required true,
@@ -213,19 +342,39 @@ class ModelInterface(TypeDBInterface):
         '''
         return self.match_database(query)
 
-    # Get all Functions with is-required property equal to True and
-    # function-status equal to 'unsolved'
-    def get_unsolved_functions(self):
+    def get_unsolved_functions(self) -> list[str]:
+        """
+        Get unsolved Functions.
+
+        Get unsolved Functions. A function is unsolved when its 'is-required'
+        attribute is True and its status is 'unsolved'.
+
+        :return: name of unsolved functions
+        """
         query_result = self.get_unsolved_thing_raw('Function')
         return [r.get('name').get('value') for r in query_result]
 
-    # Get all Components with is-required property equal to True and
-    # component-status equal to 'unsolved'
-    def get_unsolved_components(self):
+    def get_unsolved_components(self) -> list[str]:
+        """
+        Get unsolved Components.
+
+        Get unsolved Components. A component is unsolved when its 'is-required'
+        attribute is True and its status is 'unsolved'.
+
+        :return: name of unsolved components
+        """
         query_result = self.get_unsolved_thing_raw('Component')
         return [r.get("name").get('value') for r in query_result]
 
-    def update_function_design_priority(self, fd_name, value):
+    def update_function_design_priority(
+            self, fd_name: str, value: float) -> Iterator[ConceptMap] | None:
+        """
+        Update function design priority.
+
+        :param fd_name: function design name
+        :param value: new priority value
+        :return: query result
+        """
         return self.update_attribute_in_thing(
             'function-design',
             'function-design-name',
@@ -233,7 +382,19 @@ class ModelInterface(TypeDBInterface):
             'priority',
             value)
 
-    def add_measurement(self, name, value):
+    def add_measurement(
+         self, name: str, value: str) -> Iterator[ConceptMap] | None:
+        """
+        Add new Quality Attribute or EnvironmentalAttribute measurement.
+
+        Add new Quality Attribute or EnvironmentalAttribute measurement. The
+        new measurement 'latest' attribute is set to true, and the old
+        measurements 'latest' attribute are set to false.
+
+        :param name: QA/EA name
+        :param value: measured value
+        :return: query result
+        """
         query = f"""
             match
                 $attr isa Attribute, has attribute-name "{name}";
@@ -254,10 +415,15 @@ class ModelInterface(TypeDBInterface):
                     has measurement-value {value},
                     has measurement-time {time};
         """
-        query_result = self.insert_database(query)
-        return query_result
+        return self.insert_database(query)
 
-    def get_latest_measurement(self, name):
+    def get_latest_measurement(self, name: str) -> float | None:
+        """
+        Get latest measurement value.
+
+        :param name: QA/EA name
+        :return: measurement value, or None if there is no measurement
+        """
         query = f"""
             match
                 $attr isa Attribute, has attribute-name "{name}";
@@ -266,11 +432,18 @@ class ModelInterface(TypeDBInterface):
                 get $value;
         """
         query_result = self.match_database(query)
-        if query_result is None or len(query_result) == 0:
+        if len(query_result) == 0:
             return None
         return query_result[0].get('value').get('value')
 
-    def get_measurement(self, name, time):
+    def get_measurement(self, name: str, time: datetime) -> float | None:
+        """
+        Get measured value at a certain time.
+
+        :param name: QA/EA name
+        :param time: measurement time
+        :return: measurement value, or None if there is no measurement
+        """
         time = self.convert_py_type_to_query_type(time)
         query = f"""
             match
@@ -281,14 +454,20 @@ class ModelInterface(TypeDBInterface):
                 get $value;
         """
         query_result = self.match_database(query)
-        if query_result is None or len(query_result) == 0:
+        if len(query_result) == 0:
             return None
         return query_result[0].get('value').get('value')
 
-    def get_selectable_c_configs_raw(self, component):
+    def get_selectable_c_configs(self, component_name: str) -> list[str]:
+        """
+        Get the name of selectable component configurations for a Component.
+
+        :param component_name: component name
+        :return: name of selectable component configurations
+        """
         query = f'''
             match
-                $c isa Component, has component-name "{component}";
+                $c isa Component, has component-name "{component_name}";
                 $cc (component: $c) isa component-configuration,
                     has component-configuration-name $name;
                 not {{
@@ -296,16 +475,19 @@ class ModelInterface(TypeDBInterface):
                 }};
                 get $name;
         '''
-        return self.match_database(query)
-
-    def get_selectable_c_configs(self, component):
-        result = self.get_selectable_c_configs_raw(component)
+        result = self.match_database(query)
         return [r.get('name').get('value') for r in result]
 
-    def get_selectable_fds_raw(self, function):
+    def get_selectable_fds(self, function_name: str) -> list[str]:
+        """
+        Get the name of selectable funtion designs for a Function.
+
+        :param function_name: function name
+        :return: name of selectable function designs
+        """
         query = f'''
             match
-                $f isa Function, has function-name "{function}";
+                $f isa Function, has function-name "{function_name}";
                 $fd (function: $f) isa function-design,
                     has function-design-name $name;
                 not {{
@@ -313,20 +495,29 @@ class ModelInterface(TypeDBInterface):
                 }};
                 get $name;
         '''
-        return self.match_database(query)
-
-    def get_selectable_fds(self, function):
-        result = self.get_selectable_fds_raw(function)
+        result = self.match_database(query)
         return [r.get('name').get('value') for r in result]
 
-    def get_function_design_priority(self, fd):
-        return self.get_attribute_from_thing(
-            'function-design', [('function-design-name', fd)], 'priority')
+    def get_function_design_priority(self, fd_name: str) -> list[str]:
+        """
+        Get function design priority value.
 
-    def get_component_configuration_priority(self, cc):
+        :param fd_name: function design name
+        :return: function design priority value
+        """
+        return self.get_attribute_from_thing(
+            'function-design', [('function-design-name', fd_name)], 'priority')
+
+    def get_component_configuration_priority(self, cc_name: str) -> list[str]:
+        """
+        Get component configuration priority value.
+
+        :param cc_name: component configuration name
+        :return: component configuration priority value
+        """
         return self.get_attribute_from_thing(
             'component-configuration',
-            [('component-configuration-name', cc)],
+            [('component-configuration-name', cc_name)],
             'priority')
 
     # toogle fd and component config selection
