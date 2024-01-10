@@ -3,36 +3,28 @@
 .. currentmodule:: {{ module }}
 
 .. autoclass:: {{ objname }}
+  :members:
+  :undoc-members:
+  :special-members: __init__
 
-   {% block methods %}
+  {% if methods %}
+  .. rubric:: {{ _('Methods') }}
 
-   {% for item in methods %}
-   {%- if item not in inherited_members %}
-    .. automethod:: {{ item }}
-   {%- endif %}
-   {%- endfor %}
+  .. autosummary::
+  {% for item in methods %}
+  {%- if item not in inherited_members %}
+     ~{{ name }}.{{ item }}
+  {%- endif %}
+  {%- endfor %}
+  {% endif %}
 
-   {% if methods %}
-   .. rubric:: {{ _('Methods') }}
+  {% if attributes %}
+  .. rubric:: {{ _('Attributes') }}
 
-   .. autosummary::
-   {% for item in methods %}
-   {%- if item not in inherited_members %}
-      ~{{ name }}.{{ item }}
-   {%- endif %}
-   {%- endfor %}
-   {% endif %}
-   {% endblock %}
-
-   {% block attributes %}
-   {% if attributes %}
-   .. rubric:: {{ _('Attributes') }}
-
-   .. autosummary::
-   {% for item in attributes %}
-   {%- if item not in inherited_members %}
-      ~{{ name }}.{{ item }}
-   {%- endif %}
-   {%- endfor %}
-   {% endif %}
-   {% endblock %}
+  .. autosummary::
+  {% for item in attributes %}
+  {%- if item not in inherited_members %}
+     ~{{ name }}.{{ item }}
+  {%- endif %}
+  {%- endfor %}
+  {% endif %}
