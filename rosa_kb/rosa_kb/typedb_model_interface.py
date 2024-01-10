@@ -660,7 +660,7 @@ class ModelInterface(TypeDBInterface):
         '''
         result = self.match_database(query)
         if len(result) > 0:
-            return self.covert_query_type_to_py_type(result[0].get('time'))
+            return self.convert_query_type_to_py_type(result[0].get('time'))
         else:
             return False
 
@@ -679,7 +679,7 @@ class ModelInterface(TypeDBInterface):
         '''
         result = self.match_database(query)
         if len(result) > 0:
-            return self.covert_query_type_to_py_type(result[0].get('time'))
+            return self.convert_query_type_to_py_type(result[0].get('time'))
         else:
             return False
 
@@ -699,7 +699,7 @@ class ModelInterface(TypeDBInterface):
         '''
         result = self.match_database(query)
         if len(result) > 0:
-            return self.covert_query_type_to_py_type(result[0].get('time'))
+            return self.convert_query_type_to_py_type(result[0].get('time'))
         else:
             return False
 
@@ -789,7 +789,7 @@ class ModelInterface(TypeDBInterface):
                     'attributes': {
                         'start-time': start_time
                     },
-                    'update-attributes': {
+                    'update_attributes': {
                         'end-time': datetime.now(),
                         'result': result_value,
                     }
@@ -810,7 +810,7 @@ class ModelInterface(TypeDBInterface):
             '''
             result = self.match_database(query)
             if len(result) > 0:
-                return [self.covert_query_type_to_py_type(r.get('time'))
+                return [self.convert_query_type_to_py_type(r.get('time'))
                         for r in result]
         return []
 
@@ -819,7 +819,7 @@ class ModelInterface(TypeDBInterface):
         if len(outdated_times) > 0:
             update_plans = [{
                 'attributes': {'start-time': time},
-                'update-attributes': {
+                'update_attributes': {
                     'end-time': datetime.now(),
                     'result': 'abandoned'}
                 } for time in outdated_times]
@@ -841,7 +841,7 @@ class ModelInterface(TypeDBInterface):
         '''
         result = self.match_database(query)
         if len(result) > 0:
-            return self.covert_query_type_to_py_type(result[0].get('result'))
+            return self.convert_query_type_to_py_type(result[0].get('result'))
         else:
             return ''
 
@@ -868,17 +868,18 @@ class ModelInterface(TypeDBInterface):
         result = {}
         params = []
         if len(_result) > 0:
-            result['Component'] = self.covert_query_type_to_py_type(
+            result['Component'] = self.convert_query_type_to_py_type(
                 _result[0].get('c_name'))
             for r in _result:
-                value = convert_parameter_type_to_py_type(
-                    self.covert_query_type_to_py_type(r.get('value')),
-                    self.covert_query_type_to_py_type(r.get('type'))
+                print('r: ', r)
+                value = convert_component_parameter_value_to_py_type(
+                    self.convert_query_type_to_py_type(r.get('value')),
+                    self.convert_query_type_to_py_type(r.get('type'))
                 )
                 params.append({
-                    'key': self.covert_query_type_to_py_type(r.get('key')),
+                    'key': self.convert_query_type_to_py_type(r.get('key')),
                     'value': value,
-                    'type': self.covert_query_type_to_py_type(r.get('type'))
+                    'type': self.convert_query_type_to_py_type(r.get('type'))
                 })
             result['ComponentParameters'] = params
         return result
@@ -905,7 +906,7 @@ class ModelInterface(TypeDBInterface):
             result_dict['type'] = result[0].get('component-type').get('label')
             for r in result:
                 attr_name = r.get('attribute').get('type')
-                attr_value = self.covert_query_type_to_py_type(
+                attr_value = self.convert_query_type_to_py_type(
                     r.get('attribute'))
                 result_dict[attr_name] = attr_value
         return result_dict

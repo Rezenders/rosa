@@ -14,7 +14,7 @@
 import pytest
 from rosa_kb.typedb_model_interface import ModelInterface
 from rosa_kb.typedb_model_interface \
-    import convert_parameter_type_to_py_type
+    import convert_component_parameter_value_to_py_type
 from datetime import datetime
 
 
@@ -572,8 +572,8 @@ def test_get_selectable_c_configs(kb_interface):
     ('string', 'teste', 'teste'),
     ('string_array', '[ teste, t2 , t3 ]', ['teste', 't2', 't3']),
 ])
-def test_convert_parameter_type_to_py_type(type, param, expected):
-    result = convert_parameter_type_to_py_type(param, type)
+def test_convert_component_parameter_value_to_py_type(type, param, expected):
+    result = convert_component_parameter_value_to_py_type(param, type)
     assert result == expected
 
 
