@@ -520,21 +520,6 @@ class ModelInterface(TypeDBInterface):
             [('component-configuration-name', cc_name)],
             'priority')
 
-    # toogle fd and component config selection
-    def toogle_thing_selection(self, thing, name, value):
-        is_selected = self.get_attribute_from_thing(
-            thing,
-            [('{}-name'.format(thing.lower()), name)],
-            'is-selected')
-        if len(is_selected) > 0 and is_selected[0] is value:
-            return None
-        return self.update_attribute_in_thing(
-            thing,
-            '{}-name'.format(thing),
-            name,
-            'is-selected',
-            value)
-
     # get selected fd or component config
     def get_relationship_with_attribute(
             self, entity, entity_name, relation, r_attribute, r_value):
@@ -558,10 +543,18 @@ class ModelInterface(TypeDBInterface):
             entity, e_name, relation, 'is-selected', True)
         for r in current_selected:
             if r != r_name:
-                self.toogle_thing_selection(relation, r, False)
-
-        return self.toogle_thing_selection(
-            relation, r_name, True)
+                self.update_attribute_in_thing(
+                    relation,
+                    '{}-name'.format(relation),
+                    r,
+                    'is-selected',
+                    False)
+        return self.update_attribute_in_thing(
+            relation,
+            '{}-name'.format(relation),
+            r_name,
+            'is-selected',
+            True)
 
     def select_function_design(self, f_name, fd_name):
         return self.select_relationship(
@@ -788,11 +781,21 @@ class ModelInterface(TypeDBInterface):
     def unselect_obsolete_fds_cc(self):
         _fds = self.get_obsolete_fds()
         for _fd in _fds:
-            self.toogle_thing_selection('function-design', _fd, False)
+            self.update_attribute_in_thing(
+                'function-design',
+                'function-design-name',
+                _fd,
+                'is-selected',
+                False)
 
         _ccs = self.get_obsolete_component_configurations()
         for _cc in _ccs:
-            self.toogle_thing_selection('component-configuration', _cc, False)
+            self.update_attribute_in_thing(
+                'component-configuration',
+                'component-configuration-name',
+                _cc,
+                'is-selected',
+                False)
 
     def select_configuration(
        self, functions_selected_fd, components_selected_config):

@@ -116,22 +116,6 @@ def test_add_measurement(kb_interface):
     assert value == measured_value
 
 
-def test_toogle_function_design_selection(kb_interface):
-    kb_interface.toogle_thing_selection(
-        'function-design', 'f2_fd1_c2_c3', True)
-    fd_selected = kb_interface.get_attribute_from_thing(
-        'function-design',
-        [('function-design-name', 'f2_fd1_c2_c3')],
-        'is-selected')
-    kb_interface.toogle_thing_selection(
-        'function-design', 'f2_fd1_c2_c3', False)
-    fd_not_selected = kb_interface.get_attribute_from_thing(
-        'function-design',
-        [('function-design-name', 'f2_fd1_c2_c3')],
-        'is-selected')
-    assert fd_selected[0] is True and fd_not_selected[0] is False
-
-
 def test_select_function_design(kb_interface):
     kb_interface.select_function_design('function2', 'f2_fd1_c2_c3')
     fd1_selected = kb_interface.get_attribute_from_thing(
