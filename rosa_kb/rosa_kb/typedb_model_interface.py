@@ -83,8 +83,8 @@ def convert_component_parameter_value_to_py_type(
     param_type: Literal[
         'boolean', 'boolean_array', 'double', 'double_array',
         'long', 'long_array', 'string', 'string_array']
-     ) -> bool | list[bool] | float | list[float] | int | list[int] | str | \
-      list[str]:
+) -> bool | list[bool] | float | list[float] | int | list[int] | str | \
+        list[str]:
     """
     Convert ComponentParameter value to python type.
 
@@ -215,7 +215,7 @@ class ModelInterface(TypeDBInterface):
         :return: whether the action is required or not
         """
         is_required = self.get_attribute_from_thing(
-             'Action', [('action-name', action_name)], 'is-required')
+            'Action', [('action-name', action_name)], 'is-required')
         if len(is_required) == 0:
             return False
         return is_required[0]
@@ -228,7 +228,7 @@ class ModelInterface(TypeDBInterface):
         :return: whether the action is feasible or not
         """
         status = self.get_attribute_from_thing(
-             'Action', [('action-name', action_name)], 'action-status')
+            'Action', [('action-name', action_name)], 'action-status')
         return all(x in status for x in ['feasible'])
 
     def is_action_selectable(self, action_name: str) -> bool:
@@ -239,11 +239,11 @@ class ModelInterface(TypeDBInterface):
         :return: whether the action is feasible or not
         """
         status = self.get_attribute_from_thing(
-             'Action', [('action-name', action_name)], 'action-status')
+            'Action', [('action-name', action_name)], 'action-status')
         return 'unfeasible' not in status
 
     def get_selectable_thing_raw(
-         self, thing: str) -> list[dict[str, MatchResultDict]]:
+            self, thing: str) -> list[dict[str, MatchResultDict]]:
         """
         Get the name of selectable individuals of a specific Thing.
 
@@ -315,7 +315,7 @@ class ModelInterface(TypeDBInterface):
         return [r.get('name').get('value') for r in query_result]
 
     def get_adaptable_things_raw(
-         self, thing: str) -> list[dict[str, MatchResultDict]]:
+            self, thing: str) -> list[dict[str, MatchResultDict]]:
         """
         Get the name of adaptable individuals of a certain Thing.
 
@@ -369,7 +369,7 @@ class ModelInterface(TypeDBInterface):
         return [r.get('name').get('value') for r in query_result]
 
     def get_unsolved_thing_raw(
-         self, thing: str) -> list[dict[str, MatchResultDict]]:
+            self, thing: str) -> list[dict[str, MatchResultDict]]:
         """
         Get unsolved individuals of a certain Thing type.
 
@@ -429,7 +429,7 @@ class ModelInterface(TypeDBInterface):
             value)
 
     def add_measurement(
-         self, name: str, value: str) -> Iterator[ConceptMap] | None:
+            self, name: str, value: str) -> Iterator[ConceptMap] | None:
         """
         Add new Quality Attribute or EnvironmentalAttribute measurement.
 
@@ -704,11 +704,11 @@ class ModelInterface(TypeDBInterface):
         return is_activated[0]
 
     def create_reconfiguration_plan(
-            self,
-            c_activate: list[str],
-            c_deactivate: list[str],
-            c_config: list[str]
-         ) -> datetime | None:
+        self,
+        c_activate: list[str],
+        c_deactivate: list[str],
+        c_config: list[str]
+    ) -> datetime | None:
         """
         Create a reconfiguration plan.
 
@@ -774,7 +774,7 @@ class ModelInterface(TypeDBInterface):
                 'structural-adaptation': structural_adaptation,
                 'parameter-adaptation': parameter_adaptation
             },
-            attribute_list=[('start-time',  start_time)],
+            attribute_list=[('start-time', start_time)],
             prefix='rp'
         )
 
@@ -786,9 +786,9 @@ class ModelInterface(TypeDBInterface):
             start_time.isoformat(timespec='milliseconds'))
 
     def select_fd_and_get_components(
-            self,
-            functions_selected_fd: list[Tuple[str, str]]
-         ) -> Tuple[list[str], list[str]]:
+        self,
+        functions_selected_fd: list[Tuple[str, str]]
+    ) -> Tuple[list[str], list[str]]:
         """
         Select function design, and get components to activate and deactivate.
 
@@ -837,9 +837,9 @@ class ModelInterface(TypeDBInterface):
         return _c_activate, _c_deactivate
 
     def select_components_selected_config(
-            self,
-            components_selected_config: list[Tuple[str, str]]
-         ) -> list[str]:
+        self,
+        components_selected_config: list[Tuple[str, str]]
+    ) -> list[str]:
         """
         Select component configuration and return them.
 
@@ -947,9 +947,9 @@ class ModelInterface(TypeDBInterface):
                 False)
 
     def select_configuration(
-         self,
-         functions_selected_fd: list[Tuple[str, str]],
-         components_selected_config: list[Tuple[str, str]]) -> datetime | None:
+            self,
+            functions_selected_fd: list[Tuple[str, str]],
+            components_selected_config: list[Tuple[str, str]]) -> datetime | None:
         """
         Select configuration and create reconfiguration plan.
 
@@ -1045,7 +1045,7 @@ class ModelInterface(TypeDBInterface):
         return self.convert_query_type_to_py_type(result[0].get('time'))
 
     def get_reconfiguration_plan(
-         self, start_time: datetime) -> ReconfigPlanDict:
+            self, start_time: datetime) -> ReconfigPlanDict:
         """
         Get reconfiguration plan with start-time.
 
@@ -1106,7 +1106,7 @@ class ModelInterface(TypeDBInterface):
         return reconfig_plan_dict
 
     def get_latest_pending_reconfiguration_plan(
-         self) -> ReconfigPlanDict | None:
+            self) -> ReconfigPlanDict | None:
         """
         Get latest pending reconfiguration plan.
 
@@ -1121,10 +1121,10 @@ class ModelInterface(TypeDBInterface):
         return reconfig_plan_dict
 
     def update_reconfiguration_plan_result(
-         self,
-         start_time: str | datetime,
-         result_value: Literal['completed', 'failed', 'abandoned']
-         ) -> Iterator[ConceptMap] | None:
+        self,
+        start_time: str | datetime,
+        result_value: Literal['completed', 'failed', 'abandoned']
+    ) -> Iterator[ConceptMap] | None:
         """
         Update reconfiguration plan result.
 
@@ -1132,7 +1132,7 @@ class ModelInterface(TypeDBInterface):
         :param result_value: reconfig plan result
         :return: update query result
         """
-        if type(start_time) is str:
+        if isinstance(start_time, str):
             start_time = datetime.fromisoformat(start_time)
         match_dict = {
             'reconfiguration-plan': [
@@ -1160,7 +1160,7 @@ class ModelInterface(TypeDBInterface):
         :return: start-time of all outdated reconfiguration plans
         """
         end_time = self.get_latest_completed_reconfiguration_plan_time()
-        if type(end_time) is datetime:
+        if isinstance(end_time, datetime):
             end_time = self.convert_py_type_to_query_type(end_time)
             query = f'''
                 match $rp isa reconfiguration-plan, has start-time $time;
@@ -1175,7 +1175,7 @@ class ModelInterface(TypeDBInterface):
         return []
 
     def update_outdated_reconfiguration_plans_result(
-         self) -> Iterator[ConceptMap] | None:
+            self) -> Iterator[ConceptMap] | None:
         """
         Set outdated reconfiguration plans result to 'abandoned'.
 
@@ -1190,7 +1190,7 @@ class ModelInterface(TypeDBInterface):
             'update_attributes': {
                 'end-time': datetime.now(),
                 'result': 'abandoned'}
-            } for time in outdated_times]
+        } for time in outdated_times]
 
         match_dict = {
             'reconfiguration-plan': update_plans
@@ -1257,7 +1257,7 @@ class ModelInterface(TypeDBInterface):
         return result
 
     def get_component_all_attributes(
-         self, component: str) -> ComponentDict | None:
+            self, component: str) -> ComponentDict | None:
         """
         Get all attributes owned by a Component, and the Component type.
 
