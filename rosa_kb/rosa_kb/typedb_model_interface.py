@@ -949,7 +949,8 @@ class ModelInterface(TypeDBInterface):
     def select_configuration(
             self,
             functions_selected_fd: list[Tuple[str, str]],
-            components_selected_config: list[Tuple[str, str]]) -> datetime | None:
+            components_selected_config: list[Tuple[str, str]]
+         ) -> datetime | None:
         """
         Select configuration and create reconfiguration plan.
 
