@@ -564,22 +564,13 @@ class ModelInterface(TypeDBInterface):
         return self.select_relationship(
             'Component', c_name, 'component-configuration', cc_name)
 
-    def toogle_thing_activation(self, thing, name, value):
-        is_activated = self.get_attribute_from_thing(
-            thing,
-            [('{}-name'.format(thing.lower()), name)],
-            'is-active')
-        if len(is_activated) > 0 and is_activated[0] is value:
-            return True
+    def activate_component(self, c_name, value):
         return self.update_attribute_in_thing(
-            thing,
-            '{}-name'.format(thing.lower()),
-            name,
+            'Component',
+            'component-name',
+            c_name,
             'is-active',
             value)
-
-    def activate_component(self, c_name, value):
-        return self.toogle_thing_activation('Component', c_name, value)
 
     def is_component_active(self, name):
         is_activated = self.get_attribute_from_thing(
@@ -601,10 +592,18 @@ class ModelInterface(TypeDBInterface):
                 True)
             for config in current_active:
                 if config != cc_name:
-                    self.toogle_thing_activation(
-                        'component-configuration', config, False)
-        return self.toogle_thing_activation(
-            'component-configuration', cc_name, value)
+                    self.update_attribute_in_thing(
+                        'component-configuration',
+                        'component-configuration-name',
+                        config,
+                        'is-active',
+                        False)
+        return self.update_attribute_in_thing(
+            'component-configuration',
+            'component-configuration-name',
+            cc_name,
+            'is-active',
+            value)
 
     def create_reconfiguration_plan(self, c_activate, c_deactivate, c_config):
         match_query = "match "
