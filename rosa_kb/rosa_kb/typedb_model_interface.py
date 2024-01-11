@@ -957,7 +957,7 @@ class ModelInterface(TypeDBInterface):
         :param functions_selected_fd: a list of tuples with the form
             (FUNCTION_NAME, FD_NAME) representing the function designs that
             were selected for which function
-        :param components_selected_config:a list of tuples with the form
+        :param components_selected_config: a list of tuples with the form
             (COMPONENT_NAME, CC_NAME) representing the component configurations
             that were selected for which components
         :return: reconfig plan creation time.

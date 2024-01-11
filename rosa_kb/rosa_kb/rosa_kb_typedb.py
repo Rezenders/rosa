@@ -11,7 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""ROS wrapper for ROSA's typedb model"""
+"""ROS wrapper for ROSA's typedb model."""
 import sys
 from datetime import datetime
 
@@ -247,7 +247,7 @@ class RosaKB(ROSTypeDBInterface):
     def diagnostics_callback(
             self, msg: diagnostic_msgs.msg.DiagnosticArray) -> None:
         """
-        Updates component status or QA/EA measurement (callback).
+        Update component status or QA/EA measurement (callback).
 
         Callback from topic '/dianostics'. Updates component status when
         `message` field is 'component status' or 'component'. Updates QA/EA
