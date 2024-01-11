@@ -582,29 +582,6 @@ class ModelInterface(TypeDBInterface):
         else:
             return False
 
-    def activate_component_configuration(self, c_name, cc_name, value):
-        if value is True:
-            current_active = self.get_relationship_with_attribute(
-                'Component',
-                c_name,
-                'component-configuration',
-                'is-active',
-                True)
-            for config in current_active:
-                if config != cc_name:
-                    self.update_attribute_in_thing(
-                        'component-configuration',
-                        'component-configuration-name',
-                        config,
-                        'is-active',
-                        False)
-        return self.update_attribute_in_thing(
-            'component-configuration',
-            'component-configuration-name',
-            cc_name,
-            'is-active',
-            value)
-
     def create_reconfiguration_plan(self, c_activate, c_deactivate, c_config):
         match_query = "match "
         insert_query = "insert "
