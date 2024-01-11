@@ -274,10 +274,10 @@ class RosaKB(ROSTypeDBInterface):
 
     @publish_event(event_type='action_update')
     def action_request_cb(
-         self,
-         req: rosa_msgs.srv.ActionQuery.Request,
-         res: rosa_msgs.srv.ActionQuery.Response
-         ) -> rosa_msgs.srv.ActionQuery.Response:
+        self,
+        req: rosa_msgs.srv.ActionQuery.Request,
+        res: rosa_msgs.srv.ActionQuery.Response
+    ) -> rosa_msgs.srv.ActionQuery.Response:
         """
         Request or cancel an Action (callback).
 
@@ -290,9 +290,9 @@ class RosaKB(ROSTypeDBInterface):
         :param res: `~/action/request` service response
         :return: `~/action/request` service response
         """
-
-        if req.action.is_required is True and \
-         self.typedb_interface.is_action_selectable(req.action.name) is True:
+        _is_action_selectable = self.typedb_interface.is_action_selectable(
+            req.action.name)
+        if req.action.is_required is True and _is_action_selectable is True:
             self.typedb_interface.request_action(req.action.name)
             res.success = True
         elif req.action.is_required is False:
@@ -303,10 +303,10 @@ class RosaKB(ROSTypeDBInterface):
         return res
 
     def action_selectable_cb(
-         self,
-         req: rosa_msgs.srv.SelectableActions.Request,
-         res: rosa_msgs.srv.SelectableActions.Response
-         ) -> rosa_msgs.srv.SelectableActions.Response:
+        self,
+        req: rosa_msgs.srv.SelectableActions.Request,
+        res: rosa_msgs.srv.SelectableActions.Response
+    ) -> rosa_msgs.srv.SelectableActions.Response:
         """
         Get selectable actions (callback).
 
@@ -324,10 +324,10 @@ class RosaKB(ROSTypeDBInterface):
         return res
 
     def function_adaptable_cb(
-         self,
-         req: rosa_msgs.srv.AdaptableFunctions.Request,
-         res: rosa_msgs.srv.AdaptableFunctions.Response
-         ) -> rosa_msgs.srv.AdaptableFunctions.Response:
+        self,
+        req: rosa_msgs.srv.AdaptableFunctions.Request,
+        res: rosa_msgs.srv.AdaptableFunctions.Response
+    ) -> rosa_msgs.srv.AdaptableFunctions.Response:
         """
         Get adaptable functions (callback).
 
@@ -350,10 +350,10 @@ class RosaKB(ROSTypeDBInterface):
         return res
 
     def component_adaptable_cb(
-         self,
-         req: rosa_msgs.srv.AdaptableComponents.Request,
-         res: rosa_msgs.srv.AdaptableComponents.Response
-         ) -> rosa_msgs.srv.AdaptableComponents.Response:
+        self,
+        req: rosa_msgs.srv.AdaptableComponents.Request,
+        res: rosa_msgs.srv.AdaptableComponents.Response
+    ) -> rosa_msgs.srv.AdaptableComponents.Response:
         """
         Get adaptable components (callback).
 
@@ -379,10 +379,10 @@ class RosaKB(ROSTypeDBInterface):
         return res
 
     def selectable_fd_cb(
-         self,
-         req: rosa_msgs.srv.SelectableFunctionDesigns.Request,
-         res: rosa_msgs.srv.SelectableFunctionDesigns.Response
-         ) -> rosa_msgs.srv.SelectableFunctionDesigns.Response:
+        self,
+        req: rosa_msgs.srv.SelectableFunctionDesigns.Request,
+        res: rosa_msgs.srv.SelectableFunctionDesigns.Response
+    ) -> rosa_msgs.srv.SelectableFunctionDesigns.Response:
         """
         Get selectable function designs (callback).
 
@@ -403,10 +403,10 @@ class RosaKB(ROSTypeDBInterface):
         return res
 
     def selectable_c_config_cb(
-         self,
-         req: rosa_msgs.srv.SelectableComponentConfigurations.Request,
-         res: rosa_msgs.srv.SelectableComponentConfigurations.Response
-         ) -> rosa_msgs.srv.SelectableComponentConfigurations.Response:
+        self,
+        req: rosa_msgs.srv.SelectableComponentConfigurations.Request,
+        res: rosa_msgs.srv.SelectableComponentConfigurations.Response
+    ) -> rosa_msgs.srv.SelectableComponentConfigurations.Response:
         """
         Get selectable component configurations (callback).
 
@@ -428,10 +428,10 @@ class RosaKB(ROSTypeDBInterface):
         return res
 
     def function_design_priority_cb(
-         self,
-         req: rosa_msgs.srv.GetFunctionDesignPriority.Request,
-         res: rosa_msgs.srv.GetFunctionDesignPriority.Response
-         ) -> rosa_msgs.srv.GetFunctionDesignPriority.Response:
+        self,
+        req: rosa_msgs.srv.GetFunctionDesignPriority.Request,
+        res: rosa_msgs.srv.GetFunctionDesignPriority.Response
+    ) -> rosa_msgs.srv.GetFunctionDesignPriority.Response:
         """
         Get function designs priority (callback).
 
@@ -453,10 +453,10 @@ class RosaKB(ROSTypeDBInterface):
         return res
 
     def component_configuration_priority_cb(
-         self,
-         req: rosa_msgs.srv.GetComponentConfigurationPriority.Request,
-         res: rosa_msgs.srv.GetComponentConfigurationPriority.Response
-         ) -> rosa_msgs.srv.GetComponentConfigurationPriority.Response:
+        self,
+        req: rosa_msgs.srv.GetComponentConfigurationPriority.Request,
+        res: rosa_msgs.srv.GetComponentConfigurationPriority.Response
+    ) -> rosa_msgs.srv.GetComponentConfigurationPriority.Response:
         """
         Get component configurations priority (callback).
 
@@ -480,10 +480,10 @@ class RosaKB(ROSTypeDBInterface):
 
     @publish_event(event_type='insert_reconfiguration_plan')
     def select_configuration_cb(
-         self,
-         req: rosa_msgs.srv.SelectedConfigurations.Request,
-         res: rosa_msgs.srv.SelectedConfigurations.Response
-         ) -> rosa_msgs.srv.SelectedConfigurations.Response:
+        self,
+        req: rosa_msgs.srv.SelectedConfigurations.Request,
+        res: rosa_msgs.srv.SelectedConfigurations.Response
+    ) -> rosa_msgs.srv.SelectedConfigurations.Response:
         """
         Select configuration (callback).
 
@@ -511,7 +511,7 @@ class RosaKB(ROSTypeDBInterface):
         return res
 
     def get_component_all_attributes(
-         self, component: str) -> rosa_msgs.msg.Component:
+            self, component: str) -> rosa_msgs.msg.Component:
         """
         Get all attributes of a component.
 
@@ -529,9 +529,9 @@ class RosaKB(ROSTypeDBInterface):
         return _component
 
     def reconfig_plan_dict_to_ros_msg(
-         self,
-         reconfig_plan_dict: rosa_kb.typedb_model_interface.ReconfigPlanDict
-         ) -> rosa_msgs.msg.ReconfigurationPlan:
+        self,
+        reconfig_plan_dict: rosa_kb.typedb_model_interface.ReconfigPlanDict
+    ) -> rosa_msgs.msg.ReconfigurationPlan:
         """
         Convert reconfig plan to :class:`rosa_msgs.msg.ReconfigurationPlan`.
 
@@ -564,10 +564,10 @@ class RosaKB(ROSTypeDBInterface):
         return reconfig_plan
 
     def get_latest_reconfiguration_plan_cb(
-         self,
-         req: rosa_msgs.srv.ReconfigurationPlanQuery.Request,
-         res: rosa_msgs.srv.ReconfigurationPlanQuery.Response
-         ) -> rosa_msgs.srv.ReconfigurationPlanQuery.Response:
+        self,
+        req: rosa_msgs.srv.ReconfigurationPlanQuery.Request,
+        res: rosa_msgs.srv.ReconfigurationPlanQuery.Response
+    ) -> rosa_msgs.srv.ReconfigurationPlanQuery.Response:
         """
         Get latest reconfiguration plan (callback).
 
@@ -589,10 +589,10 @@ class RosaKB(ROSTypeDBInterface):
         return res
 
     def get_reconfiguration_plan_cb(
-         self,
-         req: rosa_msgs.srv.ReconfigurationPlanQuery.Request,
-         res: rosa_msgs.srv.ReconfigurationPlanQuery.Response
-         ) -> rosa_msgs.srv.ReconfigurationPlanQuery.Response:
+        self,
+        req: rosa_msgs.srv.ReconfigurationPlanQuery.Request,
+        res: rosa_msgs.srv.ReconfigurationPlanQuery.Response
+    ) -> rosa_msgs.srv.ReconfigurationPlanQuery.Response:
         """
         Get reconfiguration plan with requested `start_time` (callback).
 
@@ -614,10 +614,10 @@ class RosaKB(ROSTypeDBInterface):
         return res
 
     def set_component_active_cb(
-         self,
-         req: rosa_msgs.srv.ComponentQuery.Request,
-         res: rosa_msgs.srv.ComponentQuery.Response
-         ) -> rosa_msgs.srv.ComponentQuery.Response:
+        self,
+        req: rosa_msgs.srv.ComponentQuery.Request,
+        res: rosa_msgs.srv.ComponentQuery.Response
+    ) -> rosa_msgs.srv.ComponentQuery.Response:
         """
         Set if a component is active (callback).
 
@@ -638,10 +638,10 @@ class RosaKB(ROSTypeDBInterface):
         return res
 
     def get_component_active_cb(
-         self,
-         req: rosa_msgs.srv.ComponentQuery.Request,
-         res: rosa_msgs.srv.ComponentQuery.Response
-         ) -> rosa_msgs.srv.ComponentQuery.Response:
+        self,
+        req: rosa_msgs.srv.ComponentQuery.Request,
+        res: rosa_msgs.srv.ComponentQuery.Response
+    ) -> rosa_msgs.srv.ComponentQuery.Response:
         """
         Check whether a component is active or not (callback).
 
@@ -661,10 +661,10 @@ class RosaKB(ROSTypeDBInterface):
         return res
 
     def get_component_parameters_cb(
-         self,
-         req: rosa_msgs.srv.GetComponentParameters.Request,
-         res: rosa_msgs.srv.GetComponentParameters.Response
-         ) -> rosa_msgs.srv.GetComponentParameters.Response:
+        self,
+        req: rosa_msgs.srv.GetComponentParameters.Request,
+        res: rosa_msgs.srv.GetComponentParameters.Response
+    ) -> rosa_msgs.srv.GetComponentParameters.Response:
         """
         Get ComponentParameters in a component configuration (callback).
 
@@ -689,10 +689,10 @@ class RosaKB(ROSTypeDBInterface):
         return res
 
     def set_reconfiguration_plan_result_service_cb(
-         self,
-         req: rosa_msgs.srv.ReconfigurationPlanQuery.Request,
-         res: rosa_msgs.srv.ReconfigurationPlanQuery.Response
-         ) -> rosa_msgs.srv.ReconfigurationPlanQuery.Response:
+        self,
+        req: rosa_msgs.srv.ReconfigurationPlanQuery.Request,
+        res: rosa_msgs.srv.ReconfigurationPlanQuery.Response
+    ) -> rosa_msgs.srv.ReconfigurationPlanQuery.Response:
         """
         Set reconfiguration plan result (callback).
 
