@@ -588,7 +588,7 @@ class ModelInterface(TypeDBInterface):
 
         if len(c_activate) == 0 and len(c_deactivate) == 0 and \
            len(c_config) == 0:
-            return True, None
+            return None
 
         structural_adaptation = []
         if len(c_activate) > 0:
@@ -644,9 +644,10 @@ class ModelInterface(TypeDBInterface):
         )
 
         query = match_query + insert_query
-        start_time = datetime.fromisoformat(
-            start_time.isoformat(timespec='milliseconds'))
-        return self.insert_database(query), start_time
+        insert_result = self.insert_database(query)
+        if insert_result is not None:
+            return datetime.fromisoformat(
+                start_time.isoformat(timespec='milliseconds'))
 
     def select_fd_and_get_components(self, functions_selected_fd):
         _c_activate = []

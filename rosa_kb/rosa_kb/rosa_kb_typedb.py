@@ -325,7 +325,7 @@ class RosaKB(ROSTypeDBInterface):
             for selected_cc in req.selected_component_configs]
         result = self.typedb_interface.select_configuration(
             _selected_fds, _selected_component_configs)
-        if result is False:
+        if result is None:
             res.success = False
         else:
             res.success = True

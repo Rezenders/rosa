@@ -165,12 +165,12 @@ def test_select_component_configuration(kb_interface):
 ])
 def test_create_reconfiguration_plan(
    kb_interface, c_activate, c_deactivate, c_config):
-    result, start_time = kb_interface.create_reconfiguration_plan(
+    start_time = kb_interface.create_reconfiguration_plan(
         c_activate, c_deactivate, c_config)
     query = "match ("
     end_query = ""
     if len(c_activate) == 0 and len(c_deactivate) == 0 and len(c_config) == 0:
-        assert result is True and start_time is None
+        assert start_time is None
     else:
         if len(c_activate) > 0:
             query += "structural-adaptation:$ca"
@@ -235,10 +235,10 @@ def test_select_configuration(
         exp_c_deactivate,
         exp_c_config
      ):
-    result, start_time = kb_interface.select_configuration(
+    start_time = kb_interface.select_configuration(
         selected_fd, selected_config)
     if exp_c_activate == [] and exp_c_deactivate == [] and exp_c_config == []:
-        assert result is True and start_time is None
+        assert start_time is None
     else:
         query = "match $rp "
         end_query = ""
@@ -364,13 +364,13 @@ def test_get_latest_reconfiguration_plan_time(kb_interface):
     c_activate = ['component2', 'component3']
     c_deactivate = ['component4', 'component5']
     c_config = ['low param']
-    r, start_time_1 = kb_interface.create_reconfiguration_plan(
+    kb_interface.create_reconfiguration_plan(
         c_activate, c_deactivate, c_config)
 
     c_activate = ['component3']
     c_deactivate = ['component5']
     c_config = ['low param']
-    r2, start_time_2 = kb_interface.create_reconfiguration_plan(
+    start_time_2 = kb_interface.create_reconfiguration_plan(
         c_activate, c_deactivate, c_config)
     lastest_plan = kb_interface.get_latest_reconfiguration_plan_time()
     assert lastest_plan == start_time_2
@@ -385,7 +385,7 @@ def test_get_reconfiguration_plan(kb_interface):
     c_activate = ['component2', 'component3']
     c_deactivate = ['component4', 'component5']
     c_config = ['low param']
-    r, start_time = kb_interface.create_reconfiguration_plan(
+    start_time = kb_interface.create_reconfiguration_plan(
         c_activate, c_deactivate, c_config)
 
     reconfig_plan = kb_interface.get_reconfiguration_plan(start_time)
@@ -398,13 +398,13 @@ def test_get_latest_reconfiguration_plan(kb_interface):
     c_activate = ['component2', 'component3']
     c_deactivate = ['component4', 'component5']
     c_config = ['low param']
-    r, start_time_1 = kb_interface.create_reconfiguration_plan(
+    kb_interface.create_reconfiguration_plan(
         c_activate, c_deactivate, c_config)
 
     c_activate = ['component3']
     c_deactivate = ['component5']
     c_config = ['low param']
-    r2, start_time_2 = kb_interface.create_reconfiguration_plan(
+    start_time_2 = kb_interface.create_reconfiguration_plan(
         c_activate, c_deactivate, c_config)
     reconfig_plan = kb_interface.get_latest_reconfiguration_plan()
     assert reconfig_plan['start-time'] == start_time_2 and \
@@ -417,7 +417,7 @@ def test_update_reconfiguration_plan_result(kb_interface):
     c_activate = ['component2', 'component3']
     c_deactivate = ['component4', 'component5']
     c_config = ['low param']
-    r, start_time = kb_interface.create_reconfiguration_plan(
+    start_time = kb_interface.create_reconfiguration_plan(
         c_activate, c_deactivate, c_config)
 
     kb_interface.update_reconfiguration_plan_result(start_time, 'completed')
@@ -437,7 +437,7 @@ def test_get_latest_completed_reconfiguration_plan_time(kb_interface):
     c_activate = ['component2', 'component3']
     c_deactivate = ['component4', 'component5']
     c_config = ['low param']
-    r, start_time_1 = kb_interface.create_reconfiguration_plan(
+    start_time_1 = kb_interface.create_reconfiguration_plan(
         c_activate, c_deactivate, c_config)
 
     kb_interface.update_reconfiguration_plan_result(start_time_1, 'completed')
@@ -445,7 +445,7 @@ def test_get_latest_completed_reconfiguration_plan_time(kb_interface):
     c_activate = ['component3']
     c_deactivate = ['component5']
     c_config = ['low param']
-    r2, start_time_2 = kb_interface.create_reconfiguration_plan(
+    start_time_2 = kb_interface.create_reconfiguration_plan(
         c_activate, c_deactivate, c_config)
     kb_interface.update_reconfiguration_plan_result(start_time_2, 'completed')
     end_time = kb_interface.get_latest_completed_reconfiguration_plan_time()
@@ -457,13 +457,13 @@ def test_get_latest_pending_reconfiguration_plan_time(kb_interface):
     c_activate = ['component2', 'component3']
     c_deactivate = ['component4', 'component5']
     c_config = ['low param']
-    r, start_time_1 = kb_interface.create_reconfiguration_plan(
+    start_time_1 = kb_interface.create_reconfiguration_plan(
         c_activate, c_deactivate, c_config)
 
     c_activate = ['component3']
     c_deactivate = ['component5']
     c_config = ['low param']
-    r2, start_time_2 = kb_interface.create_reconfiguration_plan(
+    start_time_2 = kb_interface.create_reconfiguration_plan(
         c_activate, c_deactivate, c_config)
     kb_interface.update_reconfiguration_plan_result(start_time_2, 'completed')
     r_start_time = kb_interface.get_latest_pending_reconfiguration_plan_time()
@@ -475,13 +475,13 @@ def test_get_outdated_reconfiguration_plans(kb_interface):
     c_activate = ['component2', 'component3']
     c_deactivate = ['component4', 'component5']
     c_config = ['low param']
-    r, start_time_1 = kb_interface.create_reconfiguration_plan(
+    start_time_1 = kb_interface.create_reconfiguration_plan(
         c_activate, c_deactivate, c_config)
 
     c_activate = ['component3']
     c_deactivate = ['component5']
     c_config = ['low param']
-    r2, start_time_2 = kb_interface.create_reconfiguration_plan(
+    start_time_2 = kb_interface.create_reconfiguration_plan(
         c_activate, c_deactivate, c_config)
     kb_interface.update_reconfiguration_plan_result(start_time_2, 'completed')
 
@@ -494,7 +494,7 @@ def test_get_reconfiguration_plan_result(kb_interface):
     c_activate = ['component2', 'component3']
     c_deactivate = ['component4', 'component5']
     c_config = ['low param']
-    r, start_time = kb_interface.create_reconfiguration_plan(
+    start_time = kb_interface.create_reconfiguration_plan(
         c_activate, c_deactivate, c_config)
 
     kb_interface.update_reconfiguration_plan_result(start_time, 'completed')
@@ -508,19 +508,19 @@ def test_update_outdated_reconfiguration_plans_result(kb_interface):
     c_activate = ['component2', 'component3']
     c_deactivate = ['component4', 'component5']
     c_config = ['low param']
-    r, start_time_1 = kb_interface.create_reconfiguration_plan(
+    start_time_1 = kb_interface.create_reconfiguration_plan(
         c_activate, c_deactivate, c_config)
 
     c_activate = ['component3']
     c_deactivate = ['component5']
     c_config = ['low param']
-    r2, start_time_2 = kb_interface.create_reconfiguration_plan(
+    start_time_2 = kb_interface.create_reconfiguration_plan(
         c_activate, c_deactivate, c_config)
 
     c_activate = ['component2']
     c_deactivate = ['component4']
     c_config = ['high param']
-    r3, start_time_3 = kb_interface.create_reconfiguration_plan(
+    start_time_3 = kb_interface.create_reconfiguration_plan(
         c_activate, c_deactivate, c_config)
 
     kb_interface.update_reconfiguration_plan_result(start_time_2, 'completed')
