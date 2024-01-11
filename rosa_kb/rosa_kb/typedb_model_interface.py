@@ -577,10 +577,9 @@ class ModelInterface(TypeDBInterface):
             'Component',
             [('component-name', name)],
             'is-active')
-        if len(is_activated) > 0:
-            return is_activated[0]
-        else:
-            return False
+        if len(is_activated) == 0:
+            return None
+        return is_activated[0]
 
     def create_reconfiguration_plan(self, c_activate, c_deactivate, c_config):
         match_query = "match "
@@ -645,9 +644,10 @@ class ModelInterface(TypeDBInterface):
 
         query = match_query + insert_query
         insert_result = self.insert_database(query)
-        if insert_result is not None:
-            return datetime.fromisoformat(
-                start_time.isoformat(timespec='milliseconds'))
+        if insert_result is None:
+            return None
+        return datetime.fromisoformat(
+            start_time.isoformat(timespec='milliseconds'))
 
     def select_fd_and_get_components(self, functions_selected_fd):
         _c_activate = []
@@ -830,10 +830,9 @@ class ModelInterface(TypeDBInterface):
             sort $time desc; limit 1;
         '''
         result = self.match_database(query)
-        if len(result) > 0:
-            return self.convert_query_type_to_py_type(result[0].get('time'))
-        else:
-            return False
+        if len(result) == 0:
+            return None
+        return self.convert_query_type_to_py_type(result[0].get('time'))
 
     def get_latest_pending_reconfiguration_plan_time(self):
         """
@@ -849,10 +848,9 @@ class ModelInterface(TypeDBInterface):
             sort $time desc; limit 1;
         '''
         result = self.match_database(query)
-        if len(result) > 0:
-            return self.convert_query_type_to_py_type(result[0].get('time'))
-        else:
-            return False
+        if len(result) == 0:
+            return None
+        return self.convert_query_type_to_py_type(result[0].get('time'))
 
     def get_latest_completed_reconfiguration_plan_time(self):
         """
@@ -869,10 +867,9 @@ class ModelInterface(TypeDBInterface):
             sort $time desc; limit 1;
         '''
         result = self.match_database(query)
-        if len(result) > 0:
-            return self.convert_query_type_to_py_type(result[0].get('time'))
-        else:
-            return False
+        if len(result) == 0:
+            return None
+        return self.convert_query_type_to_py_type(result[0].get('time'))
 
     def get_reconfiguration_plan(self, start_time):
         """
@@ -914,7 +911,7 @@ class ModelInterface(TypeDBInterface):
         result = self.match_database(query)
         c_config = [r.get('c_config').get('value') for r in result]
         reconfig_plan_dict = {
-            'start-time': start_time,
+            'start_time': start_time,
             'c_activate': c_activate,
             'c_deactivate': c_deactivate,
             'c_config': c_config,
@@ -929,12 +926,11 @@ class ModelInterface(TypeDBInterface):
         :rtype: dict[str, list[str]] or False
         """
         time = self.get_latest_reconfiguration_plan_time()
-        if time is not False:
-            reconfig_plan_dict = self.get_reconfiguration_plan(time)
-            reconfig_plan_dict['start-time'] = time
-            return reconfig_plan_dict
-        else:
-            return False
+        if time is None:
+            return None
+        reconfig_plan_dict = self.get_reconfiguration_plan(time)
+        reconfig_plan_dict['start_time'] = time
+        return reconfig_plan_dict
 
     def get_latest_pending_reconfiguration_plan(self):
         """
@@ -944,12 +940,12 @@ class ModelInterface(TypeDBInterface):
         :rtype: dict[str, list[str]] or False
         """
         time = self.get_latest_pending_reconfiguration_plan_time()
-        if time is not False:
-            reconfig_plan_dict = self.get_reconfiguration_plan(time)
-            reconfig_plan_dict['start-time'] = time
-            return reconfig_plan_dict
-        else:
-            return False
+        if time is None:
+            return None
+        reconfig_plan_dict = self.get_reconfiguration_plan(time)
+        reconfig_plan_dict['start_time'] = time
+        return reconfig_plan_dict
+
 
     def update_reconfiguration_plan_result(self, start_time, result_value):
         if type(start_time) is str:
@@ -987,20 +983,20 @@ class ModelInterface(TypeDBInterface):
 
     def update_outdated_reconfiguration_plans_result(self):
         outdated_times = self.get_outdated_reconfiguration_plans()
-        if len(outdated_times) > 0:
-            update_plans = [{
-                'attributes': {'start-time': time},
-                'update_attributes': {
-                    'end-time': datetime.now(),
-                    'result': 'abandoned'}
-                } for time in outdated_times]
+        if len(outdated_times) == 0:
+            return None
 
-            match_dict = {
-                'reconfiguration-plan': update_plans
-            }
-            return self.update_attributes_in_thing(match_dict)
-        else:
-            return False
+        update_plans = [{
+            'attributes': {'start-time': time},
+            'update_attributes': {
+                'end-time': datetime.now(),
+                'result': 'abandoned'}
+            } for time in outdated_times]
+
+        match_dict = {
+            'reconfiguration-plan': update_plans
+        }
+        return self.update_attributes_in_thing(match_dict)
 
     def get_reconfiguration_plan_result(self, start_time):
         start_time = self.convert_py_type_to_query_type(start_time)
@@ -1011,10 +1007,9 @@ class ModelInterface(TypeDBInterface):
             get $result;
         '''
         result = self.match_database(query)
-        if len(result) > 0:
-            return self.convert_query_type_to_py_type(result[0].get('result'))
-        else:
-            return ''
+        if len(result) == 0:
+            return None
+        return self.convert_query_type_to_py_type(result[0].get('result'))
 
     def get_component_parameters(self, c_config):
         """
@@ -1036,23 +1031,24 @@ class ModelInterface(TypeDBInterface):
             get $c_name, $key, $value, $type;
         '''
         _result = self.match_database(query)
-        result = {}
+        if len(_result) == 0:
+            return None
+
         params = []
-        if len(_result) > 0:
-            result['Component'] = self.convert_query_type_to_py_type(
-                _result[0].get('c_name'))
-            for r in _result:
-                print('r: ', r)
-                value = convert_component_parameter_value_to_py_type(
-                    self.convert_query_type_to_py_type(r.get('value')),
-                    self.convert_query_type_to_py_type(r.get('type'))
-                )
-                params.append({
-                    'key': self.convert_query_type_to_py_type(r.get('key')),
-                    'value': value,
-                    'type': self.convert_query_type_to_py_type(r.get('type'))
-                })
-            result['ComponentParameters'] = params
+        result = {}
+        result['component'] = self.convert_query_type_to_py_type(
+            _result[0].get('c_name'))
+        for r in _result:
+            value = convert_component_parameter_value_to_py_type(
+                self.convert_query_type_to_py_type(r.get('value')),
+                self.convert_query_type_to_py_type(r.get('type'))
+            )
+            params.append({
+                'key': self.convert_query_type_to_py_type(r.get('key')),
+                'value': value,
+                'type': self.convert_query_type_to_py_type(r.get('type'))
+            })
+        result['component_parameters'] = params
         return result
 
     def get_component_all_attributes(self, component):
@@ -1072,12 +1068,14 @@ class ModelInterface(TypeDBInterface):
                 get $component-type, $attribute;
         '''
         result = self.match_database(query)
+        if len(result) == 0:
+            return None
+
         result_dict = {}
-        if len(result) > 0:
-            result_dict['type'] = result[0].get('component-type').get('label')
-            for r in result:
-                attr_name = r.get('attribute').get('type')
-                attr_value = self.convert_query_type_to_py_type(
-                    r.get('attribute'))
-                result_dict[attr_name] = attr_value
+        result_dict['type'] = result[0].get('component-type').get('label')
+        for r in result:
+            attr_name = r.get('attribute').get('type').replace('-', '_')
+            attr_value = self.convert_query_type_to_py_type(
+                r.get('attribute'))
+            result_dict[attr_name] = attr_value
         return result_dict

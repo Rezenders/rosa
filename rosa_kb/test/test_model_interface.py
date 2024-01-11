@@ -378,7 +378,7 @@ def test_get_latest_reconfiguration_plan_time(kb_interface):
 
 def test_get_latest_reconfiguration_plan_time_no_rp(kb_interface):
     lastest_plan = kb_interface.get_latest_reconfiguration_plan_time()
-    assert lastest_plan is False
+    assert lastest_plan is None
 
 
 def test_get_reconfiguration_plan(kb_interface):
@@ -407,7 +407,7 @@ def test_get_latest_reconfiguration_plan(kb_interface):
     start_time_2 = kb_interface.create_reconfiguration_plan(
         c_activate, c_deactivate, c_config)
     reconfig_plan = kb_interface.get_latest_reconfiguration_plan()
-    assert reconfig_plan['start-time'] == start_time_2 and \
+    assert reconfig_plan['start_time'] == start_time_2 and \
         sorted(c_activate) == sorted(reconfig_plan['c_activate']) and \
         sorted(c_deactivate) == sorted(reconfig_plan['c_deactivate']) and \
         sorted(c_config) == sorted(reconfig_plan['c_config'])
@@ -449,8 +449,7 @@ def test_get_latest_completed_reconfiguration_plan_time(kb_interface):
         c_activate, c_deactivate, c_config)
     kb_interface.update_reconfiguration_plan_result(start_time_2, 'completed')
     end_time = kb_interface.get_latest_completed_reconfiguration_plan_time()
-    assert end_time is not False and end_time is not None \
-        and type(end_time) is datetime
+    assert end_time is not None and type(end_time) is datetime
 
 
 def test_get_latest_pending_reconfiguration_plan_time(kb_interface):
@@ -467,7 +466,7 @@ def test_get_latest_pending_reconfiguration_plan_time(kb_interface):
         c_activate, c_deactivate, c_config)
     kb_interface.update_reconfiguration_plan_result(start_time_2, 'completed')
     r_start_time = kb_interface.get_latest_pending_reconfiguration_plan_time()
-    assert r_start_time is not False and r_start_time is not None \
+    assert r_start_time is not None \
         and type(r_start_time) is datetime and r_start_time == start_time_1
 
 
@@ -564,8 +563,8 @@ def test_convert_component_parameter_value_to_py_type(type, param, expected):
 def test_get_component_parameters(kb_interface):
     c_config = 'get_cp_cc'
     expected = {
-        'Component': 'get_cp_c',
-        'ComponentParameters': [
+        'component': 'get_cp_c',
+        'component_parameters': [
             {'key': 'get_cp_1', 'value': True, 'type': 'boolean'},
             {'key': 'get_cp_2',
              'value': [True, False], 'type': 'boolean_array'},
@@ -579,9 +578,9 @@ def test_get_component_parameters(kb_interface):
         ]
     }
     result = kb_interface.get_component_parameters(c_config)
-    assert result['Component'] == expected['Component'] and \
-        all(r in result['ComponentParameters'] for
-            r in expected['ComponentParameters'])
+    assert result['component'] == expected['component'] and \
+        all(r in result['component_parameters'] for
+            r in expected['component_parameters'])
 
 
 def test_get_component_all_attributes(kb_interface):
@@ -590,18 +589,18 @@ def test_get_component_all_attributes(kb_interface):
 
     expected_result = {
         'type': 'Component',
-        'component-name': 'c_attributes',
-        'is-active': True,
-        'is-required': True,
-        'component-status': 'solved',
+        'component_name': 'c_attributes',
+        'is_active': True,
+        'is_required': True,
+        'component_status': 'solved',
     }
 
     expected_result2 = {
         'type': 'LifeCycleNode',
-        'component-name': 'ros_typedb_test',
+        'component_name': 'ros_typedb_test',
         'package': 'ros_typedb',
         'executable': 'ros_typedb',
-        'component-status': 'feasible',
+        'component_status': 'feasible',
     }
 
     assert result == expected_result and result2 == expected_result2

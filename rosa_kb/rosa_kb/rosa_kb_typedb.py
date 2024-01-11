@@ -335,7 +335,7 @@ class RosaKB(ROSTypeDBInterface):
         c_dict = self.typedb_interface.get_component_all_attributes(component)
         _component = Component()
         _component.name = component
-        _component.status = c_dict.pop('component-status', '')
+        _component.status = c_dict.pop('component_status', '')
         _component.package = c_dict.pop('package', '')
         _component.executable = c_dict.pop('executable', '')
         _component.node_type = c_dict.pop('type', '')
@@ -344,28 +344,34 @@ class RosaKB(ROSTypeDBInterface):
 
     def reconfig_plan_dict_to_ros_msg(self, reconfig_plan_dict):
         reconfig_plan = ReconfigurationPlan()
-        if reconfig_plan_dict is not False:
+        if reconfig_plan_dict is not None:
             for c_activate in reconfig_plan_dict['c_activate']:
                 _component = self.get_component_all_attributes(c_activate)
                 reconfig_plan.components_activate.append(_component)
+
             for c_deactivate in reconfig_plan_dict['c_deactivate']:
                 _component = self.get_component_all_attributes(c_deactivate)
                 reconfig_plan.components_deactivate.append(_component)
+
             for c_config in reconfig_plan_dict['c_config']:
                 _c_config = ComponentConfiguration()
                 _c_config.name = c_config
                 reconfig_plan.component_configurations.append(_c_config)
-            reconfig_plan.start_time = reconfig_plan_dict['start-time']\
+
+            reconfig_plan.start_time = reconfig_plan_dict['start_time']\
                 .isoformat(timespec='milliseconds')
-            reconfig_plan.result = \
-                self.typedb_interface.get_reconfiguration_plan_result(
-                    reconfig_plan_dict['start-time'])
+
+            _result = self.typedb_interface.get_reconfiguration_plan_result(
+                reconfig_plan_dict['start_time'])
+            if _result is not None:
+                reconfig_plan.result = _result
+
         return reconfig_plan
 
     def get_latest_reconfiguration_plan_cb(self, req, res):
         reconfig_plan_dict = \
             self.typedb_interface.get_latest_pending_reconfiguration_plan()
-        if reconfig_plan_dict is not False:
+        if reconfig_plan_dict is not None:
             res.reconfig_plan = self.reconfig_plan_dict_to_ros_msg(
                 reconfig_plan_dict)
             res.success = True
@@ -376,7 +382,7 @@ class RosaKB(ROSTypeDBInterface):
     def get_reconfiguration_plan_cb(self, req, res):
         reconfig_plan_dict = self.typedb_interface.get_reconfiguration_plan(
             datetime.fromisoformat(req.reconfig_plan.start_time))
-        if reconfig_plan_dict is not False:
+        if reconfig_plan_dict is not None:
             res.reconfig_plan = self.reconfig_plan_dict_to_ros_msg(
                 reconfig_plan_dict)
             res.success = True
@@ -405,10 +411,10 @@ class RosaKB(ROSTypeDBInterface):
     def get_component_parameters_cb(self, req, res):
         result = self.typedb_interface.get_component_parameters(
             req.c_config.name)
-        if 'Component' in result and 'ComponentParameters' in result:
+        if 'component' in result and 'component_parameters' in result:
             res.success = True
-            res.component.name = result['Component']
-            for param in result['ComponentParameters']:
+            res.component.name = result['component']
+            for param in result['component_parameters']:
                 _param = Parameter()
                 _param.name = param['key']
                 _param.value = set_query_result_value(
