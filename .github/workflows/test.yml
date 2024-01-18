@@ -22,6 +22,6 @@ jobs:
       - uses: ros-tooling/action-ros-ci@0.3.5
         with:
           package-name: rosa_msgs rosa_kb rosa_plan rosa_bringup
-          import-token: ${{ secrets.REPO_TOKEN }}
+          import-token: ${{ secrets.GITHUB_TOKEN }}
           target-ros2-distro: humble
-          vcs-repo-file-url: https://raw.githubusercontent.com/kas-lab/rosa/main/rosa.rosinstall
+          vcs-repo-file-url: rosa.rosinstall
