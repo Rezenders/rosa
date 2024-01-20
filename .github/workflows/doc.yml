@@ -27,7 +27,7 @@ jobs:
           import-token: ${{ secrets.GITHUB_TOKEN }}
       - name: Install dependencies
         run: |
-          pip install sphinx sphinx_rtd_theme myst_parser sphinx-autopackagesummary typedb-driver
+          pip install sphinx sphinx_rtd_theme myst_parser sphinx-autopackagesummary sphinx-autodoc-typehints typedb-driver
       - name: Sphinx build
         run: |
           source ${{ steps.action_ros_ci_step.outputs.ros-workspace-directory-name }}/install/setup.bash && sphinx-build docs/source docs/build
