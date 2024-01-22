@@ -90,6 +90,7 @@ protected:
     while (!action_req_client->wait_for_service(1s)) {
       if (!rclcpp::ok()) {
         RCLCPP_ERROR(_node->get_logger(), "Interrupted while waiting for the service. Exiting.");
+        return;
       }
       RCLCPP_INFO(_node->get_logger(), "service /rosa_kb/action/request not available, waiting again...");
     }
