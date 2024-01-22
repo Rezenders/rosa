@@ -31,10 +31,18 @@ from rosa_msgs.srv import SelectableFunctionDesigns
 from std_msgs.msg import String
 
 
+def check_lc_active(func):
+    def inner(*args, **kwargs):
+        if args[0].active is True:
+            return func(*args, **kwargs)
+    return inner
+
+
 class ConfigurationPlanner(Node):
     """Configuration planner."""
 
     def __init__(self, node_name, **kwargs):
+        self.active = False
         super().__init__(node_name, **kwargs)
 
     def on_configure(self, state: State) -> TransitionCallbackReturn:
@@ -93,12 +101,18 @@ class ConfigurationPlanner(Node):
 
     def on_activate(self, state: State) -> TransitionCallbackReturn:
         self.get_logger().info(self.get_name() + ': on_activate() is called.')
+        self.active = True
         return super().on_activate(state)
 
-    def on_cleanup(self, state: State) -> TransitionCallbackReturn:
-        self.destroy_subscription(self.event_sub)
+    def on_deactivate(self, state: State) -> TransitionCallbackReturn:
+        self.get_logger().info("on_deactivate() is called.")
+        self.active = False
+        return super().on_deactivate(state)
 
+    def on_cleanup(self, state: State) -> TransitionCallbackReturn:
         self.get_logger().info('on_cleanup() is called.')
+        self.active = False
+        self.destroy_subscription(self.event_sub)
         return TransitionCallbackReturn.SUCCESS
 
     def plan_function_adaptation(self):
@@ -178,6 +192,7 @@ class ConfigurationPlanner(Node):
             selected_component_configs
         return selected_config
 
+    @check_lc_active
     def event_cb(self, msg):
         if msg.data == 'insert_monitoring_data' or msg.data == 'action_update':
             selected_config = self.plan_adaptation()
