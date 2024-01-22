@@ -62,13 +62,33 @@ def publish_event(event_type: str):
     return _publish_event
 
 
+def check_lc_active(func):
+    def inner(*args, **kwargs):
+        if args[0].active is True:
+            return func(*args, **kwargs)
+    return inner
+
+
 class RosaKB(ROSTypeDBInterface):
     """ROS lifecycle node implementing ROSA's KB."""
 
     def __init__(self, node_name, **kwargs):
         """Create RosaKB node, inherits from :class:`ROSTypeDBInterface`."""
+        self.active = False
         super().__init__(node_name, **kwargs)
         self.typedb_interface_class = ModelInterface
+
+    def on_activate(self, state: State) -> TransitionCallbackReturn:
+        self.get_logger().info(self.get_name() + ': on_activate() is called.')
+        self.active = True
+        self.get_logger().info(
+            self.get_name() + ': on_activate() is completed.')
+        return super().on_activate(state)
+
+    def on_deactivate(self, state: State) -> TransitionCallbackReturn:
+        self.get_logger().info("on_deactivate() is called.")
+        self.active = False
+        return super().on_deactivate(state)
 
     def on_configure(self, state: State) -> TransitionCallbackReturn:
         """
@@ -201,6 +221,7 @@ class RosaKB(ROSTypeDBInterface):
 
         :return: transition result
         """
+        self.active = False
         return super().on_cleanup(state)
 
     @publish_event(event_type='insert_monitoring_data')
@@ -244,6 +265,7 @@ class RosaKB(ROSTypeDBInterface):
                 self.typedb_interface.update_component_status(
                     value.key, 'failure')
 
+    @check_lc_active
     def diagnostics_callback(
             self, msg: diagnostic_msgs.msg.DiagnosticArray) -> None:
         """
@@ -272,6 +294,7 @@ class RosaKB(ROSTypeDBInterface):
             if diagnostic_status.message.lower() in component_messages:
                 self.update_component_status(diagnostic_status)
 
+    @check_lc_active
     @publish_event(event_type='action_update')
     def action_request_cb(
         self,
@@ -302,6 +325,7 @@ class RosaKB(ROSTypeDBInterface):
             res.success = False
         return res
 
+    @check_lc_active
     def action_selectable_cb(
         self,
         req: rosa_msgs.srv.SelectableActions.Request,
@@ -323,6 +347,7 @@ class RosaKB(ROSTypeDBInterface):
             res.actions.append(action)
         return res
 
+    @check_lc_active
     def function_adaptable_cb(
         self,
         req: rosa_msgs.srv.AdaptableFunctions.Request,
@@ -349,6 +374,7 @@ class RosaKB(ROSTypeDBInterface):
             res.success = False
         return res
 
+    @check_lc_active
     def component_adaptable_cb(
         self,
         req: rosa_msgs.srv.AdaptableComponents.Request,
@@ -378,6 +404,7 @@ class RosaKB(ROSTypeDBInterface):
         res.components = [Component(name=c) for c in adaptable_c]
         return res
 
+    @check_lc_active
     def selectable_fd_cb(
         self,
         req: rosa_msgs.srv.SelectableFunctionDesigns.Request,
@@ -402,6 +429,7 @@ class RosaKB(ROSTypeDBInterface):
         res.success = True
         return res
 
+    @check_lc_active
     def selectable_c_config_cb(
         self,
         req: rosa_msgs.srv.SelectableComponentConfigurations.Request,
@@ -427,6 +455,7 @@ class RosaKB(ROSTypeDBInterface):
         res.success = True
         return res
 
+    @check_lc_active
     def function_design_priority_cb(
         self,
         req: rosa_msgs.srv.GetFunctionDesignPriority.Request,
@@ -452,6 +481,7 @@ class RosaKB(ROSTypeDBInterface):
         res.success = True
         return res
 
+    @check_lc_active
     def component_configuration_priority_cb(
         self,
         req: rosa_msgs.srv.GetComponentConfigurationPriority.Request,
@@ -478,6 +508,7 @@ class RosaKB(ROSTypeDBInterface):
         res.success = True
         return res
 
+    @check_lc_active
     @publish_event(event_type='insert_reconfiguration_plan')
     def select_configuration_cb(
         self,
@@ -563,6 +594,7 @@ class RosaKB(ROSTypeDBInterface):
 
         return reconfig_plan
 
+    @check_lc_active
     def get_latest_reconfiguration_plan_cb(
         self,
         req: rosa_msgs.srv.ReconfigurationPlanQuery.Request,
@@ -588,6 +620,7 @@ class RosaKB(ROSTypeDBInterface):
             res.success = False
         return res
 
+    @check_lc_active
     def get_reconfiguration_plan_cb(
         self,
         req: rosa_msgs.srv.ReconfigurationPlanQuery.Request,
@@ -613,6 +646,7 @@ class RosaKB(ROSTypeDBInterface):
             res.success = False
         return res
 
+    @check_lc_active
     def set_component_active_cb(
         self,
         req: rosa_msgs.srv.ComponentQuery.Request,
@@ -637,6 +671,7 @@ class RosaKB(ROSTypeDBInterface):
             res.component.is_active = req.component.is_active
         return res
 
+    @check_lc_active
     def get_component_active_cb(
         self,
         req: rosa_msgs.srv.ComponentQuery.Request,
@@ -660,6 +695,7 @@ class RosaKB(ROSTypeDBInterface):
             res.component.is_active = result
         return res
 
+    @check_lc_active
     def get_component_parameters_cb(
         self,
         req: rosa_msgs.srv.GetComponentParameters.Request,
@@ -688,6 +724,7 @@ class RosaKB(ROSTypeDBInterface):
                 res.parameters.append(_param)
         return res
 
+    @check_lc_active
     def set_reconfiguration_plan_result_service_cb(
         self,
         req: rosa_msgs.srv.ReconfigurationPlanQuery.Request,

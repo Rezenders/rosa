@@ -125,6 +125,7 @@ class ConfigurationExecutor(Node):
 
     def on_shutdown(self, state: State) -> TransitionCallbackReturn:
         self.get_logger().info('on_shutdown() is called.')
+        self.active = False
         self.kill_all_components()
         return super().on_shutdown(state)
 
