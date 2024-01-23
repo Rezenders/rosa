@@ -14,6 +14,7 @@
 
 import rclpy
 from rclpy.node import Node
+from rclpy.callback_groups import MutuallyExclusiveCallbackGroup
 
 from lifecycle_msgs.srv import ChangeState
 from lifecycle_msgs.srv import GetState
@@ -29,7 +30,7 @@ class LifeCycleManager(Node):
         self.managed_nodes = self.get_parameter('managed_nodes').value
         self.change_state_dict = dict()
         self.get_state_dict = dict()
-        self.cb_group = rclpy.callback_groups.MutuallyExclusiveCallbackGroup()
+        self.cb_group = MutuallyExclusiveCallbackGroup()
 
         for node in self.managed_nodes:
             self.change_state_dict[node] = self.create_client(
@@ -78,11 +79,22 @@ class LifeCycleManager(Node):
         return True
 
     def activate_managed_nodes(self):
-
         for node in self.managed_nodes:
-            if self.activate_lc_node(node) is False:
-                return False
-        return False
+            self.activate_lc_node(node)
+
+        self.create_timer(
+            1.0,
+            self.manage_lc_nodes_cb,
+            callback_group=MutuallyExclusiveCallbackGroup()
+        )
+
+    def manage_lc_nodes_cb(self):
+        for node in self.managed_nodes:
+            _state = self.get_lc_node_state(node)
+            if _state.current_state.id == 1:
+                self.change_lc_node_state(node, 1)
+            if _state.current_state.id == 2:
+                self.change_lc_node_state(node, 3)
 
 
 def main():
@@ -94,6 +106,7 @@ def main():
     future = executor.create_task(lc_node.activate_managed_nodes)
     try:
         executor.spin_until_future_complete(future, timeout_sec=30.0)
+        executor.spin()
     except (KeyboardInterrupt, rclpy.executors.ExternalShutdownException):
         lc_node.destroy_node()
 
