@@ -68,13 +68,13 @@ class LifeCycleManager(Node):
 
     def activate_lc_node(self, node_name):
         _state = self.get_lc_node_state(node_name)
-        if _state.current_state.id == 1:
+        if _state is not None and _state.current_state.id == 1:
             self.change_lc_node_state(node_name, 1)
         _state = self.get_lc_node_state(node_name)
-        if _state.current_state.id == 2:
+        if _state is not None and _state.current_state.id == 2:
             self.change_lc_node_state(node_name, 3)
         _state = self.get_lc_node_state(node_name)
-        if _state.current_state.id != 3:
+        if _state is not None and _state.current_state.id != 3:
             return False
         return True
 
@@ -91,10 +91,11 @@ class LifeCycleManager(Node):
     def manage_lc_nodes_cb(self):
         for node in self.managed_nodes:
             _state = self.get_lc_node_state(node)
-            if _state.current_state.id == 1:
-                self.change_lc_node_state(node, 1)
-            if _state.current_state.id == 2:
-                self.change_lc_node_state(node, 3)
+            if _state is not None:
+                if _state.current_state.id == 1:
+                    self.change_lc_node_state(node, 1)
+                if _state.current_state.id == 2:
+                    self.change_lc_node_state(node, 3)
 
 
 def main():
