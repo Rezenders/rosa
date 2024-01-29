@@ -62,6 +62,23 @@ Run ROSA:
 ros2 launch rosa_bringup rosa_bringup.launch.py
 ```
 
+## Example
+
+An example of how to use ROSA can be found in the [suave_rosa repo](https://github.com/kas-lab/suave_rosa), where ROSA was applied to the [SUAVE examplar](https://github.com/kas-lab/suave).
+
+## Configure ROSA to your use case
+
+To use ROSA to solve self-adaptation in a ROS 2-based robotic system, the following steps must be followed:
+
+**Step 1)** Model the use case conforming to ROSA's knowledge model: Model and implement the use case with TypeDB conforming to ROSA's knowledge model, capturing the robot's architecture, possible adaptations, the reasons to perform adaptation, and how to select adaptations. Check [suave.tql](https://github.com/kas-lab/suave_rosa/blob/main/config/suave.tql) for an example.
+
+**Step 2)** Model use case mission: Model and implement how the robot's mission is accomplished as a BT, reusing [RosaAction](https://github.com/kas-lab/rosa/blob/main/rosa_plan/include/rosa_plan/rosa_action.hpp) action node. Check [SearchPipeline](https://github.com/kas-lab/suave_rosa/blob/main/include/suave_rosa/action_search_pipeline.hpp) for an example.
+
+**Step 3)** Implement monitor nodes: Implement the monitor nodes required for the specific application. Check [WaterVisibilityObserver](https://github.com/kas-lab/suave/blob/main/suave/suave/water_visibility_observer.py)
+
+**Step 4)** Setup ROS launch files:
+Configure ROS launch files to start ROSA with the knowledge model files (from Step 1), the BT node (from Step 2), and the monitor nodes (from Step 3). Check [suave_rosa.launch.py](https://github.com/kas-lab/suave_rosa/blob/main/launch/suave_rosa.launch.py)
+
 ## Tests
 
 Start typedb:
