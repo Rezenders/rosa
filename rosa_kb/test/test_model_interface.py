@@ -33,9 +33,17 @@ def kb_interface():
 
 
 def test_request_action(kb_interface):
-    kb_interface.request_action('action1')
+    kb_interface.request_action('action1', 'ea1')
     is_required = kb_interface.is_action_required('action1')
-    assert is_required is True
+    query = """
+        match
+        $action isa Action, has action-name "action1";
+        (action: $action, preference: $att) isa required-action;
+        $att has name $name;
+        get $name;
+    """
+    result = kb_interface.match_database(query)
+    assert is_required is True and result[0].get('name').get('value') == 'ea1'
 
 
 def test_cancel_action(kb_interface):

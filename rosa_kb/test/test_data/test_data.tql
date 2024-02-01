@@ -55,11 +55,15 @@ $c6 isa Component, has component-name "component6";
 $c7 isa Component, has component-name "component7";
 (function: $f3, required-component: $c6, required-component: $c7) isa function-design, has function-design-name "f3_fd1_c6_c7";
 
-$t_required isa Action, has action-name "action_required", has is-required true;
-$t_required_activated isa Action, has action-name "action_required_solved", has is-required true, has action-status 'solved';
-$t_not_required isa Action, has action-name "action_not_required", has is-required false;
+$a_required isa Action, has action-name "action_required";
+(action: $a_required) isa required-action;
+
+$a_required_activated isa Action, has action-name "action_required_solved", has action-status 'solved';
+(action: $a_required_activated) isa required-action;
+
+$a_not_required isa Action, has action-name "action_not_required";
 $f_not_required isa Function, has function-name "f_not_required";
-(action:$t_not_required, required-function:$f_not_required) isa functional-requirement;
+(action:$a_not_required, required-function:$f_not_required) isa functional-requirement;
 $c_not_required isa Component, has component-name "c_not_required", has is-active true;
 $c_still_required isa Component, has component-name "c_still_required", has is-active true;
 (function:$f_not_required, required-component:$c_not_required, required-component:$c_still_required) isa function-design, has function-design-name "fd_selected_not_required", has is-selected true;
@@ -97,10 +101,12 @@ $c_always_improve isa Component, has component-name "c_always_improve", has alwa
 (component:$c_always_improve, parameter:$cp_reconfig_2) isa component-configuration, has component-configuration-name "c_improve_fd2";
 
 ## data to test select_reconfiguration
-$t_reconfigure isa Action, has action-name "t_reconfigure", has is-required true;
+$a_reconfigure isa Action, has action-name "a_reconfigure";
+(action: $a_reconfigure) isa required-action;
+
 $f_reconfigure_fd isa Function, has function-name "f_reconfigure_fd";
 $f_reconfigure_c_config isa Function, has function-name "f_reconfigure_f_config";
-(action: $t_reconfigure, required-function: $f_reconfigure_fd, required-function: $f_reconfigure_c_config) isa functional-requirement;
+(action: $a_reconfigure, required-function: $f_reconfigure_fd, required-function: $f_reconfigure_c_config) isa functional-requirement;
 $component_reconfig_1 isa Component, has component-name "component_reconfig_1", has is-active true;
 $component_reconfig_2 isa Component, has component-name "component_reconfig_2";
 $component_reconfig_3 isa Component, has component-name "component_reconfig_3";

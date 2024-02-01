@@ -1,4 +1,5 @@
 Action action
+string preference
 ---
 Action action
 bool success

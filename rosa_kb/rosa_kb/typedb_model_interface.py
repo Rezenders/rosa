@@ -136,15 +136,41 @@ class ModelInterface(TypeDBInterface):
             infer
         )
 
-    def request_action(self, action_name: str) -> Iterator[ConceptMap] | None:
+    def request_action(
+            self,
+            action_name: str,
+            preference: Optional[str] = '') -> Iterator[ConceptMap] | None:
         """
         Request Action.
 
         :param action_name: action name
-        :return: insert query result
+        :param preference: QA/EA that has preference when selecting a config
+        :return: insert query result or None when the action was already
+            required
         """
-        return self.update_attribute_in_thing(
-            'Action', 'action-name', action_name, 'is-required', True)
+        if self.is_action_required(action_name) is True:
+            return None
+
+        query = "match "
+
+        related_dict = dict()
+        query += " $action isa Action, has action-name '{}';".format(
+            action_name)
+        related_dict['action'] = ["action"]
+
+        if preference != '':
+            query += "$attr isa Attribute, has attribute-name '{}';".format(
+                preference)
+            related_dict['preference'] = ["attr"]
+
+        query += " insert "
+        query += self.create_relationship_query(
+            'required-action',
+            related_dict,
+            [('start-time', datetime.now())],
+            prefix='ra'
+        )
+        return self.insert_database(query)
 
     def cancel_action(self, action_name: str) -> Iterator[ConceptMap] | None:
         """
@@ -153,8 +179,18 @@ class ModelInterface(TypeDBInterface):
         :param action_name: action name
         :return: insert query result
         """
-        return self.update_attribute_in_thing(
-            'Action', 'action-name', action_name, 'is-required', False)
+        if self.is_action_required(action_name) is False:
+            return None
+
+        query = f"""
+            match
+                $action isa Action, has action-name '{action_name}';
+                $ra (action: $action) isa required-action;
+                not {{$ra has result $result;}};
+            insert
+                $ra has result 'abandoned';
+        """
+        return self.insert_database(query)
 
     def update_action_status(
             self,
@@ -218,7 +254,7 @@ class ModelInterface(TypeDBInterface):
             'Action', [('action-name', action_name)], 'is-required')
         if len(is_required) == 0:
             return False
-        return is_required[0]
+        return True in is_required
 
     def is_action_feasible(self, action_name: str) -> bool:
         """

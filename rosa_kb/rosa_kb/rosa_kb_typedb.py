@@ -316,7 +316,8 @@ class RosaKB(ROSTypeDBInterface):
         _is_action_selectable = self.typedb_interface.is_action_selectable(
             req.action.name)
         if req.action.is_required is True and _is_action_selectable is True:
-            self.typedb_interface.request_action(req.action.name)
+            self.typedb_interface.request_action(
+                req.action.name, req.preference)
             res.success = True
         elif req.action.is_required is False:
             self.typedb_interface.cancel_action(req.action.name)

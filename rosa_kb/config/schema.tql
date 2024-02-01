@@ -155,13 +155,21 @@ measurement sub relation,
     owns latest,
     relates measured-attribute;
 
+required-action sub relation,
+    owns start-time,
+    owns end-time,
+    owns result,
+    relates action,
+    relates preference;
+
 ### Concepts
 Action sub entity,
     owns action-name @key,
     owns action-status,
     owns is-required,
     plays functional-requirement:action,
-    plays constrainment:constrained;
+    plays constrainment:constrained,
+    plays required-action:action;
 
 Function sub entity,
     owns function-name @key,
@@ -195,13 +203,22 @@ Attribute sub entity,
     owns attribute-name @key,
     plays constrainment:constraint,
     plays estimation:affected,
-    plays measurement:measured-attribute;
+    plays measurement:measured-attribute,
+    plays required-action:preference;
 
 EnvironmentalAttribute sub Attribute;
 QualityAttribute sub Attribute;
 
 # Rules
 
+rule implicit-action-is-required:
+    when {
+        $ra (action: $a) isa required-action;
+        not {$ra has result $result;};
+    } then {
+        $a has is-required true;
+    };
+    
 rule implicit-function-is-required:
     when {
         (required-function:$function, action: $a) isa functional-requirement;
@@ -620,3 +637,5 @@ rule action-status-feasible:
     } then {
         $a has action-status 'feasible';
     };
+   
+

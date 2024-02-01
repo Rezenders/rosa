@@ -221,6 +221,7 @@ def test_rosa_kb_action_request(name, is_required):
         request = ActionQuery.Request()
         request.action.name = name
         request.action.is_required = is_required
+        request.preference = 'ea1'
 
         response = node.call_service(node.action_req_srv, request)
 
@@ -238,6 +239,9 @@ def test_rosa_kb_action_request(name, is_required):
             if r.name == 'action-required' \
                and r.value.bool_value is is_required:
                 correct_res = True
+
+        if len(query_res.attributes) == 0 and is_required is False:
+            correct_res = True
 
         assert response.success is True and correct_res is True
     finally:
