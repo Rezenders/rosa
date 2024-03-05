@@ -136,6 +136,119 @@ class ModelInterface(TypeDBInterface):
             infer
         )
 
+    def insert_action(self, action_name: str) -> Iterator[ConceptMap] | None:
+        """
+        Add new Action.
+
+        :param action_name: action name
+        :return: insert query result
+        """
+        return self.insert_entity('Action', [('action-name', action_name)])
+
+    def insert_functional_requirement(
+            self, action_name: str, functions_names: list[str]
+         ) -> Iterator[ConceptMap] | None:
+        """
+        Add new functional-requirement.
+
+        :param action_name: action name
+        :param functions_names: list of required functions
+        :return: insert query result
+        """
+        related_dict = {
+            'action': [('Action', 'action-name', action_name)],
+            'required-function': [
+                ('Function', 'function-name', f) for f in functions_names]
+        }
+        return self.insert_relationship(
+            'functional-requirement', related_dict)
+
+    def insert_function(
+         self, function_name: str) -> Iterator[ConceptMap] | None:
+        """
+        Add new Function.
+
+        :param function_name: function name
+        :return: insert query result
+        """
+        return self.insert_entity(
+            'Function', [('function-name', function_name)])
+
+    def insert_function_design(
+            self,
+            function_design_name: str,
+            function_name: str,
+            components_names: list[str],
+            priority: Optional[float] = None,
+         ) -> Iterator[ConceptMap] | None:
+        """
+        Add new function-design.
+
+        :param function_design_name: function design name
+        :param function_name: function name
+        :param components_names: list of required components
+        :param priority: function design priority
+        :return: insert query result
+        """
+        related_dict = {
+            'function': [('Function', 'function-name', function_name)],
+            'required-component': [
+                ('Component', 'component-name', c) for c in components_names]
+        }
+        attribute_list = [('function-design-name', function_design_name)]
+        if priority is not None:
+            attribute_list.append(('priority', priority))
+        return self.insert_relationship(
+            'function-design',
+            related_dict,
+            attribute_list)
+
+    def insert_component(
+            self,
+            component_name: str,
+            always_improve: Optional[bool] = False
+         ) -> Iterator[ConceptMap] | None:
+        """
+        Add new Component.
+
+        :param component_name: component name
+        :param always_improve: if it should always try to select the best
+        component configuration
+        :return: insert query result
+        """
+        return self.insert_entity(
+            'Component',
+            [('component-name', component_name),
+             ('always-improve', always_improve)]
+        )
+
+    def insert_ros_node_component(
+            self,
+            component_name: str,
+            package: str,
+            executable: str,
+            always_improve: Optional[bool] = False,
+            lifecycle_node: Optional[bool] = False,
+         ) -> Iterator[ConceptMap] | None:
+        """
+        Add new ROSNode Component.
+
+        :param component_name: component name
+        :param package: ros package name
+        :param executable: ros executable name
+        :param always_improve: if it should always try to select the best
+        component configuration
+        :param lifecycle_node: if the ros node is a lifecycle node
+        :return: insert query result
+        """
+        return self.insert_entity(
+            'LifeCycleNode' if lifecycle_node else 'ROSNode',
+            [('component-name', component_name),
+             ('package', package),
+             ('executable', executable),
+             ('always-improve', always_improve)]
+        )
+
     def request_action(
             self,
             action_name: str,
