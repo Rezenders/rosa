@@ -23,9 +23,13 @@ from rosa_msgs.msg import Function
 from rosa_msgs.msg import FunctionDesign
 from rosa_msgs.msg import ReconfigurationPlan
 
+from rosa_msgs.srv import ActionQuery
 from rosa_msgs.srv import AdaptableFunctions
 from rosa_msgs.srv import AdaptableComponents
 from rosa_msgs.srv import ComponentQuery
+from rosa_msgs.srv import FunctionQuery
+from rosa_msgs.srv import FunctionDesignQuery
+from rosa_msgs.srv import FunctionalRequirementQuery
 from rosa_msgs.srv import GetComponentParameters
 from rosa_msgs.srv import GetComponentConfigurationPriority
 from rosa_msgs.srv import GetFunctionDesignPriority
@@ -33,7 +37,6 @@ from rosa_msgs.srv import ReconfigurationPlanQuery
 from rosa_msgs.srv import SelectedConfigurations
 from rosa_msgs.srv import SelectableComponentConfigurations
 from rosa_msgs.srv import SelectableFunctionDesigns
-from rosa_msgs.srv import ActionQuery
 from rosa_msgs.srv import SelectableActions
 
 from rcl_interfaces.msg import Parameter
@@ -120,10 +123,31 @@ class RosaKB(ROSTypeDBInterface):
             callback_group=self.query_cb_group
         )
 
+        self.action_insert_service = self.create_service(
+            ActionQuery,
+            self.get_name() + '/action/insert',
+            self.action_insert_cb,
+            callback_group=self.query_cb_group
+        )
+
+        self.functional_requirement_insert_service = self.create_service(
+            FunctionalRequirementQuery,
+            self.get_name() + '/functional_requirement/insert',
+            self.functional_requirement_insert_cb,
+            callback_group=self.query_cb_group
+        )
+
         self.get_adaptable_functions_service = self.create_service(
             AdaptableFunctions,
             self.get_name() + '/function/adaptable',
             self.function_adaptable_cb,
+            callback_group=self.query_cb_group
+        )
+
+        self.function_insert_service = self.create_service(
+            FunctionQuery,
+            self.get_name() + '/function/insert',
+            self.function_insert_cb,
             callback_group=self.query_cb_group
         )
 
@@ -134,6 +158,13 @@ class RosaKB(ROSTypeDBInterface):
             callback_group=self.query_cb_group
         )
 
+        self.component_insert_service = self.create_service(
+            ComponentQuery,
+            self.get_name() + '/component/insert',
+            self.component_insert_cb,
+            callback_group=self.query_cb_group
+        )
+
         self.get_selectable_fds_service = self.create_service(
             SelectableFunctionDesigns,
             self.get_name() + '/function_designs/selectable',
@@ -141,17 +172,24 @@ class RosaKB(ROSTypeDBInterface):
             callback_group=self.query_cb_group
         )
 
-        self.get_selectable_c_configs_service = self.create_service(
-            SelectableComponentConfigurations,
-            self.get_name() + '/component_configuration/selectable',
-            self.selectable_c_config_cb,
-            callback_group=self.query_cb_group
-        )
-
         self.get_fds_priority_service = self.create_service(
             GetFunctionDesignPriority,
             self.get_name() + '/function_designs/priority',
             self.function_design_priority_cb,
+            callback_group=self.query_cb_group
+        )
+
+        self.function_design_insert_service = self.create_service(
+            FunctionDesignQuery,
+            self.get_name() + '/function_design/insert',
+            self.function_design_insert_cb,
+            callback_group=self.query_cb_group
+        )
+
+        self.get_selectable_c_configs_service = self.create_service(
+            SelectableComponentConfigurations,
+            self.get_name() + '/component_configuration/selectable',
+            self.selectable_c_config_cb,
             callback_group=self.query_cb_group
         )
 
@@ -324,6 +362,126 @@ class RosaKB(ROSTypeDBInterface):
             res.success = True
         else:
             res.success = False
+        res.action.is_required = self.typedb_interface.is_action_required(
+            req.action.name)
+        return res
+
+    @check_lc_active
+    def action_insert_cb(
+        self,
+        req: rosa_msgs.srv.ActionQuery.Request,
+        res: rosa_msgs.srv.ActionQuery.Response
+    ) -> rosa_msgs.srv.ActionQuery.Response:
+        """
+        Insert Action (callback).
+
+        Callback from service `~/action/insert`. Insert new action to the
+        database.
+
+        :param req: `~/action/insert` service request
+        :param res: `~/action/insert` service response
+        :return: `~/action/insert` service response
+        """
+        self.typedb_interface.insert_action(req.action.name)
+        res.success = True
+        return res
+
+    @check_lc_active
+    def function_insert_cb(
+        self,
+        req: rosa_msgs.srv.FunctionQuery.Request,
+        res: rosa_msgs.srv.FunctionQuery.Response
+    ) -> rosa_msgs.srv.FunctionQuery.Response:
+        """
+        Insert Function (callback).
+
+        Callback from service `~/function/insert`. Insert new function to the
+        database.
+
+        :param req: `~/function/insert` service request
+        :param res: `~/function/insert` service response
+        :return: `~/function/insert` service response
+        """
+        self.typedb_interface.insert_function(req.function.name)
+        res.success = True
+        return res
+
+    @check_lc_active
+    def component_insert_cb(
+        self,
+        req: rosa_msgs.srv.ComponentQuery.Request,
+        res: rosa_msgs.srv.ComponentQuery.Response
+    ) -> rosa_msgs.srv.ComponentQuery.Response:
+        """
+        Insert Component (callback).
+
+        Callback from service `~/component/insert`. Insert new component to the
+        database.
+
+        :param req: `~/component/insert` service request
+        :param res: `~/component/insert` service response
+        :return: `~/component/insert` service response
+        """
+        self.typedb_interface.insert_ros_node_component(
+            req.component.name,
+            req.component.package,
+            req.component.executable,
+            req.component.always_improve,
+            (req.component.node_type == 'LifeCycleNode'),
+        )
+        res.success = True
+        return res
+
+    @check_lc_active
+    def function_design_insert_cb(
+        self,
+        req: rosa_msgs.srv.FunctionDesignQuery.Request,
+        res: rosa_msgs.srv.FunctionDesignQuery.Response
+    ) -> rosa_msgs.srv.FunctionDesignQuery.Response:
+        """
+        Insert function-design (callback).
+
+        Callback from service `~/function_design/insert`. Insert new
+        function_design to the database.
+
+        :param req: `~/function_design/insert` service request
+        :param res: `~/function_design/insert` service response
+        :return: `~/function_design/insert` service response
+        """
+        component_names = [
+            c.name for c in req.function_design.required_components]
+        self.typedb_interface.insert_function_design(
+            req.function_design.name,
+            req.function_design.function.name,
+            component_names,
+            req.function_design.priority,
+        )
+        res.success = True
+        return res
+
+    @check_lc_active
+    def functional_requirement_insert_cb(
+        self,
+        req: rosa_msgs.srv.FunctionalRequirementQuery.Request,
+        res: rosa_msgs.srv.FunctionalRequirementQuery.Response
+    ) -> rosa_msgs.srv.FunctionalRequirementQuery.Response:
+        """
+        Insert functional-requirement (callback).
+
+        Callback from service `~/functional_requirement/insert`. Insert new
+        functional_requirement to the database.
+
+        :param req: `~/functional_requirement/insert` service request
+        :param res: `~/functional_requirement/insert` service response
+        :return: `~/functional_requirement/insert` service response
+        """
+        function_names = [
+            f.name for f in req.functional_requirement.required_functions]
+        self.typedb_interface.insert_functional_requirement(
+            req.functional_requirement.action.name,
+            function_names,
+        )
+        res.success = True
         return res
 
     @check_lc_active

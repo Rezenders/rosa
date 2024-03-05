@@ -43,6 +43,9 @@ from rosa_msgs.msg import FunctionDesign
 from rosa_msgs.srv import AdaptableFunctions
 from rosa_msgs.srv import AdaptableComponents
 from rosa_msgs.srv import ComponentQuery
+from rosa_msgs.srv import FunctionQuery
+from rosa_msgs.srv import FunctionDesignQuery
+from rosa_msgs.srv import FunctionalRequirementQuery
 from rosa_msgs.srv import GetComponentParameters
 from rosa_msgs.srv import GetComponentConfigurationPriority
 from rosa_msgs.srv import ReconfigurationPlanQuery
@@ -75,7 +78,9 @@ def generate_test_description():
         name='rosa_kb',
         output='screen',
         parameters=[{
-            'schema_path': [str(path_config / 'schema.tql')],
+            'schema_path': [
+                str(path_config / 'schema.tql'),
+                str(path_config / 'ros_schema.tql')],
             'data_path': [str(path_test_data / 'test_data.tql')],
             'database_name': database_name
         }]
@@ -244,6 +249,230 @@ def test_rosa_kb_action_request(name, is_required):
             correct_res = True
 
         assert response.success is True and correct_res is True
+    finally:
+        rclpy.shutdown()
+
+
+@pytest.mark.launch(fixture=generate_test_description)
+def test_rosa_kb_action_insert():
+    rclpy.init()
+    try:
+        node = MakeTestNode()
+        node.start_node()
+        node.activate_rosa_kb()
+        node.insert_srv = node.create_client(
+            ActionQuery, '/rosa_kb/action/insert')
+
+        name = 'action_insert_test'
+
+        request = ActionQuery.Request()
+        request.action.name = name
+
+        response = node.call_service(node.insert_srv, request)
+
+        query_req = Query.Request()
+        query_req.query_type = 'match'
+        query_req.query = f"""
+            match $action isa Action,
+                has action-name "{name}";
+        """
+        query_res = node.call_service(node.query_srv, query_req)
+        assert response.success is True and len(query_res.attributes) > 0
+    finally:
+        rclpy.shutdown()
+
+
+@pytest.mark.launch(fixture=generate_test_description)
+def test_rosa_kb_function_insert():
+    rclpy.init()
+    try:
+        node = MakeTestNode()
+        node.start_node()
+        node.activate_rosa_kb()
+        node.insert_srv = node.create_client(
+            FunctionQuery, '/rosa_kb/function/insert')
+
+        name = 'function_insert_test'
+
+        request = FunctionQuery.Request()
+        request.function.name = name
+
+        response = node.call_service(node.insert_srv, request)
+
+        query_req = Query.Request()
+        query_req.query_type = 'match'
+        query_req.query = f"""
+            match $function isa Function,
+                has function-name "{name}";
+        """
+        query_res = node.call_service(node.query_srv, query_req)
+        assert response.success is True and len(query_res.attributes) > 0
+    finally:
+        rclpy.shutdown()
+
+
+@pytest.mark.launch(fixture=generate_test_description)
+def test_rosa_kb_component_insert():
+    rclpy.init()
+    try:
+        node = MakeTestNode()
+        node.start_node()
+        node.activate_rosa_kb()
+        node.insert_srv = node.create_client(
+            ComponentQuery, '/rosa_kb/component/insert')
+
+        name = 'component_insert_test'
+
+        request = ComponentQuery.Request()
+        request.component.name = name
+        request.component.package = 'rosa_kb'
+        request.component.executable = 'rosa_test'
+        request.component.node_type = 'LifeCycleNode'
+
+        response = node.call_service(node.insert_srv, request)
+
+        query_req = Query.Request()
+        query_req.query_type = 'match'
+        query_req.query = f"""
+            match $component isa LifeCycleNode,
+                has component-name "{name}",
+                has package "rosa_kb",
+                has executable "rosa_test";
+        """
+        query_res = node.call_service(node.query_srv, query_req)
+        assert response.success is True and len(query_res.attributes) > 0
+    finally:
+        rclpy.shutdown()
+
+
+@pytest.mark.launch(fixture=generate_test_description)
+def test_rosa_kb_function_design_insert():
+    rclpy.init()
+    try:
+        node = MakeTestNode()
+        node.start_node()
+        node.activate_rosa_kb()
+
+        f_name = 'f_function_design_insert_test'
+        node.function_insert_srv = node.create_client(
+            FunctionQuery, '/rosa_kb/function/insert')
+
+        request = FunctionQuery.Request()
+        request.function.name = f_name
+        response = node.call_service(node.function_insert_srv, request)
+
+        c_names = [
+            'c_function_design_insert_test',
+            'c2_function_design_insert_test'
+        ]
+        node.component_insert_srv = node.create_client(
+            ComponentQuery, '/rosa_kb/component/insert')
+
+        request = ComponentQuery.Request()
+        request.component.name = c_names[0]
+        request.component.package = 'package'
+        request.component.executable = 'executable'
+        response = node.call_service(node.component_insert_srv, request)
+        request = ComponentQuery.Request()
+        request.component.name = c_names[1]
+        request.component.package = 'package'
+        request.component.executable = 'executable'
+        response = node.call_service(node.component_insert_srv, request)
+
+        fd_name = 'function_design_insert_test'
+        node.fd_insert_srv = node.create_client(
+            FunctionDesignQuery, '/rosa_kb/function_design/insert')
+
+        request = FunctionDesignQuery.Request()
+        request.function_design.name = fd_name
+        request.function_design.priority = 1.5
+        request.function_design.function.name = f_name
+        request.function_design.required_components = [
+            Component(name=c_names[0]),
+            Component(name=c_names[1]),
+        ]
+        response = node.call_service(node.fd_insert_srv, request)
+
+        query_req = Query.Request()
+        query_req.query_type = 'match'
+        query_req.query = f"""
+            match
+                $fd (function: $f, required-component: $c)
+                    isa function-design,
+                has function-design-name "{fd_name}",
+                has priority $priority;
+                $f has function-name $f_name;
+                $c has component-name $c_name;
+            get $priority, $f_name, $c_name;
+        """
+        query_res = node.call_service(node.query_srv, query_req)
+        correct_function = False
+        correct_components = False
+        correct_priority = False
+        for attr in query_res.attributes:
+            if attr.name == 'c_name' and attr.value.string_value in c_names:
+                correct_components = True
+            elif attr.name == 'c_name':
+                correct_components = False
+
+            if attr.name == 'f_name' \
+               and attr.value.string_value == 'f_function_design_insert_test':
+                correct_function = True
+
+            if attr.name == 'priority' and attr.value.double_value == 1.5:
+                correct_priority = True
+
+        assert response.success is True and correct_function and \
+            correct_components and correct_priority
+    finally:
+        rclpy.shutdown()
+
+
+@pytest.mark.launch(fixture=generate_test_description)
+def test_rosa_kb_functional_requirement_insert():
+    rclpy.init()
+    try:
+        node = MakeTestNode()
+        node.start_node()
+        node.activate_rosa_kb()
+
+        a_name = 'action_insert_test'
+        node.action_insert_srv = node.create_client(
+            ActionQuery, '/rosa_kb/action/insert')
+        request = ActionQuery.Request()
+        request.action.name = a_name
+        response = node.call_service(node.action_insert_srv, request)
+
+        f_name = 'f_functional_requirement_insert_test'
+        node.function_insert_srv = node.create_client(
+            FunctionQuery, '/rosa_kb/function/insert')
+
+        request = FunctionQuery.Request()
+        request.function.name = f_name
+        response = node.call_service(node.function_insert_srv, request)
+
+        node.fr_insert_srv = node.create_client(
+            FunctionalRequirementQuery,
+            '/rosa_kb/functional_requirement/insert')
+
+        request = FunctionalRequirementQuery.Request()
+        request.functional_requirement.action.name = a_name
+        request.functional_requirement.required_functions = [
+            Function(name=f_name),
+        ]
+        response = node.call_service(node.fr_insert_srv, request)
+
+        query_req = Query.Request()
+        query_req.query_type = 'match'
+        query_req.query = f"""
+            match
+                $a has action-name "{a_name}";
+                $f has function-name "{f_name}";
+                $fr (action: $a, required-function: $f)
+                    isa functional-requirement;
+        """
+        query_res = node.call_service(node.query_srv, query_req)
+        assert response.success is True and len(query_res.attributes) > 0
     finally:
         rclpy.shutdown()
 
