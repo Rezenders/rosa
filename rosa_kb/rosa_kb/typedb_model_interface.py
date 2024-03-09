@@ -295,6 +295,7 @@ class ModelInterface(TypeDBInterface):
         if self.is_action_required(action_name) is False:
             return None
 
+        end_time = self.convert_py_type_to_query_type(datetime.now())
         query = f"""
             match
                 $action isa Action, has action-name '{action_name}';
@@ -302,6 +303,7 @@ class ModelInterface(TypeDBInterface):
                 not {{$ra has result $result;}};
             insert
                 $ra has result 'abandoned';
+                $ra has end-time {end_time};
         """
         return self.insert_database(query)
 
