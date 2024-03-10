@@ -630,3 +630,18 @@ def test_get_obsolete_component_configurations(kb_interface):
     query_result = kb_interface.get_obsolete_component_configurations()
     expected_result = ['cc_not_required']
     assert all(r in query_result for r in expected_result)
+
+
+def test_get_active_component_process(kb_interface):
+    kb_interface.insert_component('c_test_component_process')
+    kb_interface.insert_component('c_test_component_process2')
+    kb_interface.insert_component_process('c_test_component_process', 2333)
+    kb_interface.insert_component_process('c_test_component_process2', 22222)
+    expected_result = [
+        {'pid': 2333, 'component': 'c_test_component_process'},
+        {'pid': 22222, 'component': 'c_test_component_process2'}
+    ]
+    query_result = kb_interface.get_active_component_process()
+    for r in query_result:
+        del r['start_time']
+    assert all(r in query_result for r in expected_result)

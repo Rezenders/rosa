@@ -37,12 +37,15 @@ from ros_typedb_msgs.msg import Attribute
 
 from rosa_msgs.msg import Component
 from rosa_msgs.msg import ComponentConfiguration
+from rosa_msgs.msg import ComponentProcess
 from rosa_msgs.msg import Function
 from rosa_msgs.msg import FunctionDesign
 
 from rosa_msgs.srv import AdaptableFunctions
 from rosa_msgs.srv import AdaptableComponents
 from rosa_msgs.srv import ComponentQuery
+from rosa_msgs.srv import ComponentProcessQuery
+from rosa_msgs.srv import ComponentProcessQueryArray
 from rosa_msgs.srv import FunctionQuery
 from rosa_msgs.srv import FunctionDesignQuery
 from rosa_msgs.srv import FunctionalRequirementQuery
@@ -473,6 +476,157 @@ def test_rosa_kb_functional_requirement_insert():
         """
         query_res = node.call_service(node.query_srv, query_req)
         assert response.success is True and len(query_res.attributes) > 0
+    finally:
+        rclpy.shutdown()
+
+
+@pytest.mark.launch(fixture=generate_test_description)
+def test_rosa_kb_component_process_insert():
+    rclpy.init()
+    try:
+        node = MakeTestNode()
+        node.start_node()
+        node.activate_rosa_kb()
+
+        c_name = 'c_component_process_insert_test'
+        node.component_insert_srv = node.create_client(
+            ComponentQuery, '/rosa_kb/component/insert')
+
+        request = ComponentQuery.Request()
+        request.component.name = c_name
+        request.component.package = 'package'
+        request.component.executable = 'executable'
+        response = node.call_service(node.component_insert_srv, request)
+
+        c_process_pid = 65755
+        node.component_process_insert_srv = node.create_client(
+            ComponentProcessQuery, '/rosa_kb/component_process/insert')
+
+        request = ComponentProcessQuery.Request()
+        request.component_process.component.name = c_name
+        request.component_process.pid = c_process_pid
+        response = node.call_service(
+            node.component_process_insert_srv, request)
+
+        query_req = Query.Request()
+        query_req.query_type = 'match'
+        query_req.query = f"""
+            match
+                $c has component-name "{c_name}";
+                $cp (component: $c) isa component-process;
+        """
+        query_res = node.call_service(node.query_srv, query_req)
+        assert response.success is True and len(query_res.attributes) > 0
+    finally:
+        rclpy.shutdown()
+
+
+@pytest.mark.launch(fixture=generate_test_description)
+def test_rosa_kb_component_process_get_active():
+    rclpy.init()
+    try:
+        node = MakeTestNode()
+        node.start_node()
+        node.activate_rosa_kb()
+
+        c_name = 'c_component_process_insert_test'
+        node.component_insert_srv = node.create_client(
+            ComponentQuery, '/rosa_kb/component/insert')
+
+        request = ComponentQuery.Request()
+        request.component.name = c_name
+        request.component.package = 'package'
+        request.component.executable = 'executable'
+        node.call_service(node.component_insert_srv, request)
+
+        c_process_pid = 65755
+        node.component_process_insert_srv = node.create_client(
+            ComponentProcessQuery, '/rosa_kb/component_process/insert')
+
+        request = ComponentProcessQuery.Request()
+        request.component_process.component.name = c_name
+        request.component_process.pid = c_process_pid
+        node.call_service(node.component_process_insert_srv, request)
+
+        node.component_process_get_active_srv = node.create_client(
+            ComponentProcessQueryArray,
+            '/rosa_kb/component_process/get_active'
+        )
+
+        response_get = node.call_service(
+            node.component_process_get_active_srv,
+            ComponentProcessQueryArray.Request()
+        )
+        assert response_get.success is True and \
+            response_get.component_process[0].pid == c_process_pid and \
+            response_get.component_process[0].component.name == c_name
+
+    finally:
+        rclpy.shutdown()
+
+
+@pytest.mark.launch(fixture=generate_test_description)
+def test_rosa_kb_component_process_set_end_active():
+    rclpy.init()
+    try:
+        node = MakeTestNode()
+        node.start_node()
+        node.activate_rosa_kb()
+
+        c_name = 'c_component_process_insert_test'
+        node.component_insert_srv = node.create_client(
+            ComponentQuery, '/rosa_kb/component/insert')
+
+        request = ComponentQuery.Request()
+        request.component.name = c_name
+        request.component.package = 'package'
+        request.component.executable = 'executable'
+        node.call_service(node.component_insert_srv, request)
+
+        c_process_pid = 65755
+        node.component_process_insert_srv = node.create_client(
+            ComponentProcessQuery, '/rosa_kb/component_process/insert')
+
+        request = ComponentProcessQuery.Request()
+        request.component_process.component.name = c_name
+        request.component_process.pid = c_process_pid
+        node.call_service(node.component_process_insert_srv, request)
+
+        node.component_process_get_active_srv = node.create_client(
+            ComponentProcessQueryArray,
+            '/rosa_kb/component_process/get_active'
+        )
+
+        response_get = node.call_service(
+            node.component_process_get_active_srv,
+            ComponentProcessQueryArray.Request()
+        )
+
+        node.component_process_set_end_srv = node.create_client(
+            ComponentProcessQuery,
+            '/rosa_kb/component_process/end/set'
+        )
+
+        response_set_end = node.call_service(
+            node.component_process_set_end_srv,
+            ComponentProcessQuery.Request(
+                component_process=ComponentProcess(
+                    start_time=response_get.component_process[0].start_time))
+        )
+
+        query_req = Query.Request()
+        query_req.query_type = 'match'
+        query_req.query = f"""
+            match
+                $c has component-name "{c_name}";
+                $cp (component: $c) isa component-process,
+                    has end-time $time;
+        """
+        query_res = node.call_service(node.query_srv, query_req)
+
+        assert response_set_end.success is True and \
+            len(query_res.attributes) > 0
+
     finally:
         rclpy.shutdown()
 

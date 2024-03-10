@@ -19,6 +19,7 @@ import rosa_msgs
 from rosa_msgs.msg import Action
 from rosa_msgs.msg import Component
 from rosa_msgs.msg import ComponentConfiguration
+from rosa_msgs.msg import ComponentProcess
 from rosa_msgs.msg import Function
 from rosa_msgs.msg import FunctionDesign
 from rosa_msgs.msg import ReconfigurationPlan
@@ -27,6 +28,8 @@ from rosa_msgs.srv import ActionQuery
 from rosa_msgs.srv import AdaptableFunctions
 from rosa_msgs.srv import AdaptableComponents
 from rosa_msgs.srv import ComponentQuery
+from rosa_msgs.srv import ComponentProcessQuery
+from rosa_msgs.srv import ComponentProcessQueryArray
 from rosa_msgs.srv import FunctionQuery
 from rosa_msgs.srv import FunctionDesignQuery
 from rosa_msgs.srv import FunctionalRequirementQuery
@@ -164,6 +167,26 @@ class RosaKB(ROSTypeDBInterface):
             self.component_insert_cb,
             callback_group=self.query_cb_group
         )
+        self.component_process_insert_service = self.create_service(
+            ComponentProcessQuery,
+            self.get_name() + '/component_process/insert',
+            self.component_process_insert_cb,
+            callback_group=self.query_cb_group
+        )
+
+        self.get_component_process_active_service = self.create_service(
+            ComponentProcessQueryArray,
+            self.get_name() + '/component_process/get_active',
+            self.component_process_get_active_cb,
+            callback_group=self.query_cb_group
+        )
+
+        self.get_component_process_set_end_service = self.create_service(
+            ComponentProcessQuery,
+            self.get_name() + '/component_process/end/set',
+            self.component_process_set_end_cb,
+            callback_group=self.query_cb_group
+        )
 
         self.get_selectable_fds_service = self.create_service(
             SelectableFunctionDesigns,
@@ -229,7 +252,6 @@ class RosaKB(ROSTypeDBInterface):
             callback_group=self.query_cb_group
         )
 
-        self.component_active_cb_group = MutuallyExclusiveCallbackGroup()
         self.set_component_active_service = self.create_service(
             ComponentQuery,
             self.get_name() + '/component/active/set',
@@ -429,6 +451,77 @@ class RosaKB(ROSTypeDBInterface):
             req.component.always_improve,
             (req.component.node_type == 'LifeCycleNode'),
         )
+        res.success = True
+        return res
+
+    @check_lc_active
+    def component_process_insert_cb(
+        self,
+        req: rosa_msgs.srv.ComponentProcessQuery.Request,
+        res: rosa_msgs.srv.ComponentProcessQuery.Response
+    ) -> rosa_msgs.srv.ComponentProcessQuery.Response:
+        """
+        Insert component-process (callback).
+
+        Callback from service `~/component_process/insert`. Insert new
+        component-process to the database.
+
+        :param req: `~/component_process/insert` service request
+        :param res: `~/component_process/insert` service response
+        :return: `~/component_process/insert` service response
+        """
+        self.typedb_interface.insert_component_process(
+            req.component_process.component.name,
+            req.component_process.pid,
+        )
+        res.success = True
+        return res
+
+    @check_lc_active
+    def component_process_get_active_cb(
+        self,
+        req: rosa_msgs.srv.ComponentProcessQueryArray.Request,
+        res: rosa_msgs.srv.ComponentProcessQueryArray.Response
+    ) -> rosa_msgs.srv.ComponentProcessQueryArray.Response:
+        """
+        Get all active component-process (callback).
+
+        Callback from service `~/component_process/get_active`. Get all
+        active component-process.
+
+        :param req: `~/component_process/get_active` service request
+        :param res: `~/component_process/get_active` service response
+        :return: `~/component_process/get_active` service response
+        """
+        query_result = self.typedb_interface.get_active_component_process()
+        for result in query_result:
+            component_process = ComponentProcess()
+            component_process.pid = result['pid']
+            component_process.start_time = \
+                result['start_time'].isoformat(timespec='milliseconds')
+            component_process.component.name = result['component']
+            res.component_process.append(component_process)
+        res.success = True
+        return res
+
+    @check_lc_active
+    def component_process_set_end_cb(
+        self,
+        req: rosa_msgs.srv.ComponentProcessQuery.Request,
+        res: rosa_msgs.srv.ComponentProcessQuery.Response
+    ) -> rosa_msgs.srv.ComponentProcessQuery.Response:
+        """
+        Set end time component-process (callback).
+
+        Callback from service `~/component_process/end/set`. Get all
+        active component-process.
+
+        :param req: `~/component_process/end/set` service request
+        :param res: `~/component_process/end/set` service response
+        :return: `~/component_process/end/set` service response
+        """
+        self.typedb_interface.set_component_process_end_time(
+            datetime.fromisoformat(req.component_process.start_time))
         res.success = True
         return res
 

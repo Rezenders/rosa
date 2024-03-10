@@ -78,6 +78,14 @@ class ComponentDict(TypedDict):
     executable: str  #: executable that starts the component
 
 
+class ComponentProcessDict(TypedDict):
+    """TypedDict for Component."""
+
+    pid: int  #: process pid
+    start_time: str  #:process start-time
+    component: str  #: component name
+
+
 def convert_component_parameter_value_to_py_type(
     param: dict[str, MatchResultDict],
     param_type: Literal[
@@ -249,6 +257,30 @@ class ModelInterface(TypeDBInterface):
              ('always-improve', always_improve)]
         )
 
+    def insert_component_process(
+            self,
+            component_name: str,
+            pid: int,
+         ) -> Iterator[ConceptMap] | None:
+        """
+        Add new component-process.
+
+        :param component_name: component name
+        :param pid: pid
+        :return: insert query result
+        """
+        related_dict = {
+            'component': [('Component', 'component-name', component_name)],
+        }
+        attribute_list = [
+            ('component-pid', pid),
+            ('start-time', datetime.now()),
+        ]
+        return self.insert_relationship(
+            'component-process',
+            related_dict,
+            attribute_list)
+
     def request_action(
             self,
             action_name: str,
@@ -348,6 +380,7 @@ class ModelInterface(TypeDBInterface):
         Update Component status.
 
         :param component_name: component name
+        :param component_status: component status
         :return: delete query result
         """
         return self.update_attribute_in_thing(
@@ -1435,3 +1468,45 @@ class ModelInterface(TypeDBInterface):
                 r.get('attribute'))
             result_dict[attr_name] = attr_value
         return result_dict
+
+    def get_active_component_process(self) -> ComponentProcessDict | None:
+        """
+        Get all attributes owned by a Component, and the Component type.
+
+        :param component: component name.
+        :return: Dict with component type and all its attributes
+        """
+        query = '''
+            match
+                $cp (component: $c) isa component-process,
+                    has component-pid $pid,
+                    has start-time $start_time;
+                not {$cp has end-time $end_time;};
+                $c has component-name $c_name;
+                get $cp, $pid, $start_time, $c_name;
+        '''
+        result = self.match_database(query)
+        if len(result) == 0:
+            return []
+        result_list = [{
+            'start_time': self.convert_query_type_to_py_type(r['start_time']),
+            'pid': self.convert_query_type_to_py_type(r['pid']),
+            'component': self.convert_query_type_to_py_type(r['c_name'])}
+            for r in result]
+        return result_list
+
+    def set_component_process_end_time(
+         self, start_time: datetime) -> Iterator[ConceptMap] | None:
+        """
+        Set component process end time.
+
+        :param start_time: component-process start-time.
+        :return: update query result
+        """
+        return self.update_attribute_in_thing(
+            'component-process',
+            'start-time',
+            start_time,
+            'end-time',
+            datetime.now()
+        )
