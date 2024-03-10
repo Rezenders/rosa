@@ -28,6 +28,8 @@ from lifecycle_msgs.srv import GetState
 
 from std_msgs.msg import String
 from rosa_msgs.srv import ComponentQuery
+from rosa_msgs.srv import ComponentProcessQuery
+from rosa_msgs.srv import ComponentProcessQueryArray
 from rosa_msgs.srv import GetComponentParameters
 from rosa_msgs.srv import ReconfigurationPlanQuery
 
@@ -64,7 +66,6 @@ class ConfigurationExecutor(Node):
 
     def __init__(self, node_name, **kwargs):
         super().__init__(node_name, **kwargs)
-        self.component_pids_dict = dict()
         self.active = False
         self.cb_group = MutuallyExclusiveCallbackGroup()
 
@@ -100,6 +101,23 @@ class ConfigurationExecutor(Node):
             GetComponentParameters,
             '/rosa_kb/component_parameters/get',
             callback_group=self.cb_group,
+        )
+
+        self.component_process_insert_srv = self.create_client(
+            ComponentProcessQuery,
+            '/rosa_kb/component_process/insert',
+            callback_group=self.cb_group
+        )
+
+        self.component_process_get_active_srv = self.create_client(
+            ComponentProcessQueryArray,
+            '/rosa_kb/component_process/get_active',
+            callback_group=self.cb_group
+        )
+        self.component_process_set_end_srv = self.create_client(
+            ComponentProcessQuery,
+            '/rosa_kb/component_process/end/set',
+            callback_group=self.cb_group
         )
 
         self.get_logger().info(self.get_name() + ': on_configure() completed.')
@@ -194,22 +212,41 @@ class ConfigurationExecutor(Node):
         return result_deactivation and result_activation and result_update
 
     def kill_all_components(self):
-        for c, pid in self.component_pids_dict.items():
+        active_components = self.call_service(
+            self.component_process_get_active_srv,
+            ComponentProcessQueryArray.Request())
+
+        for component_process in active_components.component_process:
+            pid = component_process.pid
+            c = component_process.component.name
             try:
                 pgid = os.getpgid(pid)
                 os.killpg(pgid, signal.SIGTERM)
                 os.waitid(os.P_PGID, pgid, os.WEXITED)
+                self.call_service(
+                    self.component_process_set_end_srv,
+                    ComponentProcessQuery.Request(
+                        component_process=component_process)
+                )
             except ProcessLookupError:
                 self.get_logger().warning(f'''
                     Component {c} process with pid {pid} not found''')
         return True
 
     def kill_component(self, component):
-        if component.name in self.component_pids_dict:
-            pgid = os.getpgid(self.component_pids_dict[component.name])
-            os.killpg(pgid, signal.SIGTERM)
-            os.waitid(os.P_PGID, pgid, os.WEXITED)
-            self.component_pids_dict.pop(component.name, None)
+        active_components = self.call_service(
+            self.component_process_get_active_srv,
+            ComponentProcessQueryArray.Request())
+        for component_process in active_components.component_process:
+            if component.name == component_process.component.name:
+                pgid = os.getpgid(component_process.pid)
+                os.killpg(pgid, signal.SIGTERM)
+                os.waitid(os.P_PGID, pgid, os.WEXITED)
+                self.call_service(
+                    self.component_process_set_end_srv,
+                    ComponentProcessQuery.Request(
+                        component_process=component_process)
+                )
         return True
 
     def deactivate_lc_component(self, component):
@@ -260,7 +297,11 @@ class ConfigurationExecutor(Node):
             if result_start is False:
                 return False
 
-            self.component_pids_dict[component.name] = result_start.pid
+            component_process = ComponentProcessQuery.Request()
+            component_process.component_process.component.name = component.name
+            component_process.component_process.pid = result_start.pid
+            self.call_service(
+                self.component_process_insert_srv, component_process)
         return True
 
     def activate_lc_component(self, component):
