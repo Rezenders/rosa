@@ -90,6 +90,9 @@ measurement-value sub attribute,
 latest sub attribute,
     value boolean;
 
+component-pid sub attribute,
+    value long;
+
 ### Relationships
 functional-requirement sub relation,
     relates action,
@@ -162,6 +165,12 @@ required-action sub relation,
     relates action,
     relates preference;
 
+component-process sub relation,
+    owns component-pid,
+    owns start-time,
+    owns end-time,
+    relates component;
+
 ### Concepts
 Action sub entity,
     owns action-name @key,
@@ -189,7 +198,8 @@ Component sub entity,
     plays component-configuration:component,
     plays constrainment:constrained,
     plays estimation:causer,
-    plays component-adaptation:component;
+    plays component-adaptation:component,
+    plays component-process:component;
 
 ComponentParameter sub entity,
     owns parameter-key,
