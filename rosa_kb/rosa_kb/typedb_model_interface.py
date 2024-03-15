@@ -1201,9 +1201,10 @@ class ModelInterface(TypeDBInterface):
         """
         query = '''
             match
-            not {$rp isa reconfiguration-plan, has result $result;};
-            $rp has start-time $time;
-            sort $time desc; limit 1;
+                $rp isa reconfiguration-plan;
+                not {$rp has result $result;};
+                $rp has start-time $time;
+                sort $time desc; limit 1;
         '''
         result = self.match_database(query)
         if len(result) == 0:
