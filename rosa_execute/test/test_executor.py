@@ -64,7 +64,9 @@ def generate_test_description():
                 str(path_test_data / 'ros_test_data.tql'),
                 str(path_execute_test_data / 'test_data.tql')
             ],
-            'database_name': 'test_' + configuration_executor_node_name
+            'database_name': 'test_' + configuration_executor_node_name,
+            'force_database': True,
+            'force_data': True,
         }]
     )
     return launch.LaunchDescription([

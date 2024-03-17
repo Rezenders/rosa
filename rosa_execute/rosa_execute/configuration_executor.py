@@ -211,26 +211,33 @@ class ConfigurationExecutor(Node):
             reconfig_plan.component_configurations)
         return result_deactivation and result_activation and result_update
 
+    def kill_component_component_process(self, component_process):
+        pid = component_process.pid
+        c = component_process.component.name
+        try:
+            pgid = os.getpgid(pid)
+            os.killpg(pgid, signal.SIGTERM)
+            os.waitid(os.P_PGID, pgid, os.WEXITED)
+            self.call_service(
+                self.component_process_set_end_srv,
+                ComponentProcessQuery.Request(
+                    component_process=component_process)
+            )
+        except ProcessLookupError:
+            self.get_logger().warning(f'''
+                Component {c} process with pid {pid} not found''')
+        except Exception as e:
+            self.get_logger().error(f'''
+                Exception when killing component {c} with pid {pid}:
+                {e}''')
+
     def kill_all_components(self):
         active_components = self.call_service(
             self.component_process_get_active_srv,
             ComponentProcessQueryArray.Request())
 
         for component_process in active_components.component_process:
-            pid = component_process.pid
-            c = component_process.component.name
-            try:
-                pgid = os.getpgid(pid)
-                os.killpg(pgid, signal.SIGTERM)
-                os.waitid(os.P_PGID, pgid, os.WEXITED)
-                self.call_service(
-                    self.component_process_set_end_srv,
-                    ComponentProcessQuery.Request(
-                        component_process=component_process)
-                )
-            except ProcessLookupError:
-                self.get_logger().warning(f'''
-                    Component {c} process with pid {pid} not found''')
+            self.kill_component_component_process(component_process)
         return True
 
     def kill_component(self, component):
@@ -239,14 +246,7 @@ class ConfigurationExecutor(Node):
             ComponentProcessQueryArray.Request())
         for component_process in active_components.component_process:
             if component.name == component_process.component.name:
-                pgid = os.getpgid(component_process.pid)
-                os.killpg(pgid, signal.SIGTERM)
-                os.waitid(os.P_PGID, pgid, os.WEXITED)
-                self.call_service(
-                    self.component_process_set_end_srv,
-                    ComponentProcessQuery.Request(
-                        component_process=component_process)
-                )
+                self.kill_component_component_process(component_process)
         return True
 
     def deactivate_lc_component(self, component):
@@ -427,14 +427,14 @@ class ConfigurationExecutor(Node):
                 shlex.split(cmd),
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
-                preexec_fn=os.setsid,
+                start_new_session=True
             )
             try:
                 outs, errs = process.communicate(timeout=1)
                 self.get_logger().error(f'''
                     {_func} failed!
                     input _dict: {_dict}
-                    resulting erros: {errs}''')
+                    resulting errors: {errs}''')
                 return False
             except subprocess.TimeoutExpired:
                 return process
