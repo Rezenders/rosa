@@ -29,7 +29,7 @@ def kb_interface():
     return kb_interface
 
 
-@pytest.mark.parametrize("att_name, att_value, config_name, constrainment_status", [
+@pytest.mark.parametrize("att_name, att_value, config_name, constraint_status", [
     ('ea1', 2.5, 'high param', 'violated'),
     ('ea1', 2.5, 'high param >=', 'violated'),
     ('ea1', 3.25, 'high param >=', 'satisfied'),
@@ -42,8 +42,8 @@ def kb_interface():
     ('ea1', 2.5, 'low param', 'satisfied'),
     ('ea1', '', 'low param', 'not evaluated'),
 ])
-def test_constrainment_status_inference(
-        kb_interface, att_name, att_value, config_name, constrainment_status):
+def test_constraint_status_inference(
+        kb_interface, att_name, att_value, config_name, constraint_status):
 
     if att_value != '':
         kb_interface.add_measurement(att_name, att_value)
@@ -52,14 +52,14 @@ def test_constrainment_status_inference(
             $ea isa EnvironmentalAttribute, has attribute-name "{att_name}";
             $config isa component-configuration,
                 has component-configuration-name "{config_name}";
-            (constraint: $ea, constrained: $config) isa constrainment,
-                has constrainment-status $status;
+            (constraint: $ea, constrained: $config) isa constraint,
+                has constraint-status $status;
             get $status;
     '''
     query_result = kb_interface.match_database(query)
     inferred_status = [
         status.get("status").get('value') for status in query_result]
-    assert inferred_status[0] == constrainment_status
+    assert inferred_status[0] == constraint_status
 
 
 @pytest.mark.parametrize("type, name", [
@@ -68,7 +68,7 @@ def test_constrainment_status_inference(
     ('Component', 'c_constrained'),
     ('component-configuration', 'cc_constrained'),
 ])
-def test_constrainment_status_propagation(kb_interface, type, name):
+def test_constraint_status_propagation(kb_interface, type, name):
     status_inferred = kb_interface.get_attribute_from_thing(
         type,
         [(type.lower()+'-name', name)],
