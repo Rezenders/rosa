@@ -54,9 +54,9 @@ def test_constraint_status_inference(
                 has component-configuration-name "{config_name}";
             (constraint: $ea, constrained: $config) isa constraint,
                 has constraint-status $status;
-            get $status;
+            fetch $status;
     '''
-    query_result = kb_interface.match_database(query)
+    query_result = kb_interface.fetch_database(query)
     inferred_status = [
         status.get("status").get('value') for status in query_result]
     assert inferred_status[0] == constraint_status
@@ -69,7 +69,7 @@ def test_constraint_status_inference(
     ('component-configuration', 'cc_constrained'),
 ])
 def test_constraint_status_propagation(kb_interface, type, name):
-    status_inferred = kb_interface.get_attribute_from_thing(
+    status_inferred = kb_interface.fetch_attribute_from_thing(
         type,
         [(type.lower()+'-name', name)],
         type.lower()+'-status')
@@ -90,9 +90,9 @@ def test_component_configuration_status_inference(
             $config isa component-configuration,
                 has component-configuration-name "{config_name}",
                 has component-configuration-status $status;
-            get $status;
+            fetch $status;
     '''
-    query_result = kb_interface.match_database(query)
+    query_result = kb_interface.fetch_database(query)
     inferred_status = [
         status.get("status").get('value') for status in query_result]
     assert inferred_status[0] == config_status
@@ -140,7 +140,7 @@ def test_component_status_inference(
         c_name,
         'is-active',
         c_active)
-    c_status_inferred = kb_interface.get_attribute_from_thing(
+    c_status_inferred = kb_interface.fetch_attribute_from_thing(
         'Component',
         [('component-name', c_name)],
         'component-status')
@@ -191,7 +191,7 @@ def test_function_design_status_inference(
         fd_name,
         'is-selected',
         fd_selected)
-    fd_status_inferred = kb_interface.get_attribute_from_thing(
+    fd_status_inferred = kb_interface.fetch_attribute_from_thing(
         'function-design',
         [('function-design-name', fd_name)],
         'function-design-status')
@@ -242,7 +242,7 @@ def test_function_status_inference(
         f_name,
         'is-required',
         f_required)
-    f_status_inferred = kb_interface.get_attribute_from_thing(
+    f_status_inferred = kb_interface.fetch_attribute_from_thing(
         'Function',
         [('function-name', f_name)],
         'function-status')
@@ -285,7 +285,7 @@ def test_action_status_inference(
         t_name,
         'is-required',
         t_required)
-    t_status_inferred = kb_interface.get_attribute_from_thing(
+    t_status_inferred = kb_interface.fetch_attribute_from_thing(
         'Action',
         [('action-name', t_name)],
         'action-status')

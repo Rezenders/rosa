@@ -165,13 +165,13 @@ def test_manual_event_cb():
             Query, rosa_kb_name + '/query')
 
         query_req = Query.Request()
-        query_req.query_type = 'match'
+        query_req.query_type = 'fetch'
         query_req.query = '''
             match $rp isa reconfiguration-plan, has start-time $time;
-            get $time;
+            fetch $time;
             '''
         result = node.call_service(node.query_srv, query_req)
-        assert len(result.attributes) > 0
+        assert len(result.results) > 0
     finally:
         configuration_planner.destroy_node()
         rclpy.shutdown()
