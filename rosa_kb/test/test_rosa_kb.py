@@ -303,6 +303,30 @@ def test_rosa_kb_action_insert():
         rclpy.shutdown()
 
 
+@pytest.mark.parametrize("action_name, result", [
+    ('action1', True),
+    ('action_not_in_model', False),
+])
+@pytest.mark.launch(fixture=generate_test_description)
+def test_rosa_kb_action_exists(action_name, result):
+    rclpy.init()
+    try:
+        node = MakeTestNode()
+        node.start_node()
+        node.activate_rosa_kb()
+        node.exists_srv = node.create_client(
+            ActionQuery, '/rosa_kb/action/exists')
+
+        request = ActionQuery.Request()
+        request.action.name = action_name
+
+        response = node.call_service(node.exists_srv, request)
+
+        assert response.success == result
+    finally:
+        rclpy.shutdown()
+
+
 @pytest.mark.launch(fixture=generate_test_description)
 def test_rosa_kb_function_insert():
     rclpy.init()

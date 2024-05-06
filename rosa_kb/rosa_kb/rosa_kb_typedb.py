@@ -133,6 +133,13 @@ class RosaKB(ROSTypeDBInterface):
             callback_group=self.query_cb_group
         )
 
+        self.action_exists_service = self.create_service(
+            ActionQuery,
+            self.get_name() + '/action/exists',
+            self.action_exists_cb,
+            callback_group=self.query_cb_group
+        )
+
         self.functional_requirement_insert_service = self.create_service(
             FunctionalRequirementQuery,
             self.get_name() + '/functional_requirement/insert',
@@ -406,6 +413,25 @@ class RosaKB(ROSTypeDBInterface):
         """
         self.typedb_interface.insert_action(req.action.name)
         res.success = True
+        return res
+
+    @check_lc_active
+    def action_exists_cb(
+        self,
+        req: rosa_msgs.srv.ActionQuery.Request,
+        res: rosa_msgs.srv.ActionQuery.Response
+    ) -> rosa_msgs.srv.ActionQuery.Response:
+        """
+        Check wheter an Action exists in the database (callback).
+
+        Callback from service `~/action/exists`. Check wheter an Action exists
+        in the database.
+
+        :param req: `~/action/exists` service request
+        :param res: `~/action/exists` service response
+        :return: `~/action/exists` service response
+        """
+        res.success = self.typedb_interface.has_action(req.action.name)
         return res
 
     @check_lc_active
