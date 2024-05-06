@@ -7,7 +7,7 @@ ROSA is implemented as a ROS 2-based system, with its knowledge base implemented
 
 This is still work in progress, therefore the repository is unstable.
 
-This package was tested with ROS 2 Humble and TypeDB 2.24.17
+This package was tested with ROS 2 Humble and TypeDB 2.27.0
 
 ## Installing
 

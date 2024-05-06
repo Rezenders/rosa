@@ -40,9 +40,9 @@ def test_request_action(kb_interface):
         $action isa Action, has action-name "action1";
         (action: $action, preference: $att) isa required-action;
         $att has name $name;
-        get $name;
+        fetch $name;
     """
-    result = kb_interface.match_database(query)
+    result = kb_interface.fetch_database(query)
     assert is_required is True and result[0].get('name').get('value') == 'ea1'
 
 
@@ -126,16 +126,16 @@ def test_add_measurement(kb_interface):
 
 def test_select_function_design(kb_interface):
     kb_interface.select_function_design('function2', 'f2_fd1_c2_c3')
-    fd1_selected = kb_interface.get_attribute_from_thing(
+    fd1_selected = kb_interface.fetch_attribute_from_thing(
         'function-design',
         [('function-design-name', 'f2_fd1_c2_c3')],
         'is-selected')
     kb_interface.select_function_design('function2', 'f2_fd2_c4_c5')
-    fd1_not_selected = kb_interface.get_attribute_from_thing(
+    fd1_not_selected = kb_interface.fetch_attribute_from_thing(
         'function-design',
         [('function-design-name', 'f2_fd1_c2_c3')],
         'is-selected')
-    fd2_selected = kb_interface.get_attribute_from_thing(
+    fd2_selected = kb_interface.fetch_attribute_from_thing(
         'function-design',
         [('function-design-name', 'f2_fd2_c4_c5')],
         'is-selected')
@@ -146,16 +146,16 @@ def test_select_function_design(kb_interface):
 
 def test_select_component_configuration(kb_interface):
     kb_interface.select_component_configuration('component1', 'high param')
-    high_selected = kb_interface.get_attribute_from_thing(
+    high_selected = kb_interface.fetch_attribute_from_thing(
         'component-configuration',
         [('component-configuration-name', 'high param')],
         'is-selected')
     kb_interface.select_component_configuration('component1', 'low param')
-    high_not_selected = kb_interface.get_attribute_from_thing(
+    high_not_selected = kb_interface.fetch_attribute_from_thing(
         'component-configuration',
         [('component-configuration-name', 'high param')],
         'is-selected')
-    low_selected = kb_interface.get_attribute_from_thing(
+    low_selected = kb_interface.fetch_attribute_from_thing(
         'component-configuration',
         [('component-configuration-name', 'low param')],
         'is-selected')
@@ -225,8 +225,8 @@ def test_create_reconfiguration_plan(
                 has start-time {start_time.isoformat(timespec='milliseconds')};
         """
         query += end_query
-        query_result = kb_interface.match_database(query)
-        assert len(query_result) > 0
+        query_result = kb_interface.get_aggregate_database(query + "get; count;")
+        assert query_result > 0
 
 
 @pytest.mark.parametrize("selected_fd, selected_config, exp_c_activate, exp_c_deactivate, exp_c_config ", [
@@ -300,7 +300,8 @@ def test_select_configuration(
         query += " isa reconfiguration-plan, has start-time {};".format(
             start_time.isoformat(timespec='milliseconds'))
         query += end_query
-        query_result = kb_interface.match_database(query)
+        query_result = kb_interface.get_aggregate_database(
+            query + "get; count;")
 
         right_fd_selected = True
         for fd in selected_fd:
@@ -322,7 +323,7 @@ def test_select_configuration(
                 True
             )
             right_conf_selected = (config[1] == _config[0])
-        assert len(query_result) > 0 and right_fd_selected \
+        assert query_result > 0 and right_fd_selected \
             and right_conf_selected
 
 
@@ -434,9 +435,9 @@ def test_update_reconfiguration_plan_result(kb_interface):
             has start-time {start_time.isoformat(timespec='milliseconds')},
             has end-time $end-time,
             has result $result;
-            get $end-time, $result;
+            fetch $end-time; $result;
     '''
-    query_result = kb_interface.match_database(query)
+    query_result = kb_interface.fetch_database(query)
     result = [r.get('result').get('value') for r in query_result]
     assert len(result) > 0 and result[0] == 'completed'
 
@@ -630,3 +631,26 @@ def test_get_obsolete_component_configurations(kb_interface):
     query_result = kb_interface.get_obsolete_component_configurations()
     expected_result = ['cc_not_required']
     assert all(r in query_result for r in expected_result)
+
+
+def test_get_active_component_process(kb_interface):
+    kb_interface.insert_component('c_test_component_process')
+    kb_interface.insert_component('c_test_component_process2')
+    kb_interface.insert_component_process('c_test_component_process', 2333)
+    kb_interface.insert_component_process('c_test_component_process2', 22222)
+    expected_result = [
+        {'pid': 2333, 'component': 'c_test_component_process'},
+        {'pid': 22222, 'component': 'c_test_component_process2'}
+    ]
+    query_result = kb_interface.get_active_component_process()
+    for r in query_result:
+        del r['start_time']
+    assert all(r in query_result for r in expected_result)
+
+
+@pytest.mark.parametrize("action_name, result", [
+    ('action1', True),
+    ('action_not_in_model', False),
+])
+def test_has_action(kb_interface, action_name, result):
+    assert kb_interface.has_action(action_name) == result

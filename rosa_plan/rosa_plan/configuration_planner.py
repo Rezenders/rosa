@@ -198,7 +198,8 @@ class ConfigurationPlanner(Node):
             selected_config = self.plan_adaptation()
             # update kb with selected fds and component configs
             if len(selected_config.selected_fds) > 0 \
-               or len(selected_config.selected_component_configs) > 0:
+               or len(selected_config.selected_component_configs) > 0 \
+               or msg.data == 'action_update':
                 self.call_service(
                     self.select_configuration_srv, selected_config)
 

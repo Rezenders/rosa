@@ -31,7 +31,7 @@ component-status sub status,
 component-configuration-status sub status,
     regex "^(unfeasible|feasible)$";
 
-constrainment-status sub status,
+constraint-status sub status,
     regex "^(violated|not evaluated|satisfied)$";
 
 parameter-key sub attribute,
@@ -66,7 +66,7 @@ estimation-type sub attribute,
     value string,
     regex "^(positive|negative|absolute)$";
 
-constrainment-operator sub attribute,
+constraint-operator sub attribute,
     value string,
     regex "^(<|<=|>|>=)";
 
@@ -90,6 +90,9 @@ measurement-value sub attribute,
 latest sub attribute,
     value boolean;
 
+component-pid sub attribute,
+    value long;
+
 ### Relationships
 functional-requirement sub relation,
     relates action,
@@ -102,7 +105,7 @@ function-design sub relation,
     owns function-design-status,
     relates function,
     relates required-component,
-    plays constrainment:constrained,
+    plays constraint:constrained,
     plays estimation:causer;
 
 component-configuration sub relation,
@@ -112,14 +115,14 @@ component-configuration sub relation,
     owns component-configuration-status,
     relates component,
     relates parameter,
-    plays constrainment:constrained,
+    plays constraint:constrained,
     plays estimation:causer,
     plays parameter-adaptation:component-configuration;
 
-constrainment sub relation,
+constraint sub relation,
     owns attribute-value,
-    owns constrainment-status,
-    owns constrainment-operator,
+    owns constraint-status,
+    owns constraint-operator,
     relates constraint,
     relates constrained;
 
@@ -162,13 +165,19 @@ required-action sub relation,
     relates action,
     relates preference;
 
-### Concepts
+component-process sub relation,
+    owns component-pid,
+    owns start-time,
+    owns end-time,
+    relates component;
+
+### Entities
 Action sub entity,
     owns action-name @key,
     owns action-status,
     owns is-required,
     plays functional-requirement:action,
-    plays constrainment:constrained,
+    plays constraint:constrained,
     plays required-action:action;
 
 Function sub entity,
@@ -187,9 +196,10 @@ Component sub entity,
     owns always-improve,
     plays function-design:required-component,
     plays component-configuration:component,
-    plays constrainment:constrained,
+    plays constraint:constrained,
     plays estimation:causer,
-    plays component-adaptation:component;
+    plays component-adaptation:component,
+    plays component-process:component;
 
 ComponentParameter sub entity,
     owns parameter-key,
@@ -201,7 +211,7 @@ ComponentParameter sub entity,
 Attribute sub entity,
     abstract,
     owns attribute-name @key,
-    plays constrainment:constraint,
+    plays constraint:constraint,
     plays estimation:affected,
     plays measurement:measured-attribute,
     plays required-action:preference;
@@ -218,7 +228,7 @@ rule implicit-action-is-required:
     } then {
         $a has is-required true;
     };
-    
+
 rule implicit-function-is-required:
     when {
         (required-function:$function, action: $a) isa functional-requirement;
@@ -234,79 +244,79 @@ rule implicit-component-is-required:
         $c has is-required true;
     };
 
-rule constrainment-status-violated:
+rule constraint-status-violated:
     when{
-        $constrainment (constraint: $constraint) isa constrainment, has attribute-value $value;
+        $r_constraint (constraint: $constraint) isa constraint, has attribute-value $value;
         (measured-attribute:$constraint) isa measurement, has latest true, has measurement-value $measurement;
         {
             {
-                $constrainment has constrainment-operator ">=";
+                $r_constraint has constraint-operator ">=";
             } or {
-                not {$constrainment has constrainment-operator $op;};
+                not {$r_constraint has constraint-operator $op;};
             };
             not {
                 $measurement >= $value;
             };
         } or {
-            $constrainment has constrainment-operator ">";
+            $r_constraint has constraint-operator ">";
              not {
                 $measurement > $value;
             };
         }  or {
-            $constrainment has constrainment-operator "<=";
+            $r_constraint has constraint-operator "<=";
              not {
                 $measurement <= $value;
             };
         } or {
-            $constrainment has constrainment-operator "<";
+            $r_constraint has constraint-operator "<";
              not {
                 $measurement < $value;
             };
         };
     } then {
-        $constrainment has constrainment-status 'violated';
+        $r_constraint has constraint-status 'violated';
     };
 
-rule constrainment-status-satisfied:
+rule constraint-status-satisfied:
     when{
-        $constrainment (constraint: $constraint) isa constrainment, has attribute-value $value;
+        $r_constraint (constraint: $constraint) isa constraint, has attribute-value $value;
         (measured-attribute:$constraint) isa measurement, has latest true, has measurement-value $measurement;
         {
             {
-                $constrainment has constrainment-operator ">=";
+                $r_constraint has constraint-operator ">=";
             } or {
-                not {$constrainment has constrainment-operator $op;};
+                not {$r_constraint has constraint-operator $op;};
             };
             $measurement >= $value;
         } or {
-            $constrainment has constrainment-operator ">";
+            $r_constraint has constraint-operator ">";
             $measurement > $value;
         }  or {
-            $constrainment has constrainment-operator "<=";
+            $r_constraint has constraint-operator "<=";
             $measurement <= $value;
         } or {
-            $constrainment has constrainment-operator "<";
+            $r_constraint has constraint-operator "<";
             $measurement < $value;
         };
     } then {
-        $constrainment has constrainment-status 'satisfied';
+        $r_constraint has constraint-status 'satisfied';
     };
 
-# this should also be true when only the first condition is met, i.e., when the constrainment does not have an attribute-value
-rule constrainment-status-ok-no-measurement:
+# this should also be true when only the first condition is met, i.e., when the constraint does not have an attribute-value
+rule constraint-status-ok-no-measurement:
     when{
-        $constrainment (constraint: $constraint, constrained: $constrained) isa constrainment;
+        $r_constraint (constraint: $constraint, constrained: $constrained) isa constraint;
         not {
         (measured-attribute:$constraint) isa measurement, has latest true, has measurement-value $measurement;
         };
     } then {
-        $constrainment has constrainment-status 'not evaluated';
+        $r_constraint has constraint-status 'not evaluated';
     };
 
 rule component-configuration-status-unfeasible:
     when{
         $component-config isa component-configuration;
-        (constrained: $component-config) isa constrainment, has constrainment-status 'violated';
+        (constrained: $component-config) isa constraint, has constraint-status 'violated';
     } then {
         $component-config has component-configuration-status 'unfeasible';
     };
@@ -331,7 +341,7 @@ rule component-status-unfeasible:
                 $status != 'unfeasible';
             };
         } or {
-            (constrained: $c) isa constrainment, has constrainment-status 'violated';
+            (constrained: $c) isa constraint, has constraint-status 'violated';
         };
     } then {
         $c has component-status 'unfeasible';
@@ -412,7 +422,7 @@ rule function-design-status-unfeasible:
                 $c_status2 like 'configuration error|unsolved|solved|feasible';
             };
         } or {
-            (constrained: $fd) isa constrainment, has constrainment-status 'violated';
+            (constrained: $fd) isa constraint, has constraint-status 'violated';
         };
     } then {
         $fd has function-design-status 'unfeasible';
@@ -568,7 +578,7 @@ rule action-status-unfeasible:
             $f_status = 'unfeasible';
         }
         or {
-            (constrained: $a) isa constrainment, has constrainment-status 'violated';
+            (constrained: $a) isa constraint, has constraint-status 'violated';
         };
     } then {
         $a has action-status 'unfeasible';
@@ -637,5 +647,3 @@ rule action-status-feasible:
     } then {
         $a has action-status 'feasible';
     };
-   
-

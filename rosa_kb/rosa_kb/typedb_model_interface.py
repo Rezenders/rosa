@@ -14,6 +14,8 @@
 """python interface to interact with typedb's ROSA knowledge model."""
 
 from ros_typedb.typedb_interface import TypeDBInterface
+from ros_typedb.typedb_interface import convert_query_type_to_py_type
+from ros_typedb.typedb_interface import convert_py_type_to_query_type
 from datetime import datetime
 
 from typedb.driver import ConceptMap
@@ -78,6 +80,14 @@ class ComponentDict(TypedDict):
     executable: str  #: executable that starts the component
 
 
+class ComponentProcessDict(TypedDict):
+    """TypedDict for Component."""
+
+    pid: int  #: process pid
+    start_time: str  #: process start-time
+    component: str  #: component name
+
+
 def convert_component_parameter_value_to_py_type(
     param: dict[str, MatchResultDict],
     param_type: Literal[
@@ -136,6 +146,143 @@ class ModelInterface(TypeDBInterface):
             infer
         )
 
+    def insert_action(self, action_name: str) -> Iterator[ConceptMap] | None:
+        """
+        Add new Action.
+
+        :param action_name: action name
+        :return: insert query result
+        """
+        return self.insert_entity('Action', [('action-name', action_name)])
+
+    def insert_functional_requirement(
+            self, action_name: str, functions_names: list[str]
+         ) -> Iterator[ConceptMap] | None:
+        """
+        Add new functional-requirement.
+
+        :param action_name: action name
+        :param functions_names: list of required functions
+        :return: insert query result
+        """
+        related_dict = {
+            'action': [('Action', 'action-name', action_name)],
+            'required-function': [
+                ('Function', 'function-name', f) for f in functions_names]
+        }
+        return self.insert_relationship(
+            'functional-requirement', related_dict)
+
+    def insert_function(
+         self, function_name: str) -> Iterator[ConceptMap] | None:
+        """
+        Add new Function.
+
+        :param function_name: function name
+        :return: insert query result
+        """
+        return self.insert_entity(
+            'Function', [('function-name', function_name)])
+
+    def insert_function_design(
+            self,
+            function_design_name: str,
+            function_name: str,
+            components_names: list[str],
+            priority: Optional[float] = None,
+         ) -> Iterator[ConceptMap] | None:
+        """
+        Add new function-design.
+
+        :param function_design_name: function design name
+        :param function_name: function name
+        :param components_names: list of required components
+        :param priority: function design priority
+        :return: insert query result
+        """
+        related_dict = {
+            'function': [('Function', 'function-name', function_name)],
+            'required-component': [
+                ('Component', 'component-name', c) for c in components_names]
+        }
+        attribute_list = [('function-design-name', function_design_name)]
+        if priority is not None:
+            attribute_list.append(('priority', priority))
+        return self.insert_relationship(
+            'function-design',
+            related_dict,
+            attribute_list)
+
+    def insert_component(
+            self,
+            component_name: str,
+            always_improve: Optional[bool] = False
+         ) -> Iterator[ConceptMap] | None:
+        """
+        Add new Component.
+
+        :param component_name: component name
+        :param always_improve: if it should always try to select the best
+        component configuration
+        :return: insert query result
+        """
+        return self.insert_entity(
+            'Component',
+            [('component-name', component_name),
+             ('always-improve', always_improve)]
+        )
+
+    def insert_ros_node_component(
+            self,
+            component_name: str,
+            package: str,
+            executable: str,
+            always_improve: Optional[bool] = False,
+            lifecycle_node: Optional[bool] = False,
+         ) -> Iterator[ConceptMap] | None:
+        """
+        Add new ROSNode Component.
+
+        :param component_name: component name
+        :param package: ros package name
+        :param executable: ros executable name
+        :param always_improve: if it should always try to select the best
+        component configuration
+        :param lifecycle_node: if the ros node is a lifecycle node
+        :return: insert query result
+        """
+        return self.insert_entity(
+            'LifeCycleNode' if lifecycle_node else 'ROSNode',
+            [('component-name', component_name),
+             ('package', package),
+             ('executable', executable),
+             ('always-improve', always_improve)]
+        )
+
+    def insert_component_process(
+            self,
+            component_name: str,
+            pid: int,
+         ) -> Iterator[ConceptMap] | None:
+        """
+        Add new component-process.
+
+        :param component_name: component name
+        :param pid: pid
+        :return: insert query result
+        """
+        related_dict = {
+            'component': [('Component', 'component-name', component_name)],
+        }
+        attribute_list = [
+            ('component-pid', pid),
+            ('start-time', datetime.now()),
+        ]
+        return self.insert_relationship(
+            'component-process',
+            related_dict,
+            attribute_list)
+
     def request_action(
             self,
             action_name: str,
@@ -182,6 +329,7 @@ class ModelInterface(TypeDBInterface):
         if self.is_action_required(action_name) is False:
             return None
 
+        end_time = convert_py_type_to_query_type(datetime.now())
         query = f"""
             match
                 $action isa Action, has action-name '{action_name}';
@@ -189,6 +337,7 @@ class ModelInterface(TypeDBInterface):
                 not {{$ra has result $result;}};
             insert
                 $ra has result 'abandoned';
+                $ra has end-time {end_time};
         """
         return self.insert_database(query)
 
@@ -233,6 +382,7 @@ class ModelInterface(TypeDBInterface):
         Update Component status.
 
         :param component_name: component name
+        :param component_status: component status
         :return: delete query result
         """
         return self.update_attribute_in_thing(
@@ -243,6 +393,21 @@ class ModelInterface(TypeDBInterface):
             component_status
         )
 
+    def has_action(self, action_name: str) -> bool:
+        """
+        Check whether model can an specific Action.
+
+        :param action_name: Action name
+        :return: whether the action exists in the model or not
+        """
+        action_name = convert_py_type_to_query_type(action_name)
+        query = f"""
+            match $a isa Action, has action-name {action_name};
+            get;
+            count;
+        """
+        return True if self.get_aggregate_database(query) > 0 else False
+
     def is_action_required(self, action_name: str) -> bool:
         """
         Check whether an Action is required.
@@ -250,7 +415,7 @@ class ModelInterface(TypeDBInterface):
         :param action_name: Action name
         :return: whether the action is required or not
         """
-        is_required = self.get_attribute_from_thing(
+        is_required = self.fetch_attribute_from_thing(
             'Action', [('action-name', action_name)], 'is-required')
         if len(is_required) == 0:
             return False
@@ -263,7 +428,7 @@ class ModelInterface(TypeDBInterface):
         :param action_name: Action name
         :return: whether the action is feasible or not
         """
-        status = self.get_attribute_from_thing(
+        status = self.fetch_attribute_from_thing(
             'Action', [('action-name', action_name)], 'action-status')
         return all(x in status for x in ['feasible'])
 
@@ -274,7 +439,7 @@ class ModelInterface(TypeDBInterface):
         :param action_name: Action name
         :return: whether the action is feasible or not
         """
-        status = self.get_attribute_from_thing(
+        status = self.fetch_attribute_from_thing(
             'Action', [('action-name', action_name)], 'action-status')
         return 'unfeasible' not in status
 
@@ -290,9 +455,9 @@ class ModelInterface(TypeDBInterface):
             match
             $t isa {thing}, has name $name;
             not {{$t has status 'unfeasible';}};
-            get $name;
+            fetch $name;
         '''
-        query_result = self.match_database(query)
+        query_result = self.fetch_database(query)
         return query_result
 
     def get_selectable_actions(self) -> list[str]:
@@ -319,9 +484,9 @@ class ModelInterface(TypeDBInterface):
                     has {thing.lower()}-name $name,
                     has {thing.lower()}-status $status;
                     $status like "{status}";
-                get $name;
+                fetch $name;
         '''
-        query_result = self.match_database(query)
+        query_result = self.fetch_database(query)
         return [r.get('name').get('value') for r in query_result]
 
     def get_solved_functions(self) -> list[str]:
@@ -345,9 +510,9 @@ class ModelInterface(TypeDBInterface):
             match
                 $f isa {thing}, has always-improve true,
                     has {thing.lower()}-name $name;
-                get $name;
+                fetch $name;
         '''
-        query_result = self.match_database(query)
+        query_result = self.fetch_database(query)
         return [r.get('name').get('value') for r in query_result]
 
     def get_adaptable_things_raw(
@@ -373,9 +538,9 @@ class ModelInterface(TypeDBInterface):
                     $t has {thing.lower()}-status $status;
                         $status like 'solved';
                 }};
-                get $name;
+                fetch $name;
         '''
-        query_result = self.match_database(query)
+        query_result = self.fetch_database(query)
         return query_result
 
     def get_adaptable_functions(self) -> list[str]:
@@ -420,9 +585,9 @@ class ModelInterface(TypeDBInterface):
                 $e isa {thing}, has is-required true,
                     has {thing.lower()}-name $name,
                     has {thing.lower()}-status 'unsolved';
-                get $name;
+                fetch $name;
         '''
-        return self.match_database(query)
+        return self.fetch_database(query)
 
     def get_unsolved_functions(self) -> list[str]:
         """
@@ -487,7 +652,7 @@ class ModelInterface(TypeDBInterface):
         """
         self.delete_from_database(query)
 
-        time = self.convert_py_type_to_query_type(datetime.now())
+        time = convert_py_type_to_query_type(datetime.now())
         query = f"""
             match
                 $attr isa Attribute, has attribute-name "{name}";
@@ -511,9 +676,9 @@ class ModelInterface(TypeDBInterface):
                 $attr isa Attribute, has attribute-name "{name}";
                 $m (measured-attribute:$attr) isa measurement,
                     has latest true , has measurement-value $value;
-                get $value;
+                fetch $value;
         """
-        query_result = self.match_database(query)
+        query_result = self.fetch_database(query)
         if len(query_result) == 0:
             return None
         return query_result[0].get('value').get('value')
@@ -526,16 +691,16 @@ class ModelInterface(TypeDBInterface):
         :param time: measurement time
         :return: measurement value, or None if there is no measurement
         """
-        time = self.convert_py_type_to_query_type(time)
+        time = convert_py_type_to_query_type(time)
         query = f"""
             match
                 $attr isa Attribute,
                     has attribute-name "{name}";
                 $m (measured-attribute:$attr) isa measurement,
                     has measurement-time {time} , has measurement-value $value;
-                get $value;
+                fetch $value;
         """
-        query_result = self.match_database(query)
+        query_result = self.fetch_database(query)
         if len(query_result) == 0:
             return None
         return query_result[0].get('value').get('value')
@@ -555,9 +720,9 @@ class ModelInterface(TypeDBInterface):
                 not {{
                     $cc has component-configuration-status 'unfeasible';
                 }};
-                get $name;
+                fetch $name;
         '''
-        result = self.match_database(query)
+        result = self.fetch_database(query)
         return [r.get('name').get('value') for r in result]
 
     def get_selectable_fds(self, function_name: str) -> list[str]:
@@ -575,9 +740,9 @@ class ModelInterface(TypeDBInterface):
                 not {{
                     $fd has function-design-status 'unfeasible';
                 }};
-                get $name;
+                fetch $name;
         '''
-        result = self.match_database(query)
+        result = self.fetch_database(query)
         return [r.get('name').get('value') for r in result]
 
     def get_function_design_priority(self, fd_name: str) -> list[str]:
@@ -587,7 +752,7 @@ class ModelInterface(TypeDBInterface):
         :param fd_name: function design name
         :return: function design priority value
         """
-        return self.get_attribute_from_thing(
+        return self.fetch_attribute_from_thing(
             'function-design', [('function-design-name', fd_name)], 'priority')
 
     def get_component_configuration_priority(self, cc_name: str) -> list[str]:
@@ -597,7 +762,7 @@ class ModelInterface(TypeDBInterface):
         :param cc_name: component configuration name
         :return: component configuration priority value
         """
-        return self.get_attribute_from_thing(
+        return self.fetch_attribute_from_thing(
             'component-configuration',
             [('component-configuration-name', cc_name)],
             'priority')
@@ -624,8 +789,8 @@ class ModelInterface(TypeDBInterface):
         :param r_value: attribute value
         :return: name of individuals of the relation
         """
-        entity_name = self.convert_py_type_to_query_type(entity_name)
-        r_value = self.convert_py_type_to_query_type(r_value)
+        entity_name = convert_py_type_to_query_type(entity_name)
+        r_value = convert_py_type_to_query_type(r_value)
         query = f'''
             match
                 $e isa {entity},
@@ -633,9 +798,9 @@ class ModelInterface(TypeDBInterface):
                 $r ($e) isa {relation},
                     has {r_attribute} {r_value},
                     has {relation}-name $name;
-                get $name;
+                fetch $name;
             '''
-        query_result = self.match_database(query)
+        query_result = self.fetch_database(query)
         return [r.get('name').get('value') for r in query_result]
 
     def select_relationship(
@@ -731,7 +896,7 @@ class ModelInterface(TypeDBInterface):
         :param name: component name
         :return: whether the component is active or not
         """
-        is_activated = self.get_attribute_from_thing(
+        is_activated = self.fetch_attribute_from_thing(
             'Component',
             [('component-name', name)],
             'is-active')
@@ -844,12 +1009,12 @@ class ModelInterface(TypeDBInterface):
         for function, fd in functions_selected_fd:
             # select components that need to be activated
             for c in self.get_components_in_function_design(fd):
-                c_active = self.get_attribute_from_thing(
+                c_active = self.fetch_attribute_from_thing(
                     'Component', [('component-name', c)], 'is-active')
                 if True not in c_active:
                     _c_activate.append(c)
             # select components that need to be deactivated
-            fd_selected = self.get_attribute_from_thing(
+            fd_selected = self.fetch_attribute_from_thing(
                 'function-design',
                 [('function-design-name', fd)],
                 'is-selected')
@@ -864,7 +1029,7 @@ class ModelInterface(TypeDBInterface):
                 )
                 if len(_fd) > 0:
                     for c in self.get_components_in_function_design(_fd[0]):
-                        c_active = self.get_attribute_from_thing(
+                        c_active = self.fetch_attribute_from_thing(
                             'Component', [('component-name', c)], 'is-active')
                         if c not in _c_activate and len(c_active) > 0 \
                            and c_active[0] is True:
@@ -891,7 +1056,7 @@ class ModelInterface(TypeDBInterface):
         """
         _configs = []
         for component, config in components_selected_config:
-            config_selected = self.get_attribute_from_thing(
+            config_selected = self.fetch_attribute_from_thing(
                 'component-configuration',
                 [('component-configuration-name', config)],
                 'is-selected'
@@ -916,9 +1081,9 @@ class ModelInterface(TypeDBInterface):
                     isa function-design;
                 $func has is-required true;
             };
-            get $name;
+            fetch $name;
         '''
-        query_result = self.match_database(query)
+        query_result = self.fetch_database(query)
         return [r.get('name').get('value') for r in query_result]
 
     def get_obsolete_fds(self) -> list[str]:
@@ -932,9 +1097,9 @@ class ModelInterface(TypeDBInterface):
                 $fd (function:$f) isa function-design,
                     has function-design-name $name, has is-selected true;
                 not {$f has is-required true;};
-            get $name;
+            fetch $name;
         '''
-        query_result = self.match_database(query)
+        query_result = self.fetch_database(query)
         return [r.get('name').get('value') for r in query_result]
 
     def get_obsolete_component_configurations(self) -> list[str]:
@@ -953,8 +1118,9 @@ class ModelInterface(TypeDBInterface):
                         isa function-design;
                     $func has is-required true;
                 };
+                fetch $name;
         '''
-        query_result = self.match_database(query)
+        query_result = self.fetch_database(query)
         return [r.get('name').get('value') for r in query_result]
 
     def unselect_obsolete_fds_cc(self) -> None:
@@ -1024,9 +1190,9 @@ class ModelInterface(TypeDBInterface):
                 $fd (required-component: $component) isa function-design,
                     has function-design-name "{fd_name}";
                 $component isa Component, has component-name $c-name;
-                get $c-name;
+                fetch $c-name;
             '''
-        query_result = self.match_database(query)
+        query_result = self.fetch_database(query)
         return [r.get('c-name').get('value') for r in query_result]
 
     def get_latest_reconfiguration_plan_time(self) -> datetime | None:
@@ -1040,10 +1206,10 @@ class ModelInterface(TypeDBInterface):
             get $time;
             sort $time desc; limit 1;
         '''
-        result = self.match_database(query)
+        result = self.get_database(query)
         if len(result) == 0:
             return None
-        return self.convert_query_type_to_py_type(result[0].get('time'))
+        return result[0].get('time').as_attribute().get_value()
 
     def get_latest_pending_reconfiguration_plan_time(self) -> datetime | None:
         """
@@ -1053,14 +1219,16 @@ class ModelInterface(TypeDBInterface):
         """
         query = '''
             match
-            not {$rp isa reconfiguration-plan, has result $result;};
-            $rp has start-time $time;
-            sort $time desc; limit 1;
+                $rp isa reconfiguration-plan;
+                not {$rp has result $result;};
+                $rp has start-time $time;
+                get $time;
+                sort $time desc; limit 1;
         '''
-        result = self.match_database(query)
+        result = self.get_database(query)
         if len(result) == 0:
             return None
-        return self.convert_query_type_to_py_type(result[0].get('time'))
+        return result[0].get('time').as_attribute().get_value()
 
     def get_latest_completed_reconfiguration_plan_time(
             self) -> datetime | None:
@@ -1076,10 +1244,10 @@ class ModelInterface(TypeDBInterface):
             get $time;
             sort $time desc; limit 1;
         '''
-        result = self.match_database(query)
+        result = self.get_database(query)
         if len(result) == 0:
             return None
-        return self.convert_query_type_to_py_type(result[0].get('time'))
+        return result[0].get('time').as_attribute().get_value()
 
     def get_reconfiguration_plan(
             self, start_time: datetime) -> ReconfigPlanDict:
@@ -1095,9 +1263,9 @@ class ModelInterface(TypeDBInterface):
                 has start-time {start_time.isoformat(timespec='milliseconds')};
             $ca_ (component:$ca) isa component-activation;
             $ca isa Component, has component-name $c_activate;
-            get $c_activate;
+            fetch $c_activate;
         '''
-        result = self.match_database(query)
+        result = self.fetch_database(query)
         c_activate = [r.get('c_activate').get('value') for r in result]
 
         query = f'''
@@ -1105,9 +1273,9 @@ class ModelInterface(TypeDBInterface):
                 has start-time {start_time.isoformat(timespec='milliseconds')};
             $cd_ (component:$cd) isa component-deactivation;
             $cd isa Component, has component-name $c_deactivate;
-            get $c_deactivate;
+            fetch $c_deactivate;
         '''
-        result = self.match_database(query)
+        result = self.fetch_database(query)
         c_deactivate = [r.get('c_deactivate').get('value') for r in result]
 
         query = f'''
@@ -1116,9 +1284,9 @@ class ModelInterface(TypeDBInterface):
             $pa (component-configuration:$cc) isa parameter-adaptation;
             $cc isa component-configuration,
                 has component-configuration-name $c_config;
-            get $c_config;
+            fetch $c_config;
         '''
-        result = self.match_database(query)
+        result = self.fetch_database(query)
         c_config = [r.get('c_config').get('value') for r in result]
         reconfig_plan_dict = {
             'start_time': start_time,
@@ -1198,16 +1366,16 @@ class ModelInterface(TypeDBInterface):
         """
         end_time = self.get_latest_completed_reconfiguration_plan_time()
         if isinstance(end_time, datetime):
-            end_time = self.convert_py_type_to_query_type(end_time)
+            end_time = convert_py_type_to_query_type(end_time)
             query = f'''
                 match $rp isa reconfiguration-plan, has start-time $time;
                     not {{$rp has end-time $end-time;}};
                     $time < {end_time};
-                get $time;
+                fetch $time;
             '''
-            result = self.match_database(query)
+            result = self.fetch_database(query)
             if len(result) > 0:
-                return [self.convert_query_type_to_py_type(r.get('time'))
+                return [convert_query_type_to_py_type(r.get('time'))
                         for r in result]
         return []
 
@@ -1242,17 +1410,17 @@ class ModelInterface(TypeDBInterface):
         :param start_time: reconfiguration plan start-time
         :return: reconfiguration plan result
         """
-        start_time = self.convert_py_type_to_query_type(start_time)
+        start_time = convert_py_type_to_query_type(start_time)
         query = f'''
             match $rp isa reconfiguration-plan,
                 has start-time {start_time},
                 has result $result;
-            get $result;
+            fetch $result;
         '''
-        result = self.match_database(query)
+        result = self.fetch_database(query)
         if len(result) == 0:
             return None
-        return self.convert_query_type_to_py_type(result[0].get('result'))
+        return convert_query_type_to_py_type(result[0].get('result'))
 
     def get_component_parameters(
             self, c_config: str) -> ComponentConfigurationDict | None:
@@ -1270,25 +1438,25 @@ class ModelInterface(TypeDBInterface):
                 $p has parameter-key $key,
                     has parameter-value $value,
                     has parameter-type $type;
-            get $c_name, $key, $value, $type;
+            fetch $c_name; $key; $value; $type;
         '''
-        _result = self.match_database(query)
+        _result = self.fetch_database(query)
         if len(_result) == 0:
             return None
 
         params = []
         result = {}
-        result['component'] = self.convert_query_type_to_py_type(
+        result['component'] = convert_query_type_to_py_type(
             _result[0].get('c_name'))
         for r in _result:
             value = convert_component_parameter_value_to_py_type(
-                self.convert_query_type_to_py_type(r.get('value')),
-                self.convert_query_type_to_py_type(r.get('type'))
+                convert_query_type_to_py_type(r.get('value')),
+                convert_query_type_to_py_type(r.get('type'))
             )
             params.append({
-                'key': self.convert_query_type_to_py_type(r.get('key')),
+                'key': convert_query_type_to_py_type(r.get('key')),
                 'value': value,
-                'type': self.convert_query_type_to_py_type(r.get('type'))
+                'type': convert_query_type_to_py_type(r.get('type'))
             })
         result['component_parameters'] = params
         return result
@@ -1306,17 +1474,59 @@ class ModelInterface(TypeDBInterface):
                 $c isa! $component-type,
                     has component-name '{component}',
                     has $attribute;
-                get $component-type, $attribute;
+                fetch $component-type; $attribute;
         '''
-        result = self.match_database(query)
+        result = self.fetch_database(query)
         if len(result) == 0:
             return None
 
         result_dict = {}
         result_dict['type'] = result[0].get('component-type').get('label')
         for r in result:
-            attr_name = r.get('attribute').get('type').replace('-', '_')
-            attr_value = self.convert_query_type_to_py_type(
-                r.get('attribute'))
+            attr = r.get('attribute')
+            attr_name = attr.get('type').get('label').replace('-', '_')
+            attr_value = convert_query_type_to_py_type(attr)
             result_dict[attr_name] = attr_value
         return result_dict
+
+    def get_active_component_process(self) -> ComponentProcessDict | None:
+        """
+        Get all attributes owned by a Component, and the Component type.
+
+        :param component: component name.
+        :return: Dict with component type and all its attributes
+        """
+        query = '''
+            match
+                $cp (component: $c) isa component-process,
+                    has component-pid $pid,
+                    has start-time $start_time;
+                not {$cp has end-time $end_time;};
+                $c has component-name $c_name;
+                fetch $pid; $start_time; $c_name;
+        '''
+        result = self.fetch_database(query)
+        if len(result) == 0:
+            return []
+        result_list = [{
+            'start_time': convert_query_type_to_py_type(r['start_time']),
+            'pid': convert_query_type_to_py_type(r['pid']),
+            'component': convert_query_type_to_py_type(r['c_name'])}
+            for r in result]
+        return result_list
+
+    def set_component_process_end_time(
+         self, start_time: datetime) -> Iterator[ConceptMap] | None:
+        """
+        Set component process end time.
+
+        :param start_time: component-process start-time.
+        :return: update query result
+        """
+        return self.update_attribute_in_thing(
+            'component-process',
+            'start-time',
+            start_time,
+            'end-time',
+            datetime.now()
+        )

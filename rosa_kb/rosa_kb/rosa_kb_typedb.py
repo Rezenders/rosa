@@ -19,13 +19,20 @@ import rosa_msgs
 from rosa_msgs.msg import Action
 from rosa_msgs.msg import Component
 from rosa_msgs.msg import ComponentConfiguration
+from rosa_msgs.msg import ComponentProcess
 from rosa_msgs.msg import Function
 from rosa_msgs.msg import FunctionDesign
 from rosa_msgs.msg import ReconfigurationPlan
 
+from rosa_msgs.srv import ActionQuery
 from rosa_msgs.srv import AdaptableFunctions
 from rosa_msgs.srv import AdaptableComponents
 from rosa_msgs.srv import ComponentQuery
+from rosa_msgs.srv import ComponentProcessQuery
+from rosa_msgs.srv import ComponentProcessQueryArray
+from rosa_msgs.srv import FunctionQuery
+from rosa_msgs.srv import FunctionDesignQuery
+from rosa_msgs.srv import FunctionalRequirementQuery
 from rosa_msgs.srv import GetComponentParameters
 from rosa_msgs.srv import GetComponentConfigurationPriority
 from rosa_msgs.srv import GetFunctionDesignPriority
@@ -33,7 +40,6 @@ from rosa_msgs.srv import ReconfigurationPlanQuery
 from rosa_msgs.srv import SelectedConfigurations
 from rosa_msgs.srv import SelectableComponentConfigurations
 from rosa_msgs.srv import SelectableFunctionDesigns
-from rosa_msgs.srv import ActionQuery
 from rosa_msgs.srv import SelectableActions
 
 from rcl_interfaces.msg import Parameter
@@ -120,10 +126,38 @@ class RosaKB(ROSTypeDBInterface):
             callback_group=self.query_cb_group
         )
 
+        self.action_insert_service = self.create_service(
+            ActionQuery,
+            self.get_name() + '/action/insert',
+            self.action_insert_cb,
+            callback_group=self.query_cb_group
+        )
+
+        self.action_exists_service = self.create_service(
+            ActionQuery,
+            self.get_name() + '/action/exists',
+            self.action_exists_cb,
+            callback_group=self.query_cb_group
+        )
+
+        self.functional_requirement_insert_service = self.create_service(
+            FunctionalRequirementQuery,
+            self.get_name() + '/functional_requirement/insert',
+            self.functional_requirement_insert_cb,
+            callback_group=self.query_cb_group
+        )
+
         self.get_adaptable_functions_service = self.create_service(
             AdaptableFunctions,
             self.get_name() + '/function/adaptable',
             self.function_adaptable_cb,
+            callback_group=self.query_cb_group
+        )
+
+        self.function_insert_service = self.create_service(
+            FunctionQuery,
+            self.get_name() + '/function/insert',
+            self.function_insert_cb,
             callback_group=self.query_cb_group
         )
 
@@ -134,6 +168,33 @@ class RosaKB(ROSTypeDBInterface):
             callback_group=self.query_cb_group
         )
 
+        self.component_insert_service = self.create_service(
+            ComponentQuery,
+            self.get_name() + '/component/insert',
+            self.component_insert_cb,
+            callback_group=self.query_cb_group
+        )
+        self.component_process_insert_service = self.create_service(
+            ComponentProcessQuery,
+            self.get_name() + '/component_process/insert',
+            self.component_process_insert_cb,
+            callback_group=self.query_cb_group
+        )
+
+        self.get_component_process_active_service = self.create_service(
+            ComponentProcessQueryArray,
+            self.get_name() + '/component_process/get_active',
+            self.component_process_get_active_cb,
+            callback_group=self.query_cb_group
+        )
+
+        self.get_component_process_set_end_service = self.create_service(
+            ComponentProcessQuery,
+            self.get_name() + '/component_process/end/set',
+            self.component_process_set_end_cb,
+            callback_group=self.query_cb_group
+        )
+
         self.get_selectable_fds_service = self.create_service(
             SelectableFunctionDesigns,
             self.get_name() + '/function_designs/selectable',
@@ -141,17 +202,24 @@ class RosaKB(ROSTypeDBInterface):
             callback_group=self.query_cb_group
         )
 
-        self.get_selectable_c_configs_service = self.create_service(
-            SelectableComponentConfigurations,
-            self.get_name() + '/component_configuration/selectable',
-            self.selectable_c_config_cb,
-            callback_group=self.query_cb_group
-        )
-
         self.get_fds_priority_service = self.create_service(
             GetFunctionDesignPriority,
             self.get_name() + '/function_designs/priority',
             self.function_design_priority_cb,
+            callback_group=self.query_cb_group
+        )
+
+        self.function_design_insert_service = self.create_service(
+            FunctionDesignQuery,
+            self.get_name() + '/function_design/insert',
+            self.function_design_insert_cb,
+            callback_group=self.query_cb_group
+        )
+
+        self.get_selectable_c_configs_service = self.create_service(
+            SelectableComponentConfigurations,
+            self.get_name() + '/component_configuration/selectable',
+            self.selectable_c_config_cb,
             callback_group=self.query_cb_group
         )
 
@@ -191,7 +259,6 @@ class RosaKB(ROSTypeDBInterface):
             callback_group=self.query_cb_group
         )
 
-        self.component_active_cb_group = MutuallyExclusiveCallbackGroup()
         self.set_component_active_service = self.create_service(
             ComponentQuery,
             self.get_name() + '/component/active/set',
@@ -324,6 +391,216 @@ class RosaKB(ROSTypeDBInterface):
             res.success = True
         else:
             res.success = False
+        res.action.is_required = self.typedb_interface.is_action_required(
+            req.action.name)
+        return res
+
+    @check_lc_active
+    def action_insert_cb(
+        self,
+        req: rosa_msgs.srv.ActionQuery.Request,
+        res: rosa_msgs.srv.ActionQuery.Response
+    ) -> rosa_msgs.srv.ActionQuery.Response:
+        """
+        Insert Action (callback).
+
+        Callback from service `~/action/insert`. Insert new action to the
+        database.
+
+        :param req: `~/action/insert` service request
+        :param res: `~/action/insert` service response
+        :return: `~/action/insert` service response
+        """
+        self.typedb_interface.insert_action(req.action.name)
+        res.success = True
+        return res
+
+    @check_lc_active
+    def action_exists_cb(
+        self,
+        req: rosa_msgs.srv.ActionQuery.Request,
+        res: rosa_msgs.srv.ActionQuery.Response
+    ) -> rosa_msgs.srv.ActionQuery.Response:
+        """
+        Check wheter an Action exists in the database (callback).
+
+        Callback from service `~/action/exists`. Check wheter an Action exists
+        in the database.
+
+        :param req: `~/action/exists` service request
+        :param res: `~/action/exists` service response
+        :return: `~/action/exists` service response
+        """
+        res.success = self.typedb_interface.has_action(req.action.name)
+        return res
+
+    @check_lc_active
+    def function_insert_cb(
+        self,
+        req: rosa_msgs.srv.FunctionQuery.Request,
+        res: rosa_msgs.srv.FunctionQuery.Response
+    ) -> rosa_msgs.srv.FunctionQuery.Response:
+        """
+        Insert Function (callback).
+
+        Callback from service `~/function/insert`. Insert new function to the
+        database.
+
+        :param req: `~/function/insert` service request
+        :param res: `~/function/insert` service response
+        :return: `~/function/insert` service response
+        """
+        self.typedb_interface.insert_function(req.function.name)
+        res.success = True
+        return res
+
+    @check_lc_active
+    def component_insert_cb(
+        self,
+        req: rosa_msgs.srv.ComponentQuery.Request,
+        res: rosa_msgs.srv.ComponentQuery.Response
+    ) -> rosa_msgs.srv.ComponentQuery.Response:
+        """
+        Insert Component (callback).
+
+        Callback from service `~/component/insert`. Insert new component to the
+        database.
+
+        :param req: `~/component/insert` service request
+        :param res: `~/component/insert` service response
+        :return: `~/component/insert` service response
+        """
+        self.typedb_interface.insert_ros_node_component(
+            req.component.name,
+            req.component.package,
+            req.component.executable,
+            req.component.always_improve,
+            (req.component.node_type == 'LifeCycleNode'),
+        )
+        res.success = True
+        return res
+
+    @check_lc_active
+    def component_process_insert_cb(
+        self,
+        req: rosa_msgs.srv.ComponentProcessQuery.Request,
+        res: rosa_msgs.srv.ComponentProcessQuery.Response
+    ) -> rosa_msgs.srv.ComponentProcessQuery.Response:
+        """
+        Insert component-process (callback).
+
+        Callback from service `~/component_process/insert`. Insert new
+        component-process to the database.
+
+        :param req: `~/component_process/insert` service request
+        :param res: `~/component_process/insert` service response
+        :return: `~/component_process/insert` service response
+        """
+        self.typedb_interface.insert_component_process(
+            req.component_process.component.name,
+            req.component_process.pid,
+        )
+        res.success = True
+        return res
+
+    @check_lc_active
+    def component_process_get_active_cb(
+        self,
+        req: rosa_msgs.srv.ComponentProcessQueryArray.Request,
+        res: rosa_msgs.srv.ComponentProcessQueryArray.Response
+    ) -> rosa_msgs.srv.ComponentProcessQueryArray.Response:
+        """
+        Get all active component-process (callback).
+
+        Callback from service `~/component_process/get_active`. Get all
+        active component-process.
+
+        :param req: `~/component_process/get_active` service request
+        :param res: `~/component_process/get_active` service response
+        :return: `~/component_process/get_active` service response
+        """
+        query_result = self.typedb_interface.get_active_component_process()
+        for result in query_result:
+            component_process = ComponentProcess()
+            component_process.pid = result['pid']
+            component_process.start_time = \
+                result['start_time'].isoformat(timespec='milliseconds')
+            component_process.component.name = result['component']
+            res.component_process.append(component_process)
+        res.success = True
+        return res
+
+    @check_lc_active
+    def component_process_set_end_cb(
+        self,
+        req: rosa_msgs.srv.ComponentProcessQuery.Request,
+        res: rosa_msgs.srv.ComponentProcessQuery.Response
+    ) -> rosa_msgs.srv.ComponentProcessQuery.Response:
+        """
+        Set end time component-process (callback).
+
+        Callback from service `~/component_process/end/set`. Get all
+        active component-process.
+
+        :param req: `~/component_process/end/set` service request
+        :param res: `~/component_process/end/set` service response
+        :return: `~/component_process/end/set` service response
+        """
+        self.typedb_interface.set_component_process_end_time(
+            datetime.fromisoformat(req.component_process.start_time))
+        res.success = True
+        return res
+
+    @check_lc_active
+    def function_design_insert_cb(
+        self,
+        req: rosa_msgs.srv.FunctionDesignQuery.Request,
+        res: rosa_msgs.srv.FunctionDesignQuery.Response
+    ) -> rosa_msgs.srv.FunctionDesignQuery.Response:
+        """
+        Insert function-design (callback).
+
+        Callback from service `~/function_design/insert`. Insert new
+        function_design to the database.
+
+        :param req: `~/function_design/insert` service request
+        :param res: `~/function_design/insert` service response
+        :return: `~/function_design/insert` service response
+        """
+        component_names = [
+            c.name for c in req.function_design.required_components]
+        self.typedb_interface.insert_function_design(
+            req.function_design.name,
+            req.function_design.function.name,
+            component_names,
+            req.function_design.priority,
+        )
+        res.success = True
+        return res
+
+    @check_lc_active
+    def functional_requirement_insert_cb(
+        self,
+        req: rosa_msgs.srv.FunctionalRequirementQuery.Request,
+        res: rosa_msgs.srv.FunctionalRequirementQuery.Response
+    ) -> rosa_msgs.srv.FunctionalRequirementQuery.Response:
+        """
+        Insert functional-requirement (callback).
+
+        Callback from service `~/functional_requirement/insert`. Insert new
+        functional_requirement to the database.
+
+        :param req: `~/functional_requirement/insert` service request
+        :param res: `~/functional_requirement/insert` service response
+        :return: `~/functional_requirement/insert` service response
+        """
+        function_names = [
+            f.name for f in req.functional_requirement.required_functions]
+        self.typedb_interface.insert_functional_requirement(
+            req.functional_requirement.action.name,
+            function_names,
+        )
+        res.success = True
         return res
 
     @check_lc_active

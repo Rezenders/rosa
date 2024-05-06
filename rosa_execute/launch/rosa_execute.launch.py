@@ -12,12 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 from launch import LaunchDescription
-from launch_ros.actions import Node
 
 from launch.actions import EmitEvent
 from launch.actions import LogInfo
 from launch.actions import RegisterEventHandler
 from launch.event_handlers.on_shutdown import OnShutdown
+from launch_ros.actions import LifecycleNode
 from launch_ros.events.lifecycle import ChangeState
 from launch_ros.events import matches_node_name
 
@@ -25,9 +25,11 @@ import lifecycle_msgs.msg
 
 
 def generate_launch_description():
-    executor_node = Node(
+    executor_node = LifecycleNode(
         package='rosa_execute',
         executable='configuration_executor',
+        name='configuration_executor',
+        namespace='',
     )
 
     shutdown_event = RegisterEventHandler(
