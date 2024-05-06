@@ -646,3 +646,11 @@ def test_get_active_component_process(kb_interface):
     for r in query_result:
         del r['start_time']
     assert all(r in query_result for r in expected_result)
+
+
+@pytest.mark.parametrize("action_name, result", [
+    ('action1', True),
+    ('action_not_in_model', False),
+])
+def test_has_action(kb_interface, action_name, result):
+    assert kb_interface.has_action(action_name) == result

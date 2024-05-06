@@ -393,6 +393,21 @@ class ModelInterface(TypeDBInterface):
             component_status
         )
 
+    def has_action(self, action_name: str) -> bool:
+        """
+        Check whether model can an specific Action.
+
+        :param action_name: Action name
+        :return: whether the action exists in the model or not
+        """
+        action_name = convert_py_type_to_query_type(action_name)
+        query = f"""
+            match $a isa Action, has action-name {action_name};
+            get;
+            count;
+        """
+        return True if self.get_aggregate_database(query) > 0 else False
+
     def is_action_required(self, action_name: str) -> bool:
         """
         Check whether an Action is required.
