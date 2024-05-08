@@ -25,6 +25,7 @@ from rosa_msgs.msg import FunctionDesign
 from rosa_msgs.msg import ReconfigurationPlan
 
 from rosa_msgs.srv import ActionQuery
+from rosa_msgs.srv import ActionQueryArray
 from rosa_msgs.srv import AdaptableFunctions
 from rosa_msgs.srv import AdaptableComponents
 from rosa_msgs.srv import ComponentQuery
@@ -40,7 +41,6 @@ from rosa_msgs.srv import ReconfigurationPlanQuery
 from rosa_msgs.srv import SelectedConfigurations
 from rosa_msgs.srv import SelectableComponentConfigurations
 from rosa_msgs.srv import SelectableFunctionDesigns
-from rosa_msgs.srv import SelectableActions
 
 from rcl_interfaces.msg import Parameter
 
@@ -129,7 +129,7 @@ class RosaKB(ROSTypeDBInterface):
         )
 
         self.action_selectable_service = self.create_service(
-            SelectableActions,
+            ActionQueryArray,
             self.get_name() + '/action/selectable',
             self.action_selectable_cb,
             callback_group=self.query_cb_group
@@ -612,12 +612,12 @@ class RosaKB(ROSTypeDBInterface):
         res.success = True
         return res
 
-    @check_lc_active(response=SelectableActions.Response())
+    @check_lc_active(response=ActionQueryArray.Response())
     def action_selectable_cb(
         self,
-        req: rosa_msgs.srv.SelectableActions.Request,
-        res: rosa_msgs.srv.SelectableActions.Response
-    ) -> rosa_msgs.srv.SelectableActions.Response:
+        req: rosa_msgs.srv.ActionQueryArray.Request,
+        res: rosa_msgs.srv.ActionQueryArray.Response
+    ) -> rosa_msgs.srv.ActionQueryArray.Response:
         """
         Get selectable actions (callback).
 
@@ -632,6 +632,7 @@ class RosaKB(ROSTypeDBInterface):
             action = Action()
             action.name = action_name
             res.actions.append(action)
+        res.success = True
         return res
 
     @check_lc_active(response=AdaptableFunctions.Response())
