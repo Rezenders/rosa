@@ -16,33 +16,49 @@
 
 #include <algorithm>
 
-#include "rosa_task_plan_plansys/visibility_control.h"
-
 #include "rclcpp/rclcpp.hpp"
-#include "rosa_msgs/srv/selectable_actions.hpp"
+#include "rosa_msgs/srv/action_query_array.hpp"
 #include "rosa_msgs/msg/action.hpp"
 #include "std_msgs/msg/string.hpp"
 
+#include "plansys2_domain_expert/DomainExpertClient.hpp"
+#include "plansys2_executor/ExecutorClient.hpp"
+#include "plansys2_planner/PlannerClient.hpp"
 #include "plansys2_problem_expert/ProblemExpertClient.hpp"
+
+#include "rosa_task_plan_plansys/visibility_control.h"
 
 namespace rosa_task_plan_plansys
 {
 
-class RosaPlansysControllerNode : public rclcpp::Node
+class RosaPlansysController : public rclcpp::Node
 {
 public:
-  RosaPlansysControllerNode(const std::string & node_name);
+  RosaPlansysController(const std::string & node_name);
 
-  virtual ~RosaPlansysControllerNode();
+  virtual ~RosaPlansysController();
 
 private:
+  rclcpp::CallbackGroup::SharedPtr step_timer_cb_group_;
+  rclcpp::TimerBase::SharedPtr step_timer_;
+
   rclcpp::Subscription<std_msgs::msg::String>::SharedPtr rosa_events_sub_;
-  rclcpp::Client<rosa_msgs::srv::SelectableActions>::SharedPtr selectable_actions_client_;
-
-  std::shared_ptr<plansys2::ProblemExpertClient> problem_expert_;
-
   void rosa_events_cb(const std_msgs::msg::String msg);
-  void update_actions_feasibility();
+
+  rclcpp::CallbackGroup::SharedPtr callback_group_actions_client_;
+  rclcpp::Client<rosa_msgs::srv::ActionQueryArray>::SharedPtr selectable_actions_client_;
+
+  std::shared_ptr<plansys2::DomainExpertClient> domain_expert_;
+  std::shared_ptr<plansys2::PlannerClient> planner_client_;
+  std::shared_ptr<plansys2::ProblemExpertClient> problem_expert_;
+  std::shared_ptr<plansys2::ExecutorClient> executor_client_;
+
+  bool first_iteration_ = true;
+  void execute_plan();
+  bool update_actions_feasibility();
+
+  bool mission_completed = false;
+  void step();
 };
 
 }  // namespace rosa_task_plan_plansys

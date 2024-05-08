@@ -8,58 +8,84 @@ endif()
 # find dependencies
 find_package(ament_cmake REQUIRED)
 find_package(ament_cmake_ros REQUIRED)
+find_package(rclcpp REQUIRED)
+find_package(rclcpp_lifecycle REQUIRED)
+find_package(lifecycle_msgs REQUIRED)
+find_package(rclcpp_cascade_lifecycle REQUIRED)
+find_package(rclcpp_action REQUIRED)
 find_package(plansys2_msgs REQUIRED)
+find_package(plansys2_pddl_parser REQUIRED)
 find_package(plansys2_executor REQUIRED)
+find_package(plansys2_domain_expert REQUIRED)
+find_package(plansys2_planner REQUIRED)
 find_package(plansys2_problem_expert REQUIRED)
 find_package(rosa_msgs REQUIRED)
 find_package(std_msgs REQUIRED)
 
-add_library(rosa_action_plansys src/rosa_action_plansys.cpp)
-target_compile_features(rosa_action_plansys PUBLIC c_std_99 cxx_std_17)  # Require C99 and C++17
-target_include_directories(rosa_action_plansys PUBLIC
-  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-  $<INSTALL_INTERFACE:include>)
-ament_target_dependencies(
-  rosa_action_plansys
-  "plansys2_msgs"
-  "plansys2_executor"
-  "plansys2_problem_expert"
-  "rosa_msgs"
+set(dependencies
+  ament_index_cpp
+  rclcpp
+  rclcpp_lifecycle
+  rclcpp_cascade_lifecycle
+  rclcpp_action
+  lifecycle_msgs
+  plansys2_domain_expert
+  plansys2_executor
+  plansys2_msgs
+  plansys2_pddl_parser
+  plansys2_problem_expert
+  plansys2_planner
+  rosa_msgs
 )
 
-# Causes the visibility macros to use dllexport rather than dllimport,
-# which is appropriate when building the dll but not consuming it.
-target_compile_definitions(rosa_action_plansys PRIVATE "ROSA_TASK_PLAN_PLANSYS_BUILDING_LIBRARY")
 
 add_library(rosa_plansys_controller src/rosa_plansys_controller.cpp)
 target_compile_features(rosa_plansys_controller PUBLIC c_std_99 cxx_std_17)  # Require C99 and C++17
 target_include_directories(rosa_plansys_controller PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
   $<INSTALL_INTERFACE:include>)
-ament_target_dependencies(
-  rosa_plansys_controller
-  "plansys2_msgs"
-  "plansys2_executor"
-  "plansys2_problem_expert"
-  "rosa_msgs"
-  "std_msgs"
-)
-
+ament_target_dependencies(rosa_plansys_controller ${dependencies})
 # Causes the visibility macros to use dllexport rather than dllimport,
 # which is appropriate when building the dll but not consuming it.
 target_compile_definitions(rosa_plansys_controller PRIVATE "ROSA_TASK_PLAN_PLANSYS_BUILDING_LIBRARY")
+
+add_library(rosa_action src/rosa_action.cpp)
+target_compile_features(rosa_action PUBLIC c_std_99 cxx_std_17)  # Require C99 and C++17
+target_include_directories(rosa_action PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  $<INSTALL_INTERFACE:include>)
+ament_target_dependencies(rosa_action ${dependencies})
+# Causes the visibility macros to use dllexport rather than dllimport,
+# which is appropriate when building the dll but not consuming it.
+target_compile_definitions(rosa_action PRIVATE "ROSA_TASK_PLAN_PLANSYS_BUILDING_LIBRARY")
 
 install(
   DIRECTORY include/
   DESTINATION include
 )
 install(
-  TARGETS rosa_action_plansys rosa_plansys_controller
+  TARGETS rosa_plansys_controller
   EXPORT export_${PROJECT_NAME}
   ARCHIVE DESTINATION lib
   LIBRARY DESTINATION lib
   RUNTIME DESTINATION bin
 )
+install(
+  TARGETS rosa_action
+  EXPORT export_${PROJECT_NAME}
+  ARCHIVE DESTINATION lib
+  LIBRARY DESTINATION lib
+  RUNTIME DESTINATION bin
+)
+
+add_executable(rosa_plansys_controller_node src/rosa_plansys_controller_node.cpp)
+target_include_directories(rosa_plansys_controller_node PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  $<INSTALL_INTERFACE:include>)
+target_link_libraries(rosa_plansys_controller_node rosa_plansys_controller)
+
+install(TARGETS rosa_plansys_controller_node
+  DESTINATION lib/${PROJECT_NAME})
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
@@ -77,11 +103,11 @@ ament_export_include_directories(
   include
 )
 ament_export_libraries(
-  rosa_action_plansys
   rosa_plansys_controller
 )
 ament_export_targets(
   export_${PROJECT_NAME}
 )
+ament_export_dependencies(${dependencies})
 
 ament_package()

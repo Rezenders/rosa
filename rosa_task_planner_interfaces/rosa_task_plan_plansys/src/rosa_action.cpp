@@ -11,28 +11,35 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-#include "rosa_task_plan_plansys/rosa_action_plansys.hpp"
+#include "rosa_task_plan_plansys/rosa_action.hpp"
 
 using namespace std::chrono_literals;
 namespace rosa_task_plan_plansys
 {
 
-  RosaActionPlansys::RosaActionPlansys(const std::string & node_name,
+  RosaAction::RosaAction(const std::string & node_name,
     const std::chrono::nanoseconds & rate)
-  :   plansys2::ActionExecutorClient(node_name, rate), action_name_("rosa_action")
+  :   plansys2::ActionExecutorClient(node_name, rate)
   {
+    callback_group_actions_client_ = create_callback_group(
+      rclcpp::CallbackGroupType::MutuallyExclusive);
+
     action_req_client_ =
-      this->create_client<rosa_msgs::srv::ActionQuery>("/rosa_kb/action/request");
+      this->create_client<rosa_msgs::srv::ActionQuery>(
+        "/rosa_kb/action/request",
+        rmw_qos_profile_services_default,
+        callback_group_actions_client_);
+    action_name_ = this->get_parameter("action_name").as_string();
   }
 
-  RosaActionPlansys::~RosaActionPlansys()
+  RosaAction::~RosaAction()
   {
   }
 
   rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn
-  RosaActionPlansys::on_activate(const rclcpp_lifecycle::State & previous_state)
+  RosaAction::on_activate(const rclcpp_lifecycle::State & previous_state)
   {
-    RCLCPP_INFO(this->get_logger(), "Action requested: %s", action_name_.c_str());
+    RCLCPP_INFO(this->get_logger(), "Action requested to ROSA: %s", action_name_.c_str());
 
     while (!action_req_client_->wait_for_service(1s)) {
       if (!rclcpp::ok()) {
@@ -47,21 +54,20 @@ namespace rosa_task_plan_plansys
     request->action.is_required = true;
 
     auto response = action_req_client_->async_send_request(request);
-    if (rclcpp::spin_until_future_complete(this->get_node_base_interface(), response) ==
-      rclcpp::FutureReturnCode::SUCCESS && response.get()->success == true)
+    auto response_status = response.wait_for(1s);
+    if (response_status == std::future_status::ready && response.get()->success == true)
     {
-      RCLCPP_INFO(this->get_logger(), "Action request completed: %s", action_name_.c_str());
+      RCLCPP_INFO(this->get_logger(), "Action request to ROSA completed: %s", action_name_.c_str());
       return ActionExecutorClient::on_activate(previous_state);
     }
-
     RCLCPP_ERROR(this->get_logger(), "Failed to start action %s", action_name_.c_str());
     return rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn::FAILURE;
   }
 
   rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn
-  RosaActionPlansys::on_deactivate(const rclcpp_lifecycle::State & previous_state)
+  RosaAction::on_deactivate(const rclcpp_lifecycle::State & previous_state)
   {
-    RCLCPP_INFO(this->get_logger(), "Action cancelation requested: %s", action_name_.c_str());
+    RCLCPP_INFO(this->get_logger(), "Action cancelation requested to ROSA: %s", action_name_.c_str());
 
     while (!action_req_client_->wait_for_service(1s)) {
       if (!rclcpp::ok()) {
@@ -76,15 +82,14 @@ namespace rosa_task_plan_plansys
     request->action.is_required = false;
 
     auto response = action_req_client_->async_send_request(request);
-    if (!(rclcpp::spin_until_future_complete(this->get_node_base_interface(), response) ==
-      rclcpp::FutureReturnCode::SUCCESS && response.get()->success == true))
+    if (response.wait_for(1s) == std::future_status::ready && response.get()->success == true)
     {
-      RCLCPP_ERROR(this->get_logger(), "Failed to stop action %s", action_name_.c_str());
-      return rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn::FAILURE;
+      RCLCPP_INFO(this->get_logger(), "Action cancelation request to ROSA completed: %s", action_name_.c_str());
+      return ActionExecutorClient::on_deactivate(previous_state);
     }
 
-    RCLCPP_INFO(this->get_logger(), "Action cancelation completed: %s", action_name_.c_str());
-    return ActionExecutorClient::on_deactivate(previous_state);
+    RCLCPP_ERROR(this->get_logger(), "Failed to stop action %s", action_name_.c_str());
+    return rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn::FAILURE;
   }
 
 }  // namespace rosa_task_plan_plansys
