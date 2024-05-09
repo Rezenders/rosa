@@ -135,10 +135,10 @@ void RosaPlansysController::step(){
 
   if (!executor_client_->execute_and_check_plan() && executor_client_->getResult()) {
     if (executor_client_->getResult().value().success) {
-      std::cout << "Successful finished " << std::endl;
+      RCLCPP_INFO(this->get_logger(), "Plan execution finished with success!");
       this->finish_controlling();
     } else {
-        std::cout << "Replanning!" << std::endl;
+        RCLCPP_INFO(this->get_logger(), "Replanning!");
         this->execute_plan();
         return;
     }
