@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef ROSA_PLAN__IS_ACTION_FEASIBLE_HPP_
-#define ROSA_PLAN__IS_ACTION_FEASIBLE_HPP_
+#ifndef ROSA_TASK_PLAN_BT__IS_ACTION_FEASIBLE_HPP_
+#define ROSA_TASK_PLAN_BT__IS_ACTION_FEASIBLE_HPP_
 
 #include "behaviortree_cpp/behavior_tree.h"
 #include "behaviortree_cpp/bt_factory.h"
@@ -23,7 +23,7 @@
 
 using namespace std::chrono_literals;
 
-namespace rosa_plan
+namespace rosa_task_plan_bt
 {
 
 template<class T>
@@ -85,6 +85,6 @@ private:
   rclcpp::Client<rosa_msgs::srv::ActionQueryArray>::SharedPtr selectable_actions_client;
 };
 
-} //namespace rosa_plan
+} //namespace rosa_task_plan_bt
 
-#endif  // ROSA_PLAN__IS_ACTION_FEASIBLE_HPP_
+#endif  // ROSA_TASK_PLAN_BT__IS_ACTION_FEASIBLE_HPP_

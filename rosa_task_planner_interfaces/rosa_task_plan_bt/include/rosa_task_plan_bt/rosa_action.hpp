@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef ROSA_PLAN__ROSA_ACTION_HPP_
-#define ROSA_PLAN__ROSA_ACTION_HPP_
+#ifndef ROSA_TASK_PLAN_BT__ROSA_ACTION_HPP_
+#define ROSA_TASK_PLAN_BT__ROSA_ACTION_HPP_
 
 #include "behaviortree_cpp/behavior_tree.h"
 #include "behaviortree_cpp/bt_factory.h"
@@ -23,7 +23,7 @@
 
 using namespace std::chrono_literals;
 
-namespace rosa_plan
+namespace rosa_task_plan_bt
 {
 
 template<class T>
@@ -112,4 +112,4 @@ protected:
 
 }  // namespace rosa_plan
 
-#endif  // ROSA_PLAN__ROSA_ACTION_HPP_
+#endif  // ROSA_TASK_PLAN_BT__ROSA_ACTION_HPP_

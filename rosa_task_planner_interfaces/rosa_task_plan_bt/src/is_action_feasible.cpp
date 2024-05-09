@@ -13,8 +13,8 @@
 // limitations under the License.
 
 #include <chrono>
-#include "rosa_plan/is_action_feasible.hpp"
+#include "rosa_task_plan_bt/is_action_feasible.hpp"
 
-namespace rosa_plan
+namespace rosa_task_plan_bt
 {
-} //namespace rosa_plan
+} //namespace rosa_task_plan_bt

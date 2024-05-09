@@ -11,9 +11,9 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+#include "rosa_task_plan_bt/rosa_action.hpp"
 
-#include "rosa_plan/rosa_action.hpp"
-
-namespace rosa_plan
+namespace rosa_task_plan_bt
 {
-} //namespace rosa_plan
+
+}  // namespace rosa_task_plan_bt
