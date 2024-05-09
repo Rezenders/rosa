@@ -20,6 +20,7 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   "msg/FunctionalRequirement.msg"
   "msg/ReconfigurationPlan.msg"
   "srv/ActionQuery.srv"
+  "srv/ActionQueryArray.srv"
   "srv/AdaptableFunctions.srv"
   "srv/AdaptableComponents.srv"
   "srv/ComponentQuery.srv"
@@ -33,7 +34,6 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   "srv/GetFunctionDesignPriority.srv"
   "srv/ReconfigurationPlanQuery.srv"
   "srv/SelectedConfigurations.srv"
-  "srv/SelectableActions.srv"
   "srv/SelectableComponentConfigurations.srv"
   "srv/SelectableFunctionDesigns.srv"
   DEPENDENCIES std_msgs rcl_interfaces

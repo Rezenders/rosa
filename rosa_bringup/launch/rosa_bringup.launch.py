@@ -134,6 +134,7 @@ def generate_launch_description():
     lc_manager_node = Node(
         package='rosa_bringup',
         executable='lifecycle_manager',
+        name='rosa_lc_manager',
         parameters=[{
             'managed_nodes': managed_nodes
         }]

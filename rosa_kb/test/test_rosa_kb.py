@@ -40,6 +40,8 @@ from rosa_msgs.msg import ComponentProcess
 from rosa_msgs.msg import Function
 from rosa_msgs.msg import FunctionDesign
 
+from rosa_msgs.srv import ActionQuery
+from rosa_msgs.srv import ActionQueryArray
 from rosa_msgs.srv import AdaptableFunctions
 from rosa_msgs.srv import AdaptableComponents
 from rosa_msgs.srv import ComponentQuery
@@ -55,8 +57,6 @@ from rosa_msgs.srv import GetFunctionDesignPriority
 from rosa_msgs.srv import SelectedConfigurations
 from rosa_msgs.srv import SelectableComponentConfigurations
 from rosa_msgs.srv import SelectableFunctionDesigns
-from rosa_msgs.srv import SelectableActions
-from rosa_msgs.srv import ActionQuery
 
 from rcl_interfaces.msg import Parameter
 from rcl_interfaces.msg import ParameterValue
@@ -692,7 +692,7 @@ def test_rosa_kb_action_selectable():
         node.start_node()
         node.activate_rosa_kb()
 
-        request = SelectableActions.Request()
+        request = ActionQueryArray.Request()
         response = node.call_service(node.action_selectable_srv, request)
         res_names = [r.name for r in response.actions]
         expected_result = [
@@ -1119,7 +1119,7 @@ class MakeTestNode(Node):
             ActionQuery, '/rosa_kb/action/request')
 
         self.action_selectable_srv = self.create_client(
-            SelectableActions, '/rosa_kb/action/selectable')
+            ActionQueryArray, '/rosa_kb/action/selectable')
 
     def start_node(self):
         self.ros_spin_thread = Thread(

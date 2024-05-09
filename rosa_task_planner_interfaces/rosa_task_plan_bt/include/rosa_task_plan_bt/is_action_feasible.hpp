@@ -12,18 +12,18 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef ROSA_PLAN__IS_ACTION_FEASIBLE_HPP_
-#define ROSA_PLAN__IS_ACTION_FEASIBLE_HPP_
+#ifndef ROSA_TASK_PLAN_BT__IS_ACTION_FEASIBLE_HPP_
+#define ROSA_TASK_PLAN_BT__IS_ACTION_FEASIBLE_HPP_
 
 #include "behaviortree_cpp/behavior_tree.h"
 #include "behaviortree_cpp/bt_factory.h"
 
 #include "rclcpp/rclcpp.hpp"
-#include "rosa_msgs/srv/selectable_actions.hpp"
+#include "rosa_msgs/srv/action_query_array.hpp"
 
 using namespace std::chrono_literals;
 
-namespace rosa_plan
+namespace rosa_task_plan_bt
 {
 
 template<class T>
@@ -38,14 +38,14 @@ public:
     _node = config().blackboard->get<T>("node");
 
     selectable_actions_client =
-      this->_node->template create_client<rosa_msgs::srv::SelectableActions>("/rosa_kb/action/selectable");
+      this->_node->template create_client<rosa_msgs::srv::ActionQueryArray>("/rosa_kb/action/selectable");
   };
 
   BT::NodeStatus tick() override {
     std::string action_name;
     getInput("action_name", action_name);
 
-    auto request = std::make_shared<rosa_msgs::srv::SelectableActions::Request>();
+    auto request = std::make_shared<rosa_msgs::srv::ActionQueryArray::Request>();
 
     while (!selectable_actions_client->wait_for_service(1s)) {
       if (!rclcpp::ok()) {
@@ -82,9 +82,9 @@ public:
 
 private:
   T _node;
-  rclcpp::Client<rosa_msgs::srv::SelectableActions>::SharedPtr selectable_actions_client;
+  rclcpp::Client<rosa_msgs::srv::ActionQueryArray>::SharedPtr selectable_actions_client;
 };
 
-} //namespace rosa_plan
+} //namespace rosa_task_plan_bt
 
-#endif  // ROSA_PLAN__IS_ACTION_FEASIBLE_HPP_
+#endif  // ROSA_TASK_PLAN_BT__IS_ACTION_FEASIBLE_HPP_

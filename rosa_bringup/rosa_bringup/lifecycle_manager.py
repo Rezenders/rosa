@@ -102,7 +102,7 @@ def main():
     rclpy.init()
 
     executor = rclpy.executors.MultiThreadedExecutor()
-    lc_node = LifeCycleManager('lc_manager')
+    lc_node = LifeCycleManager('rosa_lc_manager')
     executor.add_node(lc_node)
     future = executor.create_task(lc_node.activate_managed_nodes)
     try:
