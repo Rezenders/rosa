@@ -122,6 +122,10 @@ void RosaPlansysController::execute_plan(){
   executor_client_->start_plan_execution(plan.value());
 }
 
+void RosaPlansysController::finish_controlling(){
+  step_timer_->cancel();
+}
+
 void RosaPlansysController::step(){
   if (first_iteration_ && this->update_actions_feasibility()){
     this->execute_plan();
@@ -132,7 +136,7 @@ void RosaPlansysController::step(){
   if (!executor_client_->execute_and_check_plan() && executor_client_->getResult()) {
     if (executor_client_->getResult().value().success) {
       std::cout << "Successful finished " << std::endl;
-      mission_completed = true;
+      this->finish_controlling();
     } else {
         std::cout << "Replanning!" << std::endl;
         this->execute_plan();
@@ -155,12 +159,7 @@ void RosaPlansysController::step(){
     std::string feedback_str_ = "[" + action_feedback.action + arguments_str_ +
       std::to_string(action_feedback.completion * 100.0) + "%]";
     RCLCPP_INFO(this->get_logger(), feedback_str_.c_str());
-    // std::cout << "[" << action_feedback.action << arguments_str <<
-      // action_feedback.completion * 100.0 << "%]";
-    // std::cout << std::endl;
   }
-
-  if(mission_completed) step_timer_->cancel();
 }
 
 

@@ -38,7 +38,7 @@ public:
 
   virtual ~RosaPlansysController();
 
-private:
+protected:
   rclcpp::CallbackGroup::SharedPtr step_timer_cb_group_;
   rclcpp::TimerBase::SharedPtr step_timer_;
 
@@ -57,8 +57,8 @@ private:
   void execute_plan();
   bool update_actions_feasibility();
 
-  bool mission_completed = false;
   void step();
+  virtual void finish_controlling();
 };
 
 }  // namespace rosa_task_plan_plansys
