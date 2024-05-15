@@ -9,14 +9,12 @@ endif()
 find_package(ament_cmake REQUIRED)
 find_package(ament_cmake_ros REQUIRED)
 find_package(rclcpp REQUIRED)
-find_package(rclcpp_lifecycle REQUIRED)
 find_package(behaviortree_cpp REQUIRED)
 find_package(rosa_msgs REQUIRED)
 
 set(dependencies
   ament_index_cpp
   rclcpp
-  rclcpp_lifecycle
   std_msgs
   behaviortree_cpp
   rosa_msgs
