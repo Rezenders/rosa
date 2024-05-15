@@ -35,10 +35,10 @@ public:
     const BT::NodeConfig & conf)
   : BT::ConditionNode(xml_tag_name, conf)
   {
-    _node = config().blackboard->get<T>("node");
+    node_ = config().blackboard->get<T>("node");
 
-    selectable_actions_client =
-      this->_node->template create_client<rosa_msgs::srv::ActionQueryArray>("/rosa_kb/action/selectable");
+    selectable_actions_client_ =
+      this->node_->template create_client<rosa_msgs::srv::ActionQueryArray>("/rosa_kb/action/selectable");
   };
 
   BT::NodeStatus tick() override {
@@ -47,17 +47,16 @@ public:
 
     auto request = std::make_shared<rosa_msgs::srv::ActionQueryArray::Request>();
 
-    while (!selectable_actions_client->wait_for_service(1s)) {
+    while (!selectable_actions_client_->wait_for_service(1s)) {
       if (!rclcpp::ok()) {
-        RCLCPP_ERROR(this->_node->template get_logger(), "Interrupted while waiting for the service. Exiting.");
+        RCLCPP_ERROR(this->node_->template get_logger(), "Interrupted while waiting for the service. Exiting.");
         return BT::NodeStatus::FAILURE;
       }
-      RCLCPP_INFO(this->_node->template get_logger(), "/rosa_kb/action/selectable service not available, waiting again...");
+      RCLCPP_INFO(this->node_->template get_logger(), "/rosa_kb/action/selectable service not available, waiting again...");
     }
 
-    auto response = selectable_actions_client->async_send_request(request);
-    if (rclcpp::spin_until_future_complete(this->_node, response) ==
-      rclcpp::FutureReturnCode::SUCCESS)
+    auto response = selectable_actions_client_->async_send_request(request);
+    if (response.wait_for(1s) == std::future_status::ready)
     {
       auto selectable_actions = response.get()->actions;
       for (auto action: selectable_actions){
@@ -67,7 +66,7 @@ public:
       }
       return BT::NodeStatus::FAILURE;
     } else {
-      RCLCPP_ERROR(this->_node->template get_logger(), "Failed to call service actions selectable");
+      RCLCPP_ERROR(this->node_->template get_logger(), "Failed to call service actions selectable");
       return BT::NodeStatus::FAILURE;
     }
   };
@@ -81,8 +80,8 @@ public:
   }
 
 private:
-  T _node;
-  rclcpp::Client<rosa_msgs::srv::ActionQueryArray>::SharedPtr selectable_actions_client;
+  T node_;
+  rclcpp::Client<rosa_msgs::srv::ActionQueryArray>::SharedPtr selectable_actions_client_;
 };
 
 } //namespace rosa_task_plan_bt
