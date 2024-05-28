@@ -1,0 +1,55 @@
+---
+f_sm_test:
+  ros__parameters:
+    type: system
+    parts:
+      c_sm_test_1
+      c_sm_test_2
+    modes:
+      __DEFAULT__:
+        c_sm_test_1: active.__DEFAULT__
+        c_sm_test_2: active.__DEFAULT__
+      fd_sm_1:
+        c_sm_test_1: active.normal
+        c_sm_test_2: active.normal
+      fd_sm_2:
+        c_sm_test_1: active.normal
+        c_sm_test_2: active.degraded
+      fd_sm_3:
+        c_sm_test_1: active.degraded
+        c_sm_test_2: active.degraded
+      fd_sm_4:
+        c_sm_test_1: active.degraded
+        c_sm_test_2: active.normal
+      fd_sm_5:
+        c_sm_test_1: inactive
+        c_sm_test_2: inactive
+
+
+c_sm_test_1:
+  ros__parameters:
+    type: node
+    modes:
+      __DEFAULT__:
+        ros__parameters:
+          random_parameter: 1.0
+      normal:
+        ros__parameters:
+          random_parameter: 3.0
+      degraded:
+        ros__parameters:
+          random_parameter: 2.0
+
+c_sm_test_2:
+  ros__parameters:
+    type: node
+    modes:
+      __DEFAULT__:
+        ros__parameters:
+          random_parameter: 5.0
+      normal:
+        ros__parameters:
+          random_parameter: 7.0
+      degraded:
+        ros__parameters:
+          random_parameter: 9.0

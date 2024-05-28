@@ -11,5 +11,10 @@ ROSNode sub Component,
     owns executable;
 
 LifeCycleNode sub ROSNode;
-   
 
+system-mode sub function-design;
+node-mode sub component-configuration;
+
+#system-mode-adaptation sub relation,
+#    relates system-mode,
+#    plays reconfiguration-plan:structural-adaptation;

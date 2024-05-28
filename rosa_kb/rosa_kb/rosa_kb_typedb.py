@@ -38,7 +38,8 @@ from rosa_msgs.srv import GetComponentParameters
 from rosa_msgs.srv import GetComponentConfigurationPriority
 from rosa_msgs.srv import GetFunctionDesignPriority
 from rosa_msgs.srv import ReconfigurationPlanQuery
-from rosa_msgs.srv import SelectedConfigurations
+from rosa_msgs.srv import SetReconfigurationPlan
+# from rosa_msgs.srv import SelectedConfigurations
 from rosa_msgs.srv import SelectableComponentConfigurations
 from rosa_msgs.srv import SelectableFunctionDesigns
 
@@ -183,6 +184,7 @@ class RosaKB(ROSTypeDBInterface):
             self.component_insert_cb,
             callback_group=self.query_cb_group
         )
+
         self.component_process_insert_service = self.create_service(
             ComponentProcessQuery,
             self.get_name() + '/component_process/insert',
@@ -239,14 +241,21 @@ class RosaKB(ROSTypeDBInterface):
             callback_group=self.query_cb_group
         )
 
-        self.select_configuration_service = self.create_service(
-            SelectedConfigurations,
-            self.get_name() + '/select_configuration',
-            self.select_configuration_cb,
+        # TODO: adjust this service
+        # self.select_configuration_service = self.create_service(
+        #     SelectedConfigurations,
+        #     self.get_name() + '/select_configuration',
+        #     self.select_configuration_cb,
+        #     callback_group=self.query_cb_group
+        # )
+
+        self.set_reconfiguration_plan_service = self.create_service(
+            SetReconfigurationPlan,
+            self.get_name() + '/reconfiguration_plan/set',
+            self.set_reconfiguration_plan_cb,
             callback_group=self.query_cb_group
         )
 
-        self.reconfig_plan_cb_group = MutuallyExclusiveCallbackGroup()
         self.get_reconfiguration_plan_service = self.create_service(
             ReconfigurationPlanQuery,
             self.get_name() + '/reconfiguration_plan/get',
@@ -796,38 +805,73 @@ class RosaKB(ROSTypeDBInterface):
         res.success = True
         return res
 
-    @check_lc_active(response=SelectedConfigurations.Response())
+    @check_lc_active(response=SetReconfigurationPlan.Response())
     @publish_event(event_type='insert_reconfiguration_plan')
-    def select_configuration_cb(
+    def set_reconfiguration_plan_cb(
         self,
-        req: rosa_msgs.srv.SelectedConfigurations.Request,
-        res: rosa_msgs.srv.SelectedConfigurations.Response
-    ) -> rosa_msgs.srv.SelectedConfigurations.Response:
+        req: rosa_msgs.srv.SetReconfigurationPlan.Request,
+        res: rosa_msgs.srv.SetReconfigurationPlan.Response
+    ) -> rosa_msgs.srv.SetReconfigurationPlan.Response:
         """
-        Select configuration (callback).
+        Set reconfiguration plan (callback).
 
-        Callback from service `~/select_configuration`. Select new
+        Callback from service `~/reconfiguration_plan/set`. Select new
         configuration for the system. Publish `insert_reconfiguration_plan` in
         `~/events` topic.
 
-        :param req: `~/select_configuration` service request
-        :param res: `~/select_configuration` service response
-        :return: `~/select_configuration` service response
+        :param req: `~/reconfiguration_plan/set` service request
+        :param res: `~/reconfiguration_plan/set` service response
+        :return: `~/reconfiguration_plan/set` service response
         """
-        _selected_fds = [
-            (selected_fd.function.name, selected_fd.name)
-            for selected_fd in req.selected_fds]
+        _fds_activate = [
+            selected_fd.name
+            for selected_fd in req.reconfig_plan.function_designs_activate]
+        _fds_deactivate = [
+            selected_fd.name
+            for selected_fd in req.reconfig_plan.function_designs_deactivate]
         _selected_component_configs = [
-            (selected_cc.component.name,
-                selected_cc.name)
-            for selected_cc in req.selected_component_configs]
-        result = self.typedb_interface.select_configuration(
-            _selected_fds, _selected_component_configs)
-        if result is None:
-            res.success = False
-        else:
-            res.success = True
+            selected_cc.name
+            for selected_cc in req.reconfig_plan.component_configurations]
+        if req.include_obsolete is True:
+            _fds_deactivate.append(self.typedb_interface.get_obsolete_fds())
+        result = self.typedb_interface.create_reconfiguration_plan(
+            _fds_activate, _fds_deactivate, _selected_component_configs)
+
+        res.success = False if result is None else True
         return res
+
+    # @check_lc_active(response=SelectedConfigurations.Response())
+    # @publish_event(event_type='insert_reconfiguration_plan')
+    # def set_reconfiguration_plan_cb(
+    #     self,
+    #     req: rosa_msgs.srv.ReconfigurationPlanQuery.Request,
+    #     res: rosa_msgs.srv.ReconfigurationPlanQuery.Response
+    # ) -> rosa_msgs.srv.ReconfigurationPlanQuery.Response:
+    #     """
+    #     Set reconfiguration plan (callback).
+    #
+    #     Callback from service `~/reconfiguration_plan/set`. Select new
+    #     configuration for the system. Publish `insert_reconfiguration_plan` in
+    #     `~/events` topic.
+    #
+    #     :param req: `~/reconfiguration_plan/set` service request
+    #     :param res: `~/reconfiguration_plan/set` service response
+    #     :return: `~/reconfiguration_plan/set` service response
+    #     """
+    #     _selected_fds = [
+    #         (selected_fd.function.name, selected_fd.name)
+    #         for selected_fd in req.reconfig_plan.function_designs]
+    #     _selected_component_configs = [
+    #         (selected_cc.component.name,
+    #             selected_cc.name)
+    #         for selected_cc in req.selected_component_configs]
+    #     result = self.typedb_interface.select_configuration(
+    #         _selected_fds, _selected_component_configs)
+    #     if result is None:
+    #         res.success = False
+    #     else:
+    #         res.success = True
+    #     return res
 
     def get_component_all_attributes(
             self, component: str) -> rosa_msgs.msg.Component:
@@ -859,15 +903,17 @@ class RosaKB(ROSTypeDBInterface):
         """
         reconfig_plan = ReconfigurationPlan()
         if reconfig_plan_dict is not None:
-            for c_activate in reconfig_plan_dict['c_activate']:
-                _component = self.get_component_all_attributes(c_activate)
-                reconfig_plan.components_activate.append(_component)
+            for fd in reconfig_plan_dict['function_designs']:
+                # _fd = self.get_component_all_attributes(fd)
+                _fd = FunctionDesign()
+                _fd.name = fd
+                reconfig_plan.function_designs.append(_fd)
 
-            for c_deactivate in reconfig_plan_dict['c_deactivate']:
-                _component = self.get_component_all_attributes(c_deactivate)
-                reconfig_plan.components_deactivate.append(_component)
+            # for c_deactivate in reconfig_plan_dict['c_deactivate']:
+            #     _component = self.get_component_all_attributes(c_deactivate)
+            #     reconfig_plan.components_deactivate.append(_component)
 
-            for c_config in reconfig_plan_dict['c_config']:
+            for c_config in reconfig_plan_dict['c_configs']:
                 _c_config = ComponentConfiguration()
                 _c_config.name = c_config
                 reconfig_plan.component_configurations.append(_c_config)

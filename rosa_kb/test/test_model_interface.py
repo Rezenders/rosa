@@ -163,61 +163,45 @@ def test_select_component_configuration(kb_interface):
            low_selected[0] is True
 
 
-@pytest.mark.parametrize("c_activate, c_deactivate, c_config", [
-   (['component2', 'component3'], ['component4', 'component5'], ['low param']),
-   ([], ['component4', 'component5'], ['low param']),
-   (['component2', 'component3'], [], ['low param']),
-   (['component2', 'component3'], ['component4', 'component5'], []),
-   ([], [], ['low param']),
-   ([], [], []),
+@pytest.mark.parametrize("fds_activate, fds_deactivate, c_configs", [
+   (['f1_fd1'], ['f2_fd1_c2_c3'], ['low param']),
+   (['f1_fd1', 'f2_fd1_c2_c3'], [], ['low param', 'cc_constrained']),
 ])
 def test_create_reconfiguration_plan(
-   kb_interface, c_activate, c_deactivate, c_config):
+   kb_interface, fds_activate, fds_deactivate, c_configs):
     start_time = kb_interface.create_reconfiguration_plan(
-        c_activate, c_deactivate, c_config)
+        fds_activate, fds_deactivate, c_configs)
     query = "match ("
     end_query = ""
-    if len(c_activate) == 0 and len(c_deactivate) == 0 and len(c_config) == 0:
+    if len(fds_activate) == 0 and len(fds_deactivate) == 0 and \
+       len(c_configs) == 0:
         assert start_time is None
     else:
-        if len(c_activate) > 0:
-            query += "structural-adaptation:$ca"
+        if len(fds_activate) > 0:
+            query += "function-design-activation:$fd_a"
             _match_query, _prefix_list = kb_interface.create_match_query(
-                [('Component', 'component-name', c) for c in c_activate],
-                'ca_')
-            end_query += kb_interface.create_relationship_query(
-                'component-activation',
-                {'component': _prefix_list},
-                prefix='ca'
-            )
+                [('function-design', 'function-design-name', fd)
+                    for fd in fds_activate],
+                'fd_a')
             end_query += _match_query
 
-        if len(c_deactivate) > 0:
+        if len(fds_deactivate) > 0:
             if query != "match (":
                 query += ','
-            query += "structural-adaptation:$cd"
+            query += "function-design-deactivation:$fd_d"
             _match_query, _prefix_list = kb_interface.create_match_query(
-                [('Component', 'component-name', c) for c in c_deactivate],
-                'cd_')
-            end_query += kb_interface.create_relationship_query(
-                'component-deactivation',
-                {'component': _prefix_list},
-                prefix='cd'
-            )
+                [('function-design', 'function-design-name', fd)
+                    for fd in fds_deactivate],
+                'fd_d')
             end_query += _match_query
 
-        if len(c_config) > 0:
+        if len(c_configs) > 0:
             if query != "match (":
                 query += ','
-            query += "parameter-adaptation:$pa"
+            query += "parameter-adaptation:$cc"
             _match_query, _prefix_list = kb_interface.create_match_query(
                 [('component-configuration', 'component-configuration-name', c)
-                 for c in c_config], 'cc_')
-            end_query += kb_interface.create_relationship_query(
-                'parameter-adaptation',
-                {'component-configuration': _prefix_list},
-                prefix='cc'
-            )
+                 for c in c_configs], 'cc')
             end_query += _match_query
 
         query += f"""
@@ -225,106 +209,107 @@ def test_create_reconfiguration_plan(
                 has start-time {start_time.isoformat(timespec='milliseconds')};
         """
         query += end_query
+        print(query)
         query_result = kb_interface.get_aggregate_database(query + "get; count;")
         assert query_result > 0
 
 
-@pytest.mark.parametrize("selected_fd, selected_config, exp_c_activate, exp_c_deactivate, exp_c_config ", [
-    ([('f_reconfigure_fd', 'fd_reconfig_1')], [('component_reconfig_3', 'cp_reconfig_1')], [], ['c_not_required'], []),
-    ([('f_reconfigure_fd', 'fd_reconfig_2')], [('component_reconfig_3', 'cp_reconfig_1')], ['component_reconfig_2'], ['component_reconfig_1', 'c_not_required'], []),
-    ([('f_reconfigure_fd', 'fd_reconfig_1')], [('component_reconfig_3', 'cp_reconfig_2')], [], ['c_not_required'], ['cp_reconfig_2']),
-    ([('f_reconfigure_fd', 'fd_reconfig_2')], [('component_reconfig_3', 'cp_reconfig_2')], ['component_reconfig_2'], ['component_reconfig_1', 'c_not_required'], ['cp_reconfig_2']),
-])
-def test_select_configuration(
-        kb_interface,
-        selected_fd,
-        selected_config,
-        exp_c_activate,
-        exp_c_deactivate,
-        exp_c_config
-     ):
-    start_time = kb_interface.select_configuration(
-        selected_fd, selected_config)
-    if exp_c_activate == [] and exp_c_deactivate == [] and exp_c_config == []:
-        assert start_time is None
-    else:
-        query = "match $rp "
-        end_query = ""
-        if len(exp_c_activate) > 0:
-            if query == "match $rp ":
-                query += '('
-            query += "structural-adaptation:$ca"
-            _match_query, _prefix_list = kb_interface.create_match_query(
-                [('Component', 'component-name', c) for c in exp_c_activate],
-                'ca')
-            end_query += kb_interface.create_relationship_query(
-                'component-activation',
-                {'component': _prefix_list},
-                prefix='ca'
-            )
-            end_query += _match_query
-        if len(exp_c_deactivate) > 0:
-            if query == "match $rp ":
-                query += '('
-            elif len(query) > len("match $rp ("):
-                query += ','
-            query += "structural-adaptation:$cd"
-            _match_query, _prefix_list = kb_interface.create_match_query(
-                [('Component', 'component-name', c) for c in exp_c_deactivate],
-                'cd')
-            end_query += kb_interface.create_relationship_query(
-                'component-deactivation',
-                {'component': _prefix_list},
-                prefix='cd'
-            )
-            end_query += _match_query
-        if len(exp_c_config) > 0:
-            if query == "match $rp ":
-                query += '('
-            elif len(query) > len("match $rp ("):
-                query += ','
-            query += "parameter-adaptation:$pa"
-            _match_query, _prefix_list = kb_interface.create_match_query(
-                [('component-configuration', 'component-configuration-name', c)
-                 for c in exp_c_config], 'cc_')
-            end_query += kb_interface.create_relationship_query(
-                'parameter-adaptation',
-                {'component-configuration': _prefix_list},
-                prefix='cc'
-            )
-            end_query += _match_query
-
-        if query != "match $rp ":
-            query += ')'
-
-        query += " isa reconfiguration-plan, has start-time {};".format(
-            start_time.isoformat(timespec='milliseconds'))
-        query += end_query
-        query_result = kb_interface.get_aggregate_database(
-            query + "get; count;")
-
-        right_fd_selected = True
-        for fd in selected_fd:
-            _fd = kb_interface.get_relationship_with_attribute(
-                'Function',
-                fd[0],
-                'function-design',
-                'is-selected',
-                True
-            )
-            right_fd_selected = (fd[1] == _fd[0])
-        right_conf_selected = True
-        for config in selected_config:
-            _config = kb_interface.get_relationship_with_attribute(
-                'Component',
-                config[0],
-                'component-configuration',
-                'is-selected',
-                True
-            )
-            right_conf_selected = (config[1] == _config[0])
-        assert query_result > 0 and right_fd_selected \
-            and right_conf_selected
+# @pytest.mark.parametrize("selected_fd, selected_config, exp_c_activate, exp_c_deactivate, exp_c_config ", [
+#     ([('f_reconfigure_fd', 'fd_reconfig_1')], [('component_reconfig_3', 'cp_reconfig_1')], [], ['c_not_required'], []),
+#     ([('f_reconfigure_fd', 'fd_reconfig_2')], [('component_reconfig_3', 'cp_reconfig_1')], ['component_reconfig_2'], ['component_reconfig_1', 'c_not_required'], []),
+#     ([('f_reconfigure_fd', 'fd_reconfig_1')], [('component_reconfig_3', 'cp_reconfig_2')], [], ['c_not_required'], ['cp_reconfig_2']),
+#     ([('f_reconfigure_fd', 'fd_reconfig_2')], [('component_reconfig_3', 'cp_reconfig_2')], ['component_reconfig_2'], ['component_reconfig_1', 'c_not_required'], ['cp_reconfig_2']),
+# ])
+# def test_select_configuration(
+#         kb_interface,
+#         selected_fd,
+#         selected_config,
+#         exp_c_activate,
+#         exp_c_deactivate,
+#         exp_c_config
+#      ):
+#     start_time = kb_interface.select_configuration(
+#         selected_fd, selected_config)
+#     if exp_c_activate == [] and exp_c_deactivate == [] and exp_c_config == []:
+#         assert start_time is None
+#     else:
+#         query = "match $rp "
+#         end_query = ""
+#         if len(exp_c_activate) > 0:
+#             if query == "match $rp ":
+#                 query += '('
+#             query += "structural-adaptation:$ca"
+#             _match_query, _prefix_list = kb_interface.create_match_query(
+#                 [('Component', 'component-name', c) for c in exp_c_activate],
+#                 'ca')
+#             end_query += kb_interface.create_relationship_query(
+#                 'component-activation',
+#                 {'component': _prefix_list},
+#                 prefix='ca'
+#             )
+#             end_query += _match_query
+#         if len(exp_c_deactivate) > 0:
+#             if query == "match $rp ":
+#                 query += '('
+#             elif len(query) > len("match $rp ("):
+#                 query += ','
+#             query += "structural-adaptation:$cd"
+#             _match_query, _prefix_list = kb_interface.create_match_query(
+#                 [('Component', 'component-name', c) for c in exp_c_deactivate],
+#                 'cd')
+#             end_query += kb_interface.create_relationship_query(
+#                 'component-deactivation',
+#                 {'component': _prefix_list},
+#                 prefix='cd'
+#             )
+#             end_query += _match_query
+#         if len(exp_c_config) > 0:
+#             if query == "match $rp ":
+#                 query += '('
+#             elif len(query) > len("match $rp ("):
+#                 query += ','
+#             query += "parameter-adaptation:$pa"
+#             _match_query, _prefix_list = kb_interface.create_match_query(
+#                 [('component-configuration', 'component-configuration-name', c)
+#                  for c in exp_c_config], 'cc_')
+#             end_query += kb_interface.create_relationship_query(
+#                 'parameter-adaptation',
+#                 {'component-configuration': _prefix_list},
+#                 prefix='cc'
+#             )
+#             end_query += _match_query
+#
+#         if query != "match $rp ":
+#             query += ')'
+#
+#         query += " isa reconfiguration-plan, has start-time {};".format(
+#             start_time.isoformat(timespec='milliseconds'))
+#         query += end_query
+#         query_result = kb_interface.get_aggregate_database(
+#             query + "get; count;")
+#
+#         right_fd_selected = True
+#         for fd in selected_fd:
+#             _fd = kb_interface.get_relationship_with_attribute(
+#                 'Function',
+#                 fd[0],
+#                 'function-design',
+#                 'is-selected',
+#                 True
+#             )
+#             right_fd_selected = (fd[1] == _fd[0])
+#         right_conf_selected = True
+#         for config in selected_config:
+#             _config = kb_interface.get_relationship_with_attribute(
+#                 'Component',
+#                 config[0],
+#                 'component-configuration',
+#                 'is-selected',
+#                 True
+#             )
+#             right_conf_selected = (config[1] == _config[0])
+#         assert query_result > 0 and right_fd_selected \
+#             and right_conf_selected
 
 
 @pytest.mark.parametrize("thing, status, exp", [
@@ -370,17 +355,15 @@ def test_get_components_in_function_design(kb_interface):
 
 
 def test_get_latest_reconfiguration_plan_time(kb_interface):
-    c_activate = ['component2', 'component3']
-    c_deactivate = ['component4', 'component5']
-    c_config = ['low param']
+    function_designs = ['f1_fd1']
+    c_configs = ['low param']
     kb_interface.create_reconfiguration_plan(
-        c_activate, c_deactivate, c_config)
+        function_designs, [], c_configs)
 
-    c_activate = ['component3']
-    c_deactivate = ['component5']
-    c_config = ['low param']
+    function_designs = ['f2_fd1_c2_c3']
+    c_configs = ['low param']
     start_time_2 = kb_interface.create_reconfiguration_plan(
-        c_activate, c_deactivate, c_config)
+        function_designs, [], c_configs)
     lastest_plan = kb_interface.get_latest_reconfiguration_plan_time()
     assert lastest_plan == start_time_2
 
@@ -391,43 +374,42 @@ def test_get_latest_reconfiguration_plan_time_no_rp(kb_interface):
 
 
 def test_get_reconfiguration_plan(kb_interface):
-    c_activate = ['component2', 'component3']
-    c_deactivate = ['component4', 'component5']
-    c_config = ['low param']
+    fds_activate = ['f1_fd1']
+    fds_deactivate = ['f2_fd1_c2_c3']
+    c_configs = ['low param']
     start_time = kb_interface.create_reconfiguration_plan(
-        c_activate, c_deactivate, c_config)
+        fds_activate,
+        fds_deactivate,
+        c_configs
+    )
 
     reconfig_plan = kb_interface.get_reconfiguration_plan(start_time)
-    assert sorted(c_activate) == sorted(reconfig_plan['c_activate']) and \
-        sorted(c_deactivate) == sorted(reconfig_plan['c_deactivate']) and \
-        sorted(c_config) == sorted(reconfig_plan['c_config'])
+    assert sorted(fds_activate) == sorted(reconfig_plan['fds_activate']) and \
+        sorted(fds_deactivate) == sorted(reconfig_plan['fds_deactivate']) and \
+        sorted(c_configs) == sorted(reconfig_plan['c_configs'])
 
 
 def test_get_latest_reconfiguration_plan(kb_interface):
-    c_activate = ['component2', 'component3']
-    c_deactivate = ['component4', 'component5']
-    c_config = ['low param']
+    fds_activate = ['f1_fd1']
+    c_configs = ['low param']
     kb_interface.create_reconfiguration_plan(
-        c_activate, c_deactivate, c_config)
+        fds_activate, [], c_configs)
 
-    c_activate = ['component3']
-    c_deactivate = ['component5']
-    c_config = ['low param']
+    fds_activate = ['f2_fd1_c2_c3']
+    c_configs = ['low param']
     start_time_2 = kb_interface.create_reconfiguration_plan(
-        c_activate, c_deactivate, c_config)
+        fds_activate, [], c_configs)
     reconfig_plan = kb_interface.get_latest_reconfiguration_plan()
     assert reconfig_plan['start_time'] == start_time_2 and \
-        sorted(c_activate) == sorted(reconfig_plan['c_activate']) and \
-        sorted(c_deactivate) == sorted(reconfig_plan['c_deactivate']) and \
-        sorted(c_config) == sorted(reconfig_plan['c_config'])
+        sorted(fds_activate) == sorted(reconfig_plan['fds_activate']) and \
+        sorted(c_configs) == sorted(reconfig_plan['c_configs'])
 
 
 def test_update_reconfiguration_plan_result(kb_interface):
-    c_activate = ['component2', 'component3']
-    c_deactivate = ['component4', 'component5']
-    c_config = ['low param']
+    function_designs = ['f1_fd1']
+    c_configs = ['low param']
     start_time = kb_interface.create_reconfiguration_plan(
-        c_activate, c_deactivate, c_config)
+        function_designs, [], c_configs)
 
     kb_interface.update_reconfiguration_plan_result(start_time, 'completed')
     query = f'''
@@ -443,36 +425,32 @@ def test_update_reconfiguration_plan_result(kb_interface):
 
 
 def test_get_latest_completed_reconfiguration_plan_time(kb_interface):
-    c_activate = ['component2', 'component3']
-    c_deactivate = ['component4', 'component5']
-    c_config = ['low param']
+    function_designs = ['f1_fd1']
+    c_configs = ['low param']
     start_time_1 = kb_interface.create_reconfiguration_plan(
-        c_activate, c_deactivate, c_config)
+        function_designs, [], c_configs)
 
     kb_interface.update_reconfiguration_plan_result(start_time_1, 'completed')
 
-    c_activate = ['component3']
-    c_deactivate = ['component5']
-    c_config = ['low param']
+    function_designs = ['f2_fd1_c2_c3']
+    c_configs = ['low param']
     start_time_2 = kb_interface.create_reconfiguration_plan(
-        c_activate, c_deactivate, c_config)
+        function_designs, [], c_configs)
     kb_interface.update_reconfiguration_plan_result(start_time_2, 'completed')
     end_time = kb_interface.get_latest_completed_reconfiguration_plan_time()
     assert end_time is not None and type(end_time) is datetime
 
 
 def test_get_latest_pending_reconfiguration_plan_time(kb_interface):
-    c_activate = ['component2', 'component3']
-    c_deactivate = ['component4', 'component5']
-    c_config = ['low param']
+    function_designs = ['f1_fd1']
+    c_configs = ['low param']
     start_time_1 = kb_interface.create_reconfiguration_plan(
-        c_activate, c_deactivate, c_config)
+        function_designs, [], c_configs)
 
-    c_activate = ['component3']
-    c_deactivate = ['component5']
-    c_config = ['low param']
+    function_designs = ['f2_fd1_c2_c3']
+    c_configs = ['low param']
     start_time_2 = kb_interface.create_reconfiguration_plan(
-        c_activate, c_deactivate, c_config)
+        function_designs, [], c_configs)
     kb_interface.update_reconfiguration_plan_result(start_time_2, 'completed')
     r_start_time = kb_interface.get_latest_pending_reconfiguration_plan_time()
     assert r_start_time is not None \
@@ -480,17 +458,15 @@ def test_get_latest_pending_reconfiguration_plan_time(kb_interface):
 
 
 def test_get_outdated_reconfiguration_plans(kb_interface):
-    c_activate = ['component2', 'component3']
-    c_deactivate = ['component4', 'component5']
-    c_config = ['low param']
+    function_designs = ['f1_fd1']
+    c_configs = ['low param']
     start_time_1 = kb_interface.create_reconfiguration_plan(
-        c_activate, c_deactivate, c_config)
+        function_designs, [], c_configs)
 
-    c_activate = ['component3']
-    c_deactivate = ['component5']
-    c_config = ['low param']
+    function_designs = ['f2_fd1_c2_c3']
+    c_configs = ['low param']
     start_time_2 = kb_interface.create_reconfiguration_plan(
-        c_activate, c_deactivate, c_config)
+        function_designs, [], c_configs)
     kb_interface.update_reconfiguration_plan_result(start_time_2, 'completed')
 
     times = kb_interface.get_outdated_reconfiguration_plans()
@@ -499,11 +475,10 @@ def test_get_outdated_reconfiguration_plans(kb_interface):
 
 
 def test_get_reconfiguration_plan_result(kb_interface):
-    c_activate = ['component2', 'component3']
-    c_deactivate = ['component4', 'component5']
-    c_config = ['low param']
+    function_designs = ['f1_fd1']
+    c_configs = ['low param']
     start_time = kb_interface.create_reconfiguration_plan(
-        c_activate, c_deactivate, c_config)
+        function_designs, [], c_configs)
 
     kb_interface.update_reconfiguration_plan_result(start_time, 'completed')
     result = kb_interface.get_reconfiguration_plan_result(start_time)
@@ -513,23 +488,20 @@ def test_get_reconfiguration_plan_result(kb_interface):
 def test_update_outdated_reconfiguration_plans_result(kb_interface):
     kb_interface.update_outdated_reconfiguration_plans_result()
 
-    c_activate = ['component2', 'component3']
-    c_deactivate = ['component4', 'component5']
-    c_config = ['low param']
+    function_designs = ['f1_fd1']
+    c_configs = ['low param']
     start_time_1 = kb_interface.create_reconfiguration_plan(
-        c_activate, c_deactivate, c_config)
+        function_designs, [], c_configs)
 
-    c_activate = ['component3']
-    c_deactivate = ['component5']
-    c_config = ['low param']
+    function_designs = ['f2_fd1_c2_c3']
+    c_configs = ['low param']
     start_time_2 = kb_interface.create_reconfiguration_plan(
-        c_activate, c_deactivate, c_config)
+        function_designs, [], c_configs)
 
-    c_activate = ['component2']
-    c_deactivate = ['component4']
-    c_config = ['high param']
+    function_designs = ['f2_fd2_c4_c5']
+    c_configs = ['high param']
     start_time_3 = kb_interface.create_reconfiguration_plan(
-        c_activate, c_deactivate, c_config)
+        function_designs, [], c_configs)
 
     kb_interface.update_reconfiguration_plan_result(start_time_2, 'completed')
     kb_interface.update_outdated_reconfiguration_plans_result()

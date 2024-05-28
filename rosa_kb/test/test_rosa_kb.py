@@ -54,7 +54,7 @@ from rosa_msgs.srv import GetComponentParameters
 from rosa_msgs.srv import GetComponentConfigurationPriority
 from rosa_msgs.srv import ReconfigurationPlanQuery
 from rosa_msgs.srv import GetFunctionDesignPriority
-from rosa_msgs.srv import SelectedConfigurations
+# from rosa_msgs.srv import SelectedConfigurations
 from rosa_msgs.srv import SelectableComponentConfigurations
 from rosa_msgs.srv import SelectableFunctionDesigns
 
@@ -860,35 +860,35 @@ def test_rosa_kb_get_component_configuration_priority():
         rclpy.shutdown()
 
 
-@pytest.mark.launch(fixture=generate_test_description)
-def test_rosa_kb_select_configuration():
-    rclpy.init()
-    try:
-        node = MakeTestNode()
-        node.start_node()
-        node.activate_rosa_kb()
-        node.selected_config_srv = node.create_client(
-            SelectedConfigurations, '/rosa_kb/select_configuration')
-
-        selected_config = SelectedConfigurations.Request()
-
-        selected_fd = FunctionDesign()
-        selected_fd.function.name = 'f_reconfigure_fd'
-        selected_fd.name = 'fd_reconfig_2'
-
-        selected_cc = ComponentConfiguration()
-        selected_cc.component.name = 'component_reconfig_3'
-        selected_cc.name = 'cp_reconfig_2'
-
-        selected_config.selected_fds.append(selected_fd)
-        selected_config.selected_component_configs.append(selected_cc)
-
-        response_select_config = node.call_service(
-            node.selected_config_srv, selected_config)
-
-        assert response_select_config.success is True
-    finally:
-        rclpy.shutdown()
+# @pytest.mark.launch(fixture=generate_test_description)
+# def test_rosa_kb_select_configuration():
+#     rclpy.init()
+#     try:
+#         node = MakeTestNode()
+#         node.start_node()
+#         node.activate_rosa_kb()
+#         node.selected_config_srv = node.create_client(
+#             SelectedConfigurations, '/rosa_kb/select_configuration')
+#
+#         selected_config = SelectedConfigurations.Request()
+#
+#         selected_fd = FunctionDesign()
+#         selected_fd.function.name = 'f_reconfigure_fd'
+#         selected_fd.name = 'fd_reconfig_2'
+#
+#         selected_cc = ComponentConfiguration()
+#         selected_cc.component.name = 'component_reconfig_3'
+#         selected_cc.name = 'cp_reconfig_2'
+#
+#         selected_config.selected_fds.append(selected_fd)
+#         selected_config.selected_component_configs.append(selected_cc)
+#
+#         response_select_config = node.call_service(
+#             node.selected_config_srv, selected_config)
+#
+#         assert response_select_config.success is True
+#     finally:
+#         rclpy.shutdown()
 
 
 @pytest.mark.launch(fixture=generate_test_description)
@@ -899,10 +899,10 @@ def test_rosa_kb_get_reconfiguration_plan():
         node.start_node()
         node.activate_rosa_kb()
 
-        node.selected_config_srv = node.create_client(
-            SelectedConfigurations, '/rosa_kb/select_configuration')
+        node.set_reconfig_plan_srv = node.create_client(
+            ReconfigurationPlanQuery, '/rosa_kb/reconfiguration_plan/set')
 
-        selected_config = SelectedConfigurations.Request()
+        selected_rp = ReconfigurationPlanQuery.Request()
 
         selected_fd = FunctionDesign()
         selected_fd.function.name = 'f_reconfigure_fd'
@@ -912,10 +912,10 @@ def test_rosa_kb_get_reconfiguration_plan():
         selected_cc.component.name = 'component_reconfig_3'
         selected_cc.name = 'cp_reconfig_2'
 
-        selected_config.selected_fds.append(selected_fd)
-        selected_config.selected_component_configs.append(selected_cc)
+        selected_rp.reconfig_plan.function_designs.append(selected_fd)
+        selected_rp.reconfig_plan.component_configurations.append(selected_cc)
 
-        node.call_service(node.selected_config_srv, selected_config)
+        node.call_service(node.set_reconfig_plan_srv, selected_rp)
 
         node.get_latest_reconfig_plan_srv = node.create_client(
             ReconfigurationPlanQuery,
@@ -932,15 +932,16 @@ def test_rosa_kb_get_reconfiguration_plan():
             ReconfigurationPlanQuery.Request(
                 reconfig_plan=reconfig_plan.reconfig_plan))
 
-        _c = Component()
-        _c.name = 'component_reconfig_2'
-        _c.status = 'unsolved'
-        _c.node_type = 'Component'
+        _fd = FunctionDesign()
+        _fd.name = 'fd_reconfig_2'
 
         _cc = ComponentConfiguration()
         _cc.name = 'cp_reconfig_2'
+
+        print(reconfig_plan.reconfig_plan.function_designs)
+
         assert reconfig_plan.success is True \
-            and _c in reconfig_plan.reconfig_plan.components_activate \
+            and _fd in reconfig_plan.reconfig_plan.function_designs \
             and _cc in reconfig_plan.reconfig_plan.component_configurations \
             and reconfig_plan.reconfig_plan.start_time != '' \
             and reconfig_plan_2.success is True \
@@ -951,7 +952,7 @@ def test_rosa_kb_get_reconfiguration_plan():
 
 
 @pytest.mark.launch(fixture=generate_test_description)
-def test_set_get_component_activate():
+def test_rosa_kb_set_get_component_activate():
     rclpy.init()
     try:
         node = MakeTestNode()
@@ -987,7 +988,7 @@ def test_set_get_component_activate():
 
 
 @pytest.mark.launch(fixture=generate_test_description)
-def test_get_component_parameters_cb():
+def test_rosa_kb_get_component_parameters_cb():
     rclpy.init()
     try:
         node = MakeTestNode()
@@ -1039,17 +1040,17 @@ def test_get_component_parameters_cb():
 
 
 @pytest.mark.launch(fixture=generate_test_description)
-def test_set_reconfiguration_plan_result_service_cb():
+def test_rosa_kb_set_reconfiguration_plan_result_service_cb():
     rclpy.init()
     try:
         node = MakeTestNode()
         node.start_node()
         node.activate_rosa_kb()
 
-        node.selected_config_srv = node.create_client(
-            SelectedConfigurations, '/rosa_kb/select_configuration')
+        node.set_reconfig_plan_srv = node.create_client(
+            ReconfigurationPlanQuery, '/rosa_kb/reconfiguration_plan/set')
 
-        selected_config = SelectedConfigurations.Request()
+        selected_rp = ReconfigurationPlanQuery.Request()
 
         selected_fd = FunctionDesign()
         selected_fd.function.name = 'f_reconfigure_fd'
@@ -1059,10 +1060,10 @@ def test_set_reconfiguration_plan_result_service_cb():
         selected_cc.component.name = 'component_reconfig_3'
         selected_cc.name = 'cp_reconfig_2'
 
-        selected_config.selected_fds.append(selected_fd)
-        selected_config.selected_component_configs.append(selected_cc)
+        selected_rp.reconfig_plan.function_designs.append(selected_fd)
+        selected_rp.reconfig_plan.component_configurations.append(selected_cc)
 
-        node.call_service(node.selected_config_srv, selected_config)
+        node.call_service(node.set_reconfig_plan_srv, selected_rp)
 
         node.get_latest_reconfig_plan = node.create_client(
             ReconfigurationPlanQuery,

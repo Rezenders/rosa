@@ -1,0 +1,5 @@
+rosa_msgs/FunctionDesign[] function_designs
+---
+bool success
+rosa_msgs/Component[]  activate_components
+rosa_msgs/Component[]  deactivate_components

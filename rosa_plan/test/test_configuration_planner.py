@@ -138,8 +138,8 @@ def test_plan_adaptation():
         selected_cc.component.name = 'c_always_improve'
         selected_cc.name = 'c_improve_fd1'
 
-        assert selected_fd in result.selected_fds and \
-            selected_cc in result.selected_component_configs
+        assert selected_fd in result.reconfig_plan.function_designs and \
+            selected_cc in result.reconfig_plan.component_configurations
     finally:
         configuration_planner.destroy_node()
         rclpy.shutdown()

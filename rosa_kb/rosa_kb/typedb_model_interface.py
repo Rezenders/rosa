@@ -39,9 +39,8 @@ class ReconfigPlanDict(TypedDict):
     """TypedDict for reconfiguration plan."""
 
     start_time: datetime  #: reconfig plan start-time
-    c_activate: list[str]  #: components to activate
-    c_deactivate: list[str]  #: components to deactivate
-    c_config: list[str]  #: component configurations to update
+    function_designs: list[str]  #: function designs to activate
+    c_configs: list[str]  #: component configurations to update
 
 
 class ComponentParemeterDict(TypedDict):
@@ -767,6 +766,7 @@ class ModelInterface(TypeDBInterface):
             [('component-configuration-name', cc_name)],
             'priority')
 
+    # This method makes no sense
     def get_relationship_with_attribute(
             self,
             entity: str,
@@ -906,74 +906,57 @@ class ModelInterface(TypeDBInterface):
 
     def create_reconfiguration_plan(
         self,
-        c_activate: list[str],
-        c_deactivate: list[str],
-        c_config: list[str]
+        function_designs_activate: list[str],
+        function_designs_deactivate: list[str],
+        c_configs: list[str]
     ) -> datetime | None:
         """
         Create a reconfiguration plan.
 
-        :param c_active: components to activate
-        :param c_deactive: components to deactivate
-        :param c_config: component configurations to select
+        :param function_designs: selected function designs
+        :param c_config: selected component configurations
         :return: the time the reconfiguration plan was created, or None in case
             there was a failure creating the reconfiguration plan
         """
         match_query = "match "
         insert_query = "insert "
 
-        if len(c_activate) == 0 and len(c_deactivate) == 0 and \
-           len(c_config) == 0:
+        if len(function_designs_activate) == 0 and \
+           len(function_designs_deactivate) == 0 and len(c_configs) == 0:
             return None
 
-        structural_adaptation = []
-        if len(c_activate) > 0:
-            _match_query, _prefix_list = self.create_match_query(
-                [('Component', 'component-name', c) for c in c_activate], 'ca')
+        _fd_a_prefix_list = []
+        if len(function_designs_activate) > 0:
+            _match_query, _fd_a_prefix_list = self.create_match_query(
+                [('function-design', 'function-design-name', fd)
+                    for fd in function_designs_activate],
+                'fd_a')
             match_query += _match_query
 
-            insert_query += self.create_relationship_query(
-                'component-activation',
-                {'component': _prefix_list},
-                prefix='rca'
-            )
-            structural_adaptation.append('rca')
-
-        if len(c_deactivate) > 0:
-            _match_query, _prefix_list = self.create_match_query(
-                [('Component', 'component-name', c) for c in c_deactivate],
-                'cd')
+        _fd_d_prefix_list = []
+        if len(function_designs_deactivate) > 0:
+            _match_query, _fd_d_prefix_list = self.create_match_query(
+                [('function-design', 'function-design-name', fd)
+                    for fd in function_designs_deactivate],
+                'fd_d')
             match_query += _match_query
 
-            insert_query += self.create_relationship_query(
-                'component-deactivation',
-                {'component': _prefix_list},
-                prefix='rcd'
-            )
-            structural_adaptation.append('rcd')
-
-        parameter_adaptation = []
-        if len(c_config) > 0:
-            _match_query, _prefix_list = self.create_match_query(
+        _cc_prefix_list = []
+        if len(c_configs) > 0:
+            _match_query, _cc_prefix_list = self.create_match_query(
                 [('component-configuration', 'component-configuration-name', c)
-                    for c in c_config],
+                    for c in c_configs],
                 'cc'
             )
             match_query += _match_query
-
-            insert_query += self.create_relationship_query(
-                'parameter-adaptation',
-                {'component-configuration': _prefix_list},
-                prefix='rcc'
-            )
-            parameter_adaptation.append('rcc')
 
         start_time = datetime.now()
         insert_query += self.create_relationship_query(
             'reconfiguration-plan',
             {
-                'structural-adaptation': structural_adaptation,
-                'parameter-adaptation': parameter_adaptation
+                'function-design-activation': _fd_a_prefix_list,
+                'function-design-deactivation': _fd_d_prefix_list,
+                'parameter-adaptation': _cc_prefix_list
             },
             attribute_list=[('start-time', start_time)],
             prefix='rp'
@@ -986,6 +969,7 @@ class ModelInterface(TypeDBInterface):
         return datetime.fromisoformat(
             start_time.isoformat(timespec='milliseconds'))
 
+    # TODO: only fds as input. Remove fds selection.
     def select_fd_and_get_components(
         self,
         functions_selected_fd: list[Tuple[str, str]]
@@ -1256,43 +1240,40 @@ class ModelInterface(TypeDBInterface):
 
         :param start_time: start-time of the desired reconfiguration plan.
         :return: dict representing the reconfiguration plan, its keys are:
-            start_time, c_activate, c_deactivate, c_config
+            start_time, function_designs, c_configs
         """
         query = f'''
-            match (structural-adaptation:$ca_) isa reconfiguration-plan,
+            match (function-design-activation:$fd) isa reconfiguration-plan,
                 has start-time {start_time.isoformat(timespec='milliseconds')};
-            $ca_ (component:$ca) isa component-activation;
-            $ca isa Component, has component-name $c_activate;
-            fetch $c_activate;
+            $fd isa function-design, has function-design-name $fd_name;
+            fetch $fd_name;
         '''
         result = self.fetch_database(query)
-        c_activate = [r.get('c_activate').get('value') for r in result]
+        fds_activate = [r.get('fd_name').get('value') for r in result]
 
         query = f'''
-            match (structural-adaptation:$cd_) isa reconfiguration-plan,
+            match (function-design-deactivation:$fd) isa reconfiguration-plan,
                 has start-time {start_time.isoformat(timespec='milliseconds')};
-            $cd_ (component:$cd) isa component-deactivation;
-            $cd isa Component, has component-name $c_deactivate;
-            fetch $c_deactivate;
+            $fd isa function-design, has function-design-name $fd_name;
+            fetch $fd_name;
         '''
         result = self.fetch_database(query)
-        c_deactivate = [r.get('c_deactivate').get('value') for r in result]
+        fds_deactivate = [r.get('fd_name').get('value') for r in result]
 
         query = f'''
-            match (parameter-adaptation:$pa) isa reconfiguration-plan,
+            match (parameter-adaptation:$cc) isa reconfiguration-plan,
                 has start-time {start_time.isoformat(timespec='milliseconds')};
-            $pa (component-configuration:$cc) isa parameter-adaptation;
             $cc isa component-configuration,
                 has component-configuration-name $c_config;
             fetch $c_config;
         '''
         result = self.fetch_database(query)
-        c_config = [r.get('c_config').get('value') for r in result]
+        c_configs = [r.get('c_config').get('value') for r in result]
         reconfig_plan_dict = {
             'start_time': start_time,
-            'c_activate': c_activate,
-            'c_deactivate': c_deactivate,
-            'c_config': c_config,
+            'fds_activate': fds_activate,
+            'fds_deactivate': fds_deactivate,
+            'c_configs': c_configs,
         }
         return reconfig_plan_dict
 

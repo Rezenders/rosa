@@ -24,7 +24,7 @@ from rosa_msgs.srv import AdaptableFunctions
 from rosa_msgs.srv import AdaptableComponents
 from rosa_msgs.srv import GetComponentConfigurationPriority
 from rosa_msgs.srv import GetFunctionDesignPriority
-from rosa_msgs.srv import SelectedConfigurations
+from rosa_msgs.srv import ReconfigurationPlanQuery
 from rosa_msgs.srv import SelectableComponentConfigurations
 from rosa_msgs.srv import SelectableFunctionDesigns
 
@@ -90,9 +90,9 @@ class ConfigurationPlanner(Node):
             callback_group=MutuallyExclusiveCallbackGroup()
         )
 
-        self.select_configuration_srv = self.create_client(
-            SelectedConfigurations,
-            '/rosa_kb/select_configuration',
+        self.set_reconfig_plan_srv = self.create_client(
+            ReconfigurationPlanQuery,
+            '/rosa_kb/reconfiguration_plan/set',
             callback_group=MutuallyExclusiveCallbackGroup()
         )
 
@@ -186,22 +186,22 @@ class ConfigurationPlanner(Node):
         selected_component_configs = self.plan_component_adaptation(
             selected_functions_fds)
 
-        selected_config = SelectedConfigurations.Request()
-        selected_config.selected_fds = selected_functions_fds
-        selected_config.selected_component_configs = \
+        reconfig_plan = ReconfigurationPlanQuery.Request()
+        reconfig_plan.reconfig_plan.function_designs = selected_functions_fds
+        reconfig_plan.reconfig_plan.component_configurations = \
             selected_component_configs
-        return selected_config
+        return reconfig_plan
 
     @check_lc_active
     def event_cb(self, msg):
         if msg.data == 'insert_monitoring_data' or msg.data == 'action_update':
-            selected_config = self.plan_adaptation()
+            plan = self.plan_adaptation()
             # update kb with selected fds and component configs
-            if len(selected_config.selected_fds) > 0 \
-               or len(selected_config.selected_component_configs) > 0 \
+            if len(plan.reconfig_plan.function_designs) > 0 \
+               or len(plan.reconfig_plan.component_configurations) > 0 \
                or msg.data == 'action_update':
                 self.call_service(
-                    self.select_configuration_srv, selected_config)
+                    self.set_reconfig_plan_srv, plan)
 
     def call_service(self, cli, request):
         if cli.wait_for_service(timeout_sec=5.0) is False:

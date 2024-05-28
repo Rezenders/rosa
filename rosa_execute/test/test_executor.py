@@ -19,6 +19,8 @@ import subprocess
 from threading import Thread
 from pathlib import Path
 
+from ament_index_python.packages import get_package_share_directory
+
 import launch
 import launch_pytest
 import launch_ros
@@ -69,8 +71,34 @@ def generate_test_description():
             'force_data': True,
         }]
     )
+
+    path_sm_config = str(path_execute_test_data / 'test_sm_modes.yaml')
+    mode_manager_node = launch_ros.actions.Node(
+        package='system_modes',
+        executable='mode_manager',
+        parameters=[{'modelfile': path_sm_config}],
+    )
+
+    path_mock_node = path_kb / 'test' / 'mock_node' / 'mock_lc_node.py'
+    c_sm_test_1_node = launch_ros.actions.Node(
+        executable=sys.executable,
+        arguments=[str(path_mock_node)],
+        additional_env={'PYTHONUNBUFFERED': '1'},
+        name='c_sm_test_1',
+        output='screen',
+    )
+    c_sm_test_2_node = launch_ros.actions.Node(
+        executable=sys.executable,
+        arguments=[str(path_mock_node)],
+        additional_env={'PYTHONUNBUFFERED': '1'},
+        name='c_sm_test_2',
+        output='screen',
+    )
     return launch.LaunchDescription([
         rosa_kb_node,
+        mode_manager_node,
+        c_sm_test_1_node,
+        c_sm_test_2_node,
     ])
 
 

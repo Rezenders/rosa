@@ -106,7 +106,10 @@ function-design sub relation,
     relates function,
     relates required-component,
     plays constraint:constrained,
-    plays estimation:causer;
+    plays estimation:causer,
+    plays reconfiguration-plan:function-design-activation,
+    plays reconfiguration-plan:function-design-deactivation;
+    #plays reconfiguration-plan:structural-adaptation;
 
 component-configuration sub relation,
     owns component-configuration-name @key,
@@ -117,7 +120,7 @@ component-configuration sub relation,
     relates parameter,
     plays constraint:constrained,
     plays estimation:causer,
-    plays parameter-adaptation:component-configuration;
+    plays reconfiguration-plan:parameter-adaptation;
 
 constraint sub relation,
     owns attribute-value,
@@ -137,20 +140,21 @@ reconfiguration-plan sub relation,
     owns start-time,
     owns end-time,
     owns result,
-    relates structural-adaptation,
+    relates function-design-activation,
+    relates function-design-deactivation,
     relates parameter-adaptation;
 
-component-adaptation sub relation,
-    abstract,
-    relates component,
-    plays reconfiguration-plan:structural-adaptation;
+#component-adaptation sub relation,
+#    abstract,
+#    relates component,
+#    plays reconfiguration-plan:structural-adaptation;
 
-component-activation sub component-adaptation;
-component-deactivation sub component-adaptation;
+#component-activation sub component-adaptation;
+#component-deactivation sub component-adaptation;
 
-parameter-adaptation sub relation,
-    relates component-configuration,
-    plays reconfiguration-plan:parameter-adaptation;
+#parameter-adaptation sub relation,
+#    relates component-configuration,
+#    plays reconfiguration-plan:parameter-adaptation;
 
 measurement sub relation,
     owns measurement-time,
@@ -198,7 +202,6 @@ Component sub entity,
     plays component-configuration:component,
     plays constraint:constrained,
     plays estimation:causer,
-    plays component-adaptation:component,
     plays component-process:component;
 
 ComponentParameter sub entity,
@@ -364,8 +367,15 @@ rule component-status-unsolved:
         not {
             $c has component-status $c_status; $c_status like 'unfeasible|failure|configuration error';
         };
-        not {
-            $c has is-active true;
+        {
+            not {
+                $c has is-active true;
+            };
+        } or {
+            $cc (component: $c) isa component-configuration;
+            not {
+               $cc2 (component: $c) isa component-configuration, has is-selected true;
+            };
         };
     } then {
          $c has component-status 'unsolved';

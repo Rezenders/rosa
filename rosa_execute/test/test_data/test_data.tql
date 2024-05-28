@@ -15,4 +15,11 @@ $cc_ros_typedb (component:$ros_typedb, parameter:$database_name, parameter:$forc
 $ca (component:$ros_typedb, component:$ros_component) isa component-activation;
 $cd (component:$ros_component_2) isa component-deactivation;
 $pa (component-configuration:$cc_ros_typedb) isa parameter-adaptation;
-(structural-adaptation:$ca, structural-adaptation:$cd, parameter-adaptation:$pa) isa reconfiguration-plan, has start-time 2023-11-26T22:03:17.269;
+
+$f_system_mode isa Function, has function-name "f_sm_test";
+$fd_system_mode isa system-mode, has name "fd_sm_1";
+$fd_system_mode_2 isa system-mode, has name "fd_sm_2";
+$sm_adaptation (system-mode:$fd_system_mode) isa system-mode-adaptation;
+
+(structural-adaptation:$ca, structural-adaptation:$cd, structural-adaptation: $sm_adaptation, parameter-adaptation:$pa)
+  isa reconfiguration-plan, has start-time 2023-11-26T22:03:17.269;

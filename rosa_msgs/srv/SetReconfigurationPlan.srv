@@ -1,0 +1,4 @@
+rosa_msgs/ReconfigurationPlan reconfig_plan
+bool include_obsolete # if true the KB will add the obsolete fds when saving the reconfig plan
+---
+bool success
