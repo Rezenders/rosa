@@ -57,6 +57,8 @@ from ros_typedb.ros_typedb_interface import set_query_result_value
 import diagnostic_msgs.msg
 from diagnostic_msgs.msg import DiagnosticArray
 
+from rclpy.qos import QoSProfile, QoSReliabilityPolicy, QoSHistoryPolicy
+
 
 def publish_event(event_type: str):
     """Publish event (Decorator)."""
@@ -112,11 +114,15 @@ class RosaKB(ROSTypeDBInterface):
         :return: transition result
         """
         config_res = super().on_configure(state)
+        self.diagnostics_qos = QoSProfile(
+            reliability=QoSReliabilityPolicy.RELIABLE,
+            history=QoSHistoryPolicy.KEEP_ALL,
+        )
         self.diganostic_sub = self.create_subscription(
             DiagnosticArray,
             '/diagnostics',
             self.diagnostics_callback,
-            30,
+            self.diagnostics_qos,
             callback_group=self.query_cb_group
         )
 
