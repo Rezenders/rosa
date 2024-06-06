@@ -7,4 +7,7 @@ repositories:
     type: git
     url: https://github.com/kas-lab/ros_typedb.git
     version: main
-  
+  plansys2:
+    type: git
+    url: https://github.com/PlanSys2/ros2_planning_system.git
+    version: c063ce5
