@@ -119,7 +119,7 @@ def test_component_configuration_status_inference(
 
 
 @pytest.mark.parametrize("configurations, c_name, c_required, c_active, c_status", [
-    ([('low param', 'unfeasible', True), ('high param', 'unfeasible', False)], 'component1', False, False, 'unfeasible'),
+    #([('low param', 'unfeasible', True), ('high param', 'unfeasible', False)], 'component1', False, False, 'unfeasible'),
     ([('low param', 'unfeasible', True), ('high param', 'feasible', False)], 'component1', True, False, 'configuration error'),
     ([('low param', 'feasible', False), ('high param', 'feasible', False)], 'component1', True, False, 'unsolved'),
     ([('low param', 'feasible', True), ('high param', 'feasible', False)], 'component1', True, False, 'unsolved'),

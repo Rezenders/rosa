@@ -317,7 +317,9 @@ rule component-constraint-status-violated:
 rule component-constraint-status-satisfied:
     when{
         $constraint (constraint: $component) isa component-constraint;
-        not { $component has component-status 'failure';};
+        not {
+            $component has component-status 'failure';
+        };
     } then {
         $constraint has constraint-status 'satisfied';
     };
@@ -333,8 +335,16 @@ rule component-configuration-status-unfeasible:
 rule component-configuration-status-feasible:
     when{
         $component-config isa component-configuration;
-        not {
-            $component-config has component-configuration-status 'unfeasible';
+        # not {
+            #   $component-config has component-configuration-status 'unfeasible';
+        # }; #commented out due to bug #7070
+        {
+           not {
+                $component-config is $dummy; # typedb bug issue #7070
+                (constrained: $component-config) isa constraint, has constraint-status 'violated';
+           };
+        } or {
+            not {(constrained: $component-config) isa constraint;};
         };
     } then {
         $component-config has component-configuration-status 'feasible';

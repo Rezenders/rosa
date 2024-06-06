@@ -34,7 +34,6 @@ $ea_measurement isa EnvironmentalAttribute, has attribute-name "ea_measurement";
 (measured-attribute:$ea_measurement) isa measurement, has measurement-value 1.5, has latest false;
 (measured-attribute:$ea_measurement) isa measurement, has measurement-value 1.0, has latest true;
 
-
 (constraint: $ea1, constrained: $cc1) isa greater-equal-constraint, has attribute-value 2.25;
 (constraint: $ea1, constrained: $cc2) isa greater-equal-constraint, has attribute-value 3.25;
 (constraint: $ea1, constrained: $cc3) isa greater-equal-constraint, has attribute-value 3.25;
