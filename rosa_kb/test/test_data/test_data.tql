@@ -20,11 +20,13 @@ $cp2 isa ComponentParameter, has parameter-key "param2", has parameter-value "3.
 $cc1 (component: $c1, parameter: $cp1) isa component-configuration, has component-configuration-name "low param", has priority 1.0;
 $cc2 (component: $c1, parameter: $cp2) isa component-configuration, has component-configuration-name "high param", has priority 10.0;
 
-$c_op isa Component, has component-name "component_operators";
-$cc3 (component: $c_op, parameter: $cp2) isa component-configuration, has component-configuration-name "high param >=", has priority 9.0;
-$cc4 (component: $c_op, parameter: $cp2) isa component-configuration, has component-configuration-name "high param >", has priority 8.0;
-$cc5 (component: $c_op, parameter: $cp2) isa component-configuration, has component-configuration-name "high param <=", has priority 7.0;
-$cc6 (component: $c_op, parameter: $cp2) isa component-configuration, has component-configuration-name "high param <", has priority 6.0;
+$c_constraint isa Component, has component-name "component_constraints";
+$cc3 (component: $c_constraint, parameter: $cp2) isa component-configuration, has component-configuration-name "high param >=", has priority 9.0;
+$cc4 (component: $c_constraint, parameter: $cp2) isa component-configuration, has component-configuration-name "high param >", has priority 8.0;
+$cc5 (component: $c_constraint, parameter: $cp2) isa component-configuration, has component-configuration-name "high param <=", has priority 7.0;
+$cc6 (component: $c_constraint, parameter: $cp2) isa component-configuration, has component-configuration-name "high param <", has priority 6.0;
+$cc7 (component: $c_constraint, parameter: $cp2) isa component-configuration, has component-configuration-name "component failure", has priority 2.0;
+$cc8 (component: $c_constraint, parameter: $cp2) isa component-configuration, has component-configuration-name "component ok", has priority 2.0;
 
 $ea1 isa EnvironmentalAttribute, has attribute-name "ea1";
 $ea_measurement isa EnvironmentalAttribute, has attribute-name "ea_measurement";
@@ -32,12 +34,18 @@ $ea_measurement isa EnvironmentalAttribute, has attribute-name "ea_measurement";
 (measured-attribute:$ea_measurement) isa measurement, has measurement-value 1.5, has latest false;
 (measured-attribute:$ea_measurement) isa measurement, has measurement-value 1.0, has latest true;
 
-(constraint: $ea1, constrained: $cc1) isa constraint, has attribute-value 2.25;
-(constraint: $ea1, constrained: $cc2) isa constraint, has attribute-value 3.25;
-(constraint: $ea1, constrained: $cc3) isa constraint, has attribute-value 3.25, has constraint-operator '>=';
-(constraint: $ea1, constrained: $cc4) isa constraint, has attribute-value 3.25, has constraint-operator '>';
-(constraint: $ea1, constrained: $cc5) isa constraint, has attribute-value 3.25, has constraint-operator '<=';
-(constraint: $ea1, constrained: $cc6) isa constraint, has attribute-value 3.25, has constraint-operator '<';
+
+(constraint: $ea1, constrained: $cc1) isa greater-equal-constraint, has attribute-value 2.25;
+(constraint: $ea1, constrained: $cc2) isa greater-equal-constraint, has attribute-value 3.25;
+(constraint: $ea1, constrained: $cc3) isa greater-equal-constraint, has attribute-value 3.25;
+(constraint: $ea1, constrained: $cc4) isa greater-constraint, has attribute-value 3.25;
+(constraint: $ea1, constrained: $cc5) isa less-equal-constraint, has attribute-value 3.25;
+(constraint: $ea1, constrained: $cc6) isa less-constraint, has attribute-value 3.25;
+
+$c_component_constraint_failure isa Component, has component-name "component_constraint_failure", has component-status 'failure';
+(constraint: $c_component_constraint_failure, constrained: $cc7) isa component-constraint;
+$c_component_constraint_ok isa Component, has component-name "component_constraint_ok";
+(constraint: $c_component_constraint_ok, constrained: $cc8) isa component-constraint;
 
 $c2 isa Component, has component-name "component2";
 $c3 isa Component, has component-name "component3";
@@ -83,7 +91,7 @@ $c_constrained isa Component, has component-name "c_constrained";
 $cc_constrained (component:$c_constrained) isa component-configuration, has component-configuration-name "cc_constrained";
 $qa_t_constraint isa QualityAttribute, has attribute-name "qa_t_constraint";
 (measured-attribute:$qa_t_constraint) isa measurement, has measurement-value 0.3, has latest true;
-(constraint:$qa_t_constraint, constrained:$t_constrained, constrained:$fd_constrained, constrained:$c_constrained, constrained:$cc_constrained) isa constraint, has attribute-value 0.5;
+(constraint:$qa_t_constraint, constrained:$t_constrained, constrained:$fd_constrained, constrained:$c_constrained, constrained:$cc_constrained) isa greater-equal-constraint, has attribute-value 0.5;
 
 $c_required isa Component, has component-name "c_required", has is-required true;
 $c_active isa Component, has component-name "c_active", has is-active true;

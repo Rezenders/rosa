@@ -128,6 +128,7 @@ less-equal-constraint sub measure-constraint;
 greater-constraint sub measure-constraint;
 greater-equal-constraint sub measure-constraint;
 
+component-constraint sub constraint;
 
 # TODO: find a better name
 estimation sub relation,
@@ -199,6 +200,7 @@ Component sub entity,
     owns always-improve,
     plays function-design:required-component,
     plays component-configuration:component,
+    plays constraint:constraint,
     plays constraint:constrained,
     plays estimation:causer,
     plays component-adaptation:component,
@@ -247,7 +249,7 @@ rule implicit-component-is-required:
         $c has is-required true;
     };
 
-rule constraint-status-violated:
+rule measure-constraint-status-violated:
     when{
         $constraint (constraint: $measure) has attribute-value $value;
         (measured-attribute:$measure) isa measurement, has latest true, has measurement-value $measurement;
@@ -276,7 +278,7 @@ rule constraint-status-violated:
         $constraint has constraint-status 'violated';
     };
 
-rule constraint-status-satisfied:
+rule measure-constraint-status-satisfied:
     when{
         $constraint (constraint: $measure, constrained: $constrained) has attribute-value $value;
         {
@@ -300,6 +302,22 @@ rule constraint-status-satisfied:
                 $measurement < $value;
             };
         };
+    } then {
+        $constraint has constraint-status 'satisfied';
+    };
+    
+rule component-constraint-status-violated:
+    when{
+        $constraint (constraint: $component) isa component-constraint;
+        $component has component-status 'failure';
+    } then {
+        $constraint has constraint-status 'violated';
+    };
+
+rule component-constraint-status-satisfied:
+    when{
+        $constraint (constraint: $component) isa component-constraint;
+        not { $component has component-status 'failure';};
     } then {
         $constraint has constraint-status 'satisfied';
     };

@@ -40,9 +40,9 @@ def kb_interface():
     ('ea1', 3.25, 'high param <', 'violated'),
     ('ea1', 2.5, 'high param <', 'satisfied'),
     ('ea1', 2.5, 'low param', 'satisfied'),
-    ('ea1', '', 'low param', 'not evaluated'),
+    ('ea1', '', 'low param', 'satisfied'),
 ])
-def test_constraint_status_inference(
+def test_measure_constraint_status_inference(
         kb_interface, att_name, att_value, config_name, constraint_status):
 
     if att_value != '':
@@ -52,7 +52,27 @@ def test_constraint_status_inference(
             $ea isa EnvironmentalAttribute, has attribute-name "{att_name}";
             $config isa component-configuration,
                 has component-configuration-name "{config_name}";
-            (constraint: $ea, constrained: $config) isa constraint,
+            (constraint: $ea, constrained: $config) isa measure-constraint,
+                has constraint-status $status;
+            fetch $status;
+    '''
+    query_result = kb_interface.fetch_database(query)
+    inferred_status = [
+        status.get("status").get('value') for status in query_result]
+    assert inferred_status[0] == constraint_status
+
+@pytest.mark.parametrize("config_name, constraint_status", [
+    ('component failure', 'violated'),
+    ('component ok', 'satisfied'),
+])
+def test_component_constraint_status_inference(
+        kb_interface, config_name, constraint_status):
+
+    query = f'''
+        match
+            $config isa component-configuration,
+                has component-configuration-name "{config_name}";
+            (constraint: $c, constrained: $config) isa component-constraint,
                 has constraint-status $status;
             fetch $status;
     '''
