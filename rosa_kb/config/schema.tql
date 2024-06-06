@@ -32,7 +32,7 @@ component-configuration-status sub status,
     regex "^(unfeasible|feasible)$";
 
 constraint-status sub status,
-    regex "^(violated|not evaluated|satisfied)$";
+    regex "^(violated|satisfied)$";
 
 parameter-key sub attribute,
     value string;
@@ -65,10 +65,6 @@ estimation-value sub attribute,
 estimation-type sub attribute,
     value string,
     regex "^(positive|negative|absolute)$";
-
-constraint-operator sub attribute,
-    value string,
-    regex "^(<|<=|>|>=)";
 
 time sub attribute,
     abstract,
@@ -120,11 +116,18 @@ component-configuration sub relation,
     plays parameter-adaptation:component-configuration;
 
 constraint sub relation,
-    owns attribute-value,
     owns constraint-status,
-    owns constraint-operator,
     relates constraint,
     relates constrained;
+
+measure-constraint sub constraint,
+    owns attribute-value;
+
+less-constraint sub measure-constraint;
+less-equal-constraint sub measure-constraint;
+greater-constraint sub measure-constraint;
+greater-equal-constraint sub measure-constraint;
+
 
 # TODO: find a better name
 estimation sub relation,
@@ -246,71 +249,59 @@ rule implicit-component-is-required:
 
 rule constraint-status-violated:
     when{
-        $r_constraint (constraint: $constraint) isa constraint, has attribute-value $value;
-        (measured-attribute:$constraint) isa measurement, has latest true, has measurement-value $measurement;
+        $constraint (constraint: $measure) has attribute-value $value;
+        (measured-attribute:$measure) isa measurement, has latest true, has measurement-value $measurement;
         {
-            {
-                $r_constraint has constraint-operator ">=";
-            } or {
-                not {$r_constraint has constraint-operator $op;};
-            };
+            $constraint isa greater-equal-constraint;
             not {
                 $measurement >= $value;
             };
         } or {
-            $r_constraint has constraint-operator ">";
+             $constraint isa greater-constraint;
              not {
                 $measurement > $value;
             };
         }  or {
-            $r_constraint has constraint-operator "<=";
+            $constraint isa less-equal-constraint;
              not {
                 $measurement <= $value;
             };
         } or {
-            $r_constraint has constraint-operator "<";
+            $constraint isa less-constraint;
              not {
                 $measurement < $value;
             };
         };
     } then {
-        $r_constraint has constraint-status 'violated';
+        $constraint has constraint-status 'violated';
     };
 
 rule constraint-status-satisfied:
     when{
-        $r_constraint (constraint: $constraint) isa constraint, has attribute-value $value;
-        (measured-attribute:$constraint) isa measurement, has latest true, has measurement-value $measurement;
+        $constraint (constraint: $measure, constrained: $constrained) has attribute-value $value;
         {
-            {
-                $r_constraint has constraint-operator ">=";
-            } or {
-                not {$r_constraint has constraint-operator $op;};
+            not {
+                (measured-attribute:$measure) isa measurement, has latest true, has measurement-value $measurement;
             };
-            $measurement >= $value;
-        } or {
-            $r_constraint has constraint-operator ">";
-            $measurement > $value;
-        }  or {
-            $r_constraint has constraint-operator "<=";
-            $measurement <= $value;
-        } or {
-            $r_constraint has constraint-operator "<";
-            $measurement < $value;
+        } or 
+        {
+            (measured-attribute:$measure) isa measurement, has latest true, has measurement-value $measurement;
+            {
+                $constraint isa greater-equal-constraint;
+                $measurement >= $value;
+            } or {
+                $constraint isa greater-constraint;
+                $measurement > $value;
+            }  or {
+                $constraint isa less-equal-constraint;
+                $measurement <= $value;
+            } or {
+                $constraint isa less-constraint;
+                $measurement < $value;
+            };
         };
     } then {
-        $r_constraint has constraint-status 'satisfied';
-    };
-
-# this should also be true when only the first condition is met, i.e., when the constraint does not have an attribute-value
-rule constraint-status-ok-no-measurement:
-    when{
-        $r_constraint (constraint: $constraint, constrained: $constrained) isa constraint;
-        not {
-        (measured-attribute:$constraint) isa measurement, has latest true, has measurement-value $measurement;
-        };
-    } then {
-        $r_constraint has constraint-status 'not evaluated';
+        $constraint has constraint-status 'satisfied';
     };
 
 rule component-configuration-status-unfeasible:
