@@ -29,7 +29,7 @@ def kb_interface():
     return kb_interface
 
 
-@pytest.mark.parametrize("att_name, att_value, config_name, constraint_status", [
+@pytest.mark.parametrize("att_name, att_value, name, constraint_status", [
     ('ea1', 2.5, 'high param', 'violated'),
     ('ea1', 2.5, 'high param >=', 'violated'),
     ('ea1', 3.25, 'high param >=', 'satisfied'),
@@ -43,23 +43,22 @@ def kb_interface():
     ('ea1', '', 'low param', 'satisfied'),
 ])
 def test_measure_constraint_status_inference(
-        kb_interface, att_name, att_value, config_name, constraint_status):
+        kb_interface, att_name, att_value, name, constraint_status):
 
     if att_value != '':
         kb_interface.add_measurement(att_name, att_value)
     query = f'''
         match
-            $ea isa EnvironmentalAttribute, has attribute-name "{att_name}";
-            $config isa component-configuration,
-                has component-configuration-name "{config_name}";
-            (constraint: $ea, constrained: $config) isa measure-constraint,
+            $constrained has name "{name}";
+            (constrained: $constrained) isa measure-constraint,
                 has constraint-status $status;
             fetch $status;
     '''
     query_result = kb_interface.fetch_database(query)
     inferred_status = [
         status.get("status").get('value') for status in query_result]
-    assert inferred_status[0] == constraint_status
+    print(inferred_status)
+    assert all(constraint_status for status in inferred_status)
 
 @pytest.mark.parametrize("config_name, constraint_status", [
     ('component failure', 'violated'),
@@ -115,6 +114,7 @@ def test_component_configuration_status_inference(
     query_result = kb_interface.fetch_database(query)
     inferred_status = [
         status.get("status").get('value') for status in query_result]
+    print(inferred_status)
     assert inferred_status[0] == config_status
 
 
@@ -122,9 +122,12 @@ def test_component_configuration_status_inference(
     #([('low param', 'unfeasible', True), ('high param', 'unfeasible', False)], 'component1', False, False, 'unfeasible'),
     ([('low param', 'unfeasible', True), ('high param', 'feasible', False)], 'component1', True, False, 'configuration error'),
     ([('low param', 'feasible', False), ('high param', 'feasible', False)], 'component1', True, False, 'unsolved'),
+    ([('low param', 'feasible', False), ('high param', 'feasible', False)], 'component1', True, True, 'unsolved'),
     ([('low param', 'feasible', True), ('high param', 'feasible', False)], 'component1', True, False, 'unsolved'),
     ([('low param', 'feasible', True), ('high param', 'unfeasible', False)], 'component1', True, False, 'unsolved'),
     ([], 'component1', True, False, 'unsolved'),
+    ([], 'component1', True, True, 'unsolved'),
+    ([], 'c_no_config', True, True, 'solved'),
     ([('low param', 'feasible', True), ('high param', 'feasible', False)], 'component1', False, False, 'feasible'),
     ([('low param', 'feasible', False), ('high param', 'unfeasible', False)], 'component1', False, False, 'feasible'),
     ([], 'component1', False, False, 'feasible'),

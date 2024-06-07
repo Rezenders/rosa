@@ -29,12 +29,12 @@ $cc7 (component: $c_constraint, parameter: $cp2) isa component-configuration, ha
 $cc8 (component: $c_constraint, parameter: $cp2) isa component-configuration, has component-configuration-name "component ok", has priority 2.0;
 
 $ea1 isa EnvironmentalAttribute, has attribute-name "ea1";
-$ea_measurement isa EnvironmentalAttribute, has attribute-name "ea_measurement";
-(measured-attribute:$ea_measurement) isa measurement, has measurement-value 1.8, has measurement-time 2023-01-08T06:12:11.111;
-(measured-attribute:$ea_measurement) isa measurement, has measurement-value 1.5, has latest false;
-(measured-attribute:$ea_measurement) isa measurement, has measurement-value 1.0, has latest true;
+#$ea_measurement isa EnvironmentalAttribute, has attribute-name "ea_measurement";
+(measured-attribute:$ea1) isa measurement, has measurement-value 56.8, has measurement-time 2023-01-08T06:12:11.111;
+(measured-attribute:$ea1) isa measurement, has measurement-value 25.5, has measurement-time 2023-01-08T06:12:01.111, has latest false;
+(measured-attribute:$ea1) isa measurement, has measurement-value 1.0,has measurement-time 2023-01-08T06:12:12.111, has latest true;
 
-(constraint: $ea1, constrained: $cc1) isa greater-equal-constraint, has attribute-value 2.25;
+(constraint: $ea1, constrained: $cc1) isa greater-equal-constraint, has attribute-value 0.25;
 (constraint: $ea1, constrained: $cc2) isa greater-equal-constraint, has attribute-value 3.25;
 (constraint: $ea1, constrained: $cc3) isa greater-equal-constraint, has attribute-value 3.25;
 (constraint: $ea1, constrained: $cc4) isa greater-constraint, has attribute-value 3.25;
@@ -149,3 +149,4 @@ $get_cp_8 isa ComponentParameter, has parameter-key "get_cp_8", has parameter-va
 (component: $get_cp_c, parameter:$get_cp_1, parameter:$get_cp_2, parameter:$get_cp_3, parameter:$get_cp_4, parameter:$get_cp_5, parameter:$get_cp_6, parameter:$get_cp_7, parameter:$get_cp_8) isa component-configuration, has component-configuration-name "get_cp_cc";
 
 $c_attributes isa Component, has component-name "c_attributes", has is-active true, has is-required true;
+$c_no_config isa Component, has component-name "c_no_config";

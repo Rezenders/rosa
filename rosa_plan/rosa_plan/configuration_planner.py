@@ -159,7 +159,6 @@ class ConfigurationPlanner(Node):
                 request.component = component
                 c_configs = self.call_service(
                     self.selectable_c_configs_srv, request)
-
                 if c_configs is not None:
                     # get component configs priority
                     request = GetComponentConfigurationPriority.Request()

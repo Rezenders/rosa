@@ -251,25 +251,25 @@ rule implicit-component-is-required:
 
 rule measure-constraint-status-violated:
     when{
-        $constraint (constraint: $measure) has attribute-value $value;
+        $constraint (constraint: $measure, constrained: $constrained) isa $constraint-type,  has attribute-value $value;
         (measured-attribute:$measure) isa measurement, has latest true, has measurement-value $measurement;
         {
-            $constraint isa greater-equal-constraint;
+            $constraint-type sub greater-equal-constraint;
             not {
                 $measurement >= $value;
             };
         } or {
-             $constraint isa greater-constraint;
+             $constraint-type sub greater-constraint;
              not {
                 $measurement > $value;
             };
         }  or {
-            $constraint isa less-equal-constraint;
+            $constraint-type sub less-equal-constraint;
              not {
                 $measurement <= $value;
             };
         } or {
-            $constraint isa less-constraint;
+            $constraint-type sub less-constraint;
              not {
                 $measurement < $value;
             };
@@ -280,25 +280,26 @@ rule measure-constraint-status-violated:
 
 rule measure-constraint-status-satisfied:
     when{
-        $constraint (constraint: $measure, constrained: $constrained) has attribute-value $value;
+        $constraint (constraint: $measure, constrained: $constrained) isa $constraint-type,  has attribute-value $value;
         {
             not {
+                $constraint (constraint: $measure, constrained: $constrained) isa measure-constraint;
                 (measured-attribute:$measure) isa measurement, has latest true, has measurement-value $measurement;
             };
         } or 
         {
             (measured-attribute:$measure) isa measurement, has latest true, has measurement-value $measurement;
             {
-                $constraint isa greater-equal-constraint;
+                $constraint-type sub greater-equal-constraint;
                 $measurement >= $value;
             } or {
-                $constraint isa greater-constraint;
+                $constraint-type sub greater-constraint;
                 $measurement > $value;
             }  or {
-                $constraint isa less-equal-constraint;
+                $constraint-type sub less-equal-constraint;
                 $measurement <= $value;
             } or {
-                $constraint isa less-constraint;
+                $constraint-type sub less-constraint;
                 $measurement < $value;
             };
         };
@@ -354,8 +355,8 @@ rule component-status-unfeasible:
     when{
         $c isa Component;
         {
-            (component: $c) isa component-configuration;  # (1)
-            not {  # (2)
+            (component: $c) isa component-configuration;
+            not {
                 (component: $c) isa component-configuration, has component-configuration-status $status;
                 $status != 'unfeasible';
             };
@@ -383,8 +384,16 @@ rule component-status-unsolved:
         not {
             $c has component-status $c_status; $c_status like 'unfeasible|failure|configuration error';
         };
-        not {
-            $c has is-active true;
+        {
+            not {
+                $c has is-active true;
+            };
+        } or {
+            $cc (component: $c) isa component-configuration;
+            not {
+                $cc2 (component: $c) isa component-configuration;
+                $cc2 has is-selected true;
+            };
         };
     } then {
          $c has component-status 'unsolved';
